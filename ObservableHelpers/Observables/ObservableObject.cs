@@ -27,97 +27,33 @@ namespace ObservableHelpers.Observables
     {
         #region Properties
 
-        public AttributeHolder Holder { get; } = new AttributeHolder();
+        private readonly SynchronizationContext context = AsyncOperationManager.SynchronizationContext;
 
-        private SynchronizationContext Context
-        {
-            get => Holder.GetAttribute<SynchronizationContext>(AsyncOperationManager.SynchronizationContext);
-            set => Holder.SetAttribute(value);
-        }
+        protected List<PropertyHolder> PropertyHolders { get; set; } = new List<PropertyHolder>();
 
-        private PropertyChangedEventHandler PropertyChangedHandler
-        {
-            get => Holder.GetAttribute<PropertyChangedEventHandler>(delegate { });
-            set => Holder.SetAttribute(value);
-        }
-
-        private EventHandler<ContinueExceptionEventArgs> PropertyErrorHandler
-        {
-            get => Holder.GetAttribute<EventHandler<ContinueExceptionEventArgs>>(delegate { });
-            set => Holder.SetAttribute(value);
-        }
-
-        protected List<PropertyHolder> PropertyHolders
-        {
-            get => Holder.GetAttribute<List<PropertyHolder>>(new List<PropertyHolder>());
-            set => Holder.SetAttribute(value);
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged
-        {
-            add
-            {
-                lock (this)
-                {
-                    PropertyChangedHandler += value;
-                }
-            }
-            remove
-            {
-                lock (this)
-                {
-                    PropertyChangedHandler -= value;
-                }
-            }
-        }
-
-        public event EventHandler<ContinueExceptionEventArgs> PropertyError
-        {
-            add
-            {
-                lock (this)
-                {
-                    PropertyErrorHandler += value;
-                }
-            }
-            remove
-            {
-                lock (this)
-                {
-                    PropertyErrorHandler -= value;
-                }
-            }
-        }
+        public event PropertyChangedEventHandler PropertyChanged;
+        public event EventHandler<ContinueExceptionEventArgs> PropertyError;
 
         #endregion
 
         #region Initializers
 
-        public ObservableObject(IAttributed attributed)
-        {
-            Holder.Inherit(attributed);
-            foreach (var property in this
-                .GetType()
-                .GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static))
-            {
-                property.GetValue(this);
-            }
-        }
-
         public ObservableObject()
         {
-            Holder.Inherit(null);
-            foreach (var property in this
-                .GetType()
-                .GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static))
-            {
-                property.GetValue(this);
-            }
+            InitializeProperties();
         }
 
         #endregion
 
         #region Methods
+
+        protected void InitializeProperties()
+        {
+            foreach (var property in GetType().GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static))
+            {
+                property.GetValue(this);
+            }
+        }
 
         protected virtual PropertyHolder PropertyFactory(string key, string group, string propertyName, bool serializable)
         {
@@ -253,10 +189,10 @@ namespace ObservableHelpers.Observables
             string group,
             string propertyName)
         {
-            var propertyHandler = PropertyChangedHandler;
+            var propertyHandler = PropertyChanged;
             if (propertyHandler != null)
             {
-                Context.Post(s =>
+                context.Post(s =>
                 {
                     lock (this)
                     {
@@ -265,7 +201,6 @@ namespace ObservableHelpers.Observables
                 }, null);
             }
         }
-
 
         public virtual void OnChanged(string key)
         {
@@ -276,7 +211,7 @@ namespace ObservableHelpers.Observables
         public virtual void OnError(Exception exception, bool defaultIgnoreAndContinue = true)
         {
             var args = new ContinueExceptionEventArgs(exception, defaultIgnoreAndContinue);
-            PropertyErrorHandler?.Invoke(this, args);
+            PropertyError?.Invoke(this, args);
             if (!args.IgnoreAndContinue)
             {
                 throw args.Exception;
@@ -285,7 +220,7 @@ namespace ObservableHelpers.Observables
 
         public virtual void OnError(ContinueExceptionEventArgs args)
         {
-            PropertyErrorHandler?.Invoke(this, args);
+            PropertyError?.Invoke(this, args);
             if (!args.IgnoreAndContinue)
             {
                 throw args.Exception;

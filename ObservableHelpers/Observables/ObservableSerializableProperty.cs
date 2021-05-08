@@ -15,32 +15,12 @@ namespace ObservableHelpers.Observables
     {
         #region Properties
 
-        private string BlobHolder
-        {
-            get => Holder.GetAttribute<string>();
-            set => Holder.SetAttribute(value);
-        }
+        private string blobHolder;
 
         public string Blob
         {
             get => GetBlob();
             set => SetBlob(value);
-        }
-
-        #endregion
-
-        #region Initializers
-
-        public ObservableSerializableProperty(IAttributed attributed)
-            : base (attributed)
-        {
-
-        }
-
-        public ObservableSerializableProperty()
-            : this(null)
-        {
-
         }
 
         #endregion
@@ -52,15 +32,8 @@ namespace ObservableHelpers.Observables
             var hasChanges = false;
             lock (this)
             {
-                try
-                {
-                    hasChanges = BlobHolder != blob;
-                    if (hasChanges) BlobHolder = blob;
-                }
-                catch (Exception ex)
-                {
-                    OnError(ex);
-                }
+                hasChanges = blobHolder != blob;
+                if (hasChanges) blobHolder = blob;
             }
             if (hasChanges)
             {
@@ -74,7 +47,7 @@ namespace ObservableHelpers.Observables
         {
             lock (this)
             {
-                return BlobHolder == null ? defaultValue : BlobHolder;
+                return blobHolder ?? defaultValue;
             }
         }
 
@@ -153,22 +126,6 @@ namespace ObservableHelpers.Observables
         {
             get => GetValue<T>();
             set => SetValue(Value);
-        }
-
-        #endregion
-
-        #region Initializers
-
-        public ObservableSerializableProperty(IAttributed attributed)
-            : base(attributed)
-        {
-
-        }
-
-        public ObservableSerializableProperty()
-            : this(null)
-        {
-
         }
 
         #endregion

@@ -16,130 +16,37 @@ namespace ObservableHelpers.Observables
     {
         #region Properties
 
-        public AttributeHolder Holder { get; } = new AttributeHolder();
+        private readonly SynchronizationContext context = AsyncOperationManager.SynchronizationContext;
+        private readonly ConcurrentDictionary<TKey, TValue> dictionary = new ConcurrentDictionary<TKey, TValue>();
 
-        private SynchronizationContext Context
-        {
-            get => Holder.GetAttribute<SynchronizationContext>(AsyncOperationManager.SynchronizationContext);
-            set => Holder.SetAttribute(value);
-        }
-
-        private ConcurrentDictionary<TKey, TValue> Dictionary
-        {
-            get => Holder.GetAttribute<ConcurrentDictionary<TKey, TValue>>(new ConcurrentDictionary<TKey, TValue>());
-            set => Holder.SetAttribute(value);
-        }
-
-        private PropertyChangedEventHandler PropertyChangedHandler
-        {
-            get => Holder.GetAttribute<PropertyChangedEventHandler>(delegate { });
-            set => Holder.SetAttribute(value);
-        }
-
-        private NotifyCollectionChangedEventHandler CollectionChangedHandler
-        {
-            get => Holder.GetAttribute<NotifyCollectionChangedEventHandler>(delegate { });
-            set => Holder.SetAttribute(value);
-        }
-
-        private EventHandler<ContinueExceptionEventArgs> PropertyErrorHandler
-        {
-            get => Holder.GetAttribute<EventHandler<ContinueExceptionEventArgs>>(delegate { });
-            set => Holder.SetAttribute(value);
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged
-        {
-            add
-            {
-                lock (this)
-                {
-                    PropertyChangedHandler += value;
-                }
-            }
-            remove
-            {
-                lock (this)
-                {
-                    PropertyChangedHandler -= value;
-                }
-            }
-        }
-
-        public event NotifyCollectionChangedEventHandler CollectionChanged
-        {
-            add
-            {
-                lock (this)
-                {
-                    CollectionChangedHandler += value;
-                }
-            }
-            remove
-            {
-                lock (this)
-                {
-                    CollectionChangedHandler -= value;
-                }
-            }
-        }
-
-        public event EventHandler<ContinueExceptionEventArgs> PropertyError
-        {
-            add
-            {
-                lock (this)
-                {
-                    PropertyErrorHandler += value;
-                }
-            }
-            remove
-            {
-                lock (this)
-                {
-                    PropertyErrorHandler -= value;
-                }
-            }
-        }
+        public event PropertyChangedEventHandler PropertyChanged;
+        public event NotifyCollectionChangedEventHandler CollectionChanged;
+        public event EventHandler<ContinueExceptionEventArgs> PropertyError;
 
         public ICollection<TKey> Keys
         {
-            get => Dictionary.Keys;
+            get => dictionary.Keys;
         }
 
         public ICollection<TValue> Values
         {
-            get => Dictionary.Values;
+            get => dictionary.Values;
         }
 
         public int Count
         {
-            get => ((ICollection<KeyValuePair<TKey, TValue>>)Dictionary).Count;
+            get => ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).Count;
         }
 
         public bool IsReadOnly
         {
-            get => ((ICollection<KeyValuePair<TKey, TValue>>)Dictionary).IsReadOnly;
+            get => ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).IsReadOnly;
         }
 
         public TValue this[TKey key]
         {
-            get => Dictionary[key];
+            get => dictionary[key];
             set => UpdateWithNotification(key, value);
-        }
-
-        #endregion
-
-        #region Initializers
-
-        public ObservableDictionary(IAttributed attributed)
-        {
-            Holder.Inherit(attributed);
-        }
-
-        public ObservableDictionary()
-        {
-            Holder.Inherit(null);
         }
 
         #endregion
@@ -148,24 +55,18 @@ namespace ObservableHelpers.Observables
 
         private void NotifyObserversOfChange()
         {
-            var collectionHandler = CollectionChangedHandler;
-            var propertyHandler = PropertyChangedHandler;
+            var collectionHandler = CollectionChanged;
+            var propertyHandler = PropertyChanged;
             if (collectionHandler != null || propertyHandler != null)
             {
-                Context.Post(s =>
+                context.Post(s =>
                 {
                     lock (this)
                     {
-                        if (collectionHandler != null)
-                        {
-                            collectionHandler(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
-                        }
-                        if (propertyHandler != null)
-                        {
-                            propertyHandler(this, new PropertyChangedEventArgs("Count"));
-                            propertyHandler(this, new PropertyChangedEventArgs("Keys"));
-                            propertyHandler(this, new PropertyChangedEventArgs("Values"));
-                        }
+                        collectionHandler(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+                        propertyHandler(this, new PropertyChangedEventArgs(nameof(Count)));
+                        propertyHandler(this, new PropertyChangedEventArgs(nameof(Keys)));
+                        propertyHandler(this, new PropertyChangedEventArgs(nameof(Values)));
                     }
                 }, null);
             }
@@ -178,21 +79,21 @@ namespace ObservableHelpers.Observables
 
         private bool TryAddWithNotification(TKey key, TValue value)
         {
-            bool result = Dictionary.TryAdd(key, ValueFactory(key, value).value);
+            bool result = dictionary.TryAdd(key, ValueFactory(key, value).value);
             if (result) NotifyObserversOfChange();
             return result;
         }
 
         private bool TryRemoveWithNotification(TKey key, out TValue value)
         {
-            bool result = Dictionary.TryRemove(key, out value);
+            bool result = dictionary.TryRemove(key, out value);
             if (result) NotifyObserversOfChange();
             return result;
         }
 
         private void UpdateWithNotification(TKey key, TValue value)
         {
-            Dictionary[key] = ValueFactory(key, value).value;
+            dictionary[key] = ValueFactory(key, value).value;
             NotifyObserversOfChange();
         }
 
@@ -204,7 +105,7 @@ namespace ObservableHelpers.Observables
         public virtual void OnError(Exception exception, bool defaultIgnoreAndContinue = true)
         {
             var args = new ContinueExceptionEventArgs(exception, defaultIgnoreAndContinue);
-            PropertyErrorHandler?.Invoke(this, args);
+            PropertyError?.Invoke(this, args);
             if (!args.IgnoreAndContinue)
             {
                 throw args.Exception;
@@ -213,7 +114,7 @@ namespace ObservableHelpers.Observables
 
         public virtual void OnError(ContinueExceptionEventArgs args)
         {
-            PropertyErrorHandler?.Invoke(this, args);
+            PropertyError?.Invoke(this, args);
             if (!args.IgnoreAndContinue)
             {
                 throw args.Exception;
@@ -232,50 +133,48 @@ namespace ObservableHelpers.Observables
 
         public bool ContainsKey(TKey key)
         {
-            return Dictionary.ContainsKey(key);
+            return dictionary.ContainsKey(key);
         }
 
         public bool Contains(KeyValuePair<TKey, TValue> item)
         {
-            return ((ICollection<KeyValuePair<TKey, TValue>>)Dictionary).Contains(item);
+            return ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).Contains(item);
         }
 
         public bool TryGetValue(TKey key, out TValue value)
         {
-            return Dictionary.TryGetValue(key, out value);
+            return dictionary.TryGetValue(key, out value);
         }
 
         public bool Remove(TKey key)
         {
-            TValue temp;
-            return TryRemoveWithNotification(key, out temp);
+            return TryRemoveWithNotification(key, out _);
         }
 
         public bool Remove(KeyValuePair<TKey, TValue> item)
         {
-            TValue temp;
-            return TryRemoveWithNotification(item.Key, out temp);
+            return TryRemoveWithNotification(item.Key, out _);
         }
 
         public void Clear()
         {
-            ((ICollection<KeyValuePair<TKey, TValue>>)Dictionary).Clear();
+            ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).Clear();
             NotifyObserversOfChange();
         }
 
         public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
         {
-            ((ICollection<KeyValuePair<TKey, TValue>>)Dictionary).CopyTo(array, arrayIndex);
+            ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).CopyTo(array, arrayIndex);
         }
 
         IEnumerator<KeyValuePair<TKey, TValue>> IEnumerable<KeyValuePair<TKey, TValue>>.GetEnumerator()
         {
-            return ((ICollection<KeyValuePair<TKey, TValue>>)Dictionary).GetEnumerator();
+            return ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return ((ICollection<KeyValuePair<TKey, TValue>>)Dictionary).GetEnumerator();
+            return ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).GetEnumerator();
         }
 
         #endregion

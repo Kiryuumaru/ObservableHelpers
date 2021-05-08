@@ -15,11 +15,7 @@ namespace ObservableHelpers.Observables
     {
         #region Properties
 
-        private object ObjectHolder
-        {
-            get => Holder.GetAttribute<object>();
-            set => Holder.SetAttribute(value);
-        }
+        private object objectHolder;
 
         public object Object
         {
@@ -29,37 +25,15 @@ namespace ObservableHelpers.Observables
 
         #endregion
 
-        #region Initializers
-
-        public ObservableNonSerializableProperty(IAttributed attributed)
-            : base (attributed)
-        {
-
-        }
-
-        public ObservableNonSerializableProperty()
-            : this(null)
-        {
-
-        }
-
-        #endregion
-
         #region Methods
+
         public virtual bool SetObject(object obj, string tag = null)
         {
             var hasChanges = false;
             lock (this)
             {
-                try
-                {
-                    hasChanges = ObjectHolder != obj;
-                    if (hasChanges) ObjectHolder = obj;
-                }
-                catch (Exception ex)
-                {
-                    OnError(ex);
-                }
+                hasChanges = objectHolder != obj;
+                if (hasChanges) objectHolder = obj;
             }
             if (hasChanges)
             {
@@ -73,7 +47,7 @@ namespace ObservableHelpers.Observables
         {
             lock (this)
             {
-                return ObjectHolder == null ? defaultValue : ObjectHolder;
+                return objectHolder ?? defaultValue;
             }
         }
 
@@ -152,22 +126,6 @@ namespace ObservableHelpers.Observables
         {
             get => GetValue<T>();
             set => SetValue(Value);
-        }
-
-        #endregion
-
-        #region Initializers
-
-        public ObservableNonSerializableProperty(IAttributed attributed)
-            : base(attributed)
-        {
-
-        }
-
-        public ObservableNonSerializableProperty()
-            : this(null)
-        {
-
         }
 
         #endregion
