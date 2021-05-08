@@ -74,7 +74,10 @@ namespace ObservableHelpers.Observables
 
             try
             {
-                propHolder = PropertyHolders.FirstOrDefault(i => i.Key.Equals(key));
+                lock(PropertyHolders)
+                {
+                    propHolder = PropertyHolders.FirstOrDefault(i => i.Key.Equals(key));
+                }
 
                 if (propHolder != null)
                 {
@@ -109,7 +112,10 @@ namespace ObservableHelpers.Observables
                     propHolder = PropertyFactory(key, group, propertyName, serializable);
                     if (customValueSetter == null) propHolder.Property.SetValue(value);
                     else customValueSetter.Invoke((value, propHolder.Property));
-                    PropertyHolders.Add(propHolder);
+                    lock(PropertyHolders)
+                    {
+                        PropertyHolders.Add(propHolder);
+                    }
                     hasChanges = true;
                 }
             }
@@ -132,14 +138,22 @@ namespace ObservableHelpers.Observables
             Func<(T value, ObservableProperty property), bool> customValueSetter = null)
         {
             bool hasChanges = false;
-            var propHolder = PropertyHolders.FirstOrDefault(i => i.Key.Equals(key));
+
+            PropertyHolder propHolder = null;
+            lock(PropertyHolders)
+            {
+                propHolder = PropertyHolders.FirstOrDefault(i => i.Key.Equals(key));
+            }
 
             if (propHolder == null)
             {
                 propHolder = PropertyFactory(key, group, propertyName, serializable);
                 if (customValueSetter == null) propHolder.Property.SetValue(defaultValue);
                 else customValueSetter.Invoke((defaultValue, propHolder.Property));
-                PropertyHolders.Add(propHolder);
+                lock(PropertyHolders)
+                {
+                    PropertyHolders.Add(propHolder);
+                }
                 hasChanges = true;
             }
             else
@@ -163,7 +177,11 @@ namespace ObservableHelpers.Observables
 
         protected virtual bool DeleteProperty(string key)
         {
-            var propHolder = PropertyHolders.FirstOrDefault(i => i.Key.Equals(key));
+            PropertyHolder propHolder = null;
+            lock(PropertyHolders)
+            {
+                propHolder = PropertyHolders.FirstOrDefault(i => i.Key.Equals(key));
+            }
             if (propHolder == null) return false;
             bool hasChanges = propHolder.Property.SetNull();
             if (hasChanges) OnChanged(propHolder.Key, propHolder.Group, propHolder.PropertyName);
@@ -172,7 +190,10 @@ namespace ObservableHelpers.Observables
 
         protected IEnumerable<PropertyHolder> GetRawProperties(string group = null)
         {
-            return group == null ? PropertyHolders : PropertyHolders.Where(i => i.Group == group);
+            lock(PropertyHolders)
+            {
+                return group == null ? PropertyHolders : PropertyHolders.Where(i => i.Group == group);
+            }
         }
 
         public virtual void OnChanged(
@@ -182,7 +203,7 @@ namespace ObservableHelpers.Observables
         {
             context.Post(s =>
             {
-                lock (this)
+                lock(this)
                 {
                     PropertyChanged?.Invoke(this, new ObservableObjectChangesEventArgs(key, group, propertyName));
                 }
@@ -191,7 +212,11 @@ namespace ObservableHelpers.Observables
 
         public virtual void OnChanged(string key)
         {
-            var propHolder = PropertyHolders.FirstOrDefault(i => i.Key == key);
+            PropertyHolder propHolder = null;
+            lock (PropertyHolders)
+            {
+                propHolder = PropertyHolders.FirstOrDefault(i => i.Key == key);
+            }
             if (propHolder != null) OnChanged(key, propHolder.Group, propHolder.PropertyName);
         }
 
