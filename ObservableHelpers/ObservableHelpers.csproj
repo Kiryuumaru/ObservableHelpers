@@ -11,4 +11,12 @@
     <PackageProjectUrl>https://github.com/Kiryuumaru/ObservableHelpers</PackageProjectUrl>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\LICENSE.md" Pack="true" PackagePath=""/>
+  </ItemGroup>
+
 </Project>
