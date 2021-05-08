@@ -180,17 +180,13 @@ namespace ObservableHelpers.Observables
             string group,
             string propertyName)
         {
-            var propertyHandler = PropertyChanged;
-            if (propertyHandler != null)
+            context.Post(s =>
             {
-                context.Post(s =>
+                lock (this)
                 {
-                    lock (this)
-                    {
-                        propertyHandler(this, new ObservableObjectChangesEventArgs(key, group, propertyName));
-                    }
-                }, null);
-            }
+                    PropertyChanged?.Invoke(this, new ObservableObjectChangesEventArgs(key, group, propertyName));
+                }
+            }, null);
         }
 
         public virtual void OnChanged(string key)

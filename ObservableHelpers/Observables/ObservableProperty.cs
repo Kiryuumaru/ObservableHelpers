@@ -27,17 +27,13 @@ namespace ObservableHelpers.Observables
 
         public virtual void OnChanged(string propertyName = "")
         {
-            var propertyHandler = PropertyChanged;
-            if (propertyHandler != null)
+            context.Post(s =>
             {
-                context.Post(s =>
+                lock (this)
                 {
-                    lock (this)
-                    {
-                        propertyHandler(this, new PropertyChangedEventArgs(propertyName));
-                    }
-                }, null);
-            }
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+                }
+            }, null);
         }
 
         public virtual void OnError(Exception exception, bool defaultIgnoreAndContinue = true)

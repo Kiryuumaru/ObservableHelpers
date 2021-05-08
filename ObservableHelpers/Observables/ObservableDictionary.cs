@@ -55,21 +55,16 @@ namespace ObservableHelpers.Observables
 
         private void NotifyObserversOfChange()
         {
-            var collectionHandler = CollectionChanged;
-            var propertyHandler = PropertyChanged;
-            if (collectionHandler != null || propertyHandler != null)
+            context.Post(s =>
             {
-                context.Post(s =>
+                lock (this)
                 {
-                    lock (this)
-                    {
-                        collectionHandler(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
-                        propertyHandler(this, new PropertyChangedEventArgs(nameof(Count)));
-                        propertyHandler(this, new PropertyChangedEventArgs(nameof(Keys)));
-                        propertyHandler(this, new PropertyChangedEventArgs(nameof(Values)));
-                    }
-                }, null);
-            }
+                    CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Count)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Keys)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Values)));
+                }
+            }, null);
         }
 
         private bool TryAddWithNotification(KeyValuePair<TKey, TValue> item)
