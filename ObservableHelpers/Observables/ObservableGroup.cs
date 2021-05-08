@@ -10,55 +10,7 @@ namespace ObservableHelpers.Observables
 	{
 		#region Properties
 
-		public AttributeHolder Holder { get; } = new AttributeHolder();
-
-		private EventHandler<ContinueExceptionEventArgs> PropertyErrorHandler
-		{
-			get => Holder.GetAttribute<EventHandler<ContinueExceptionEventArgs>>(delegate { });
-			set => Holder.SetAttribute(value);
-		}
-
-		public event EventHandler<ContinueExceptionEventArgs> PropertyError
-		{
-			add
-			{
-				lock (this)
-				{
-					PropertyErrorHandler += value;
-				}
-			}
-			remove
-			{
-				lock (this)
-				{
-					PropertyErrorHandler -= value;
-				}
-			}
-		}
-
-		#endregion
-
-		#region Initializers
-
-		public ObservableGroup(IAttributed attributed)
-			: base()
-		{
-			Holder.Inherit(attributed);
-			if (attributed != null)
-			{
-				if (attributed is ObservableCollection<T> collection)
-				{
-					AddArrangeCore(collection);
-					collection.CollectionChanged += (s, e) => OnCollectionChanged(e);
-				}
-			}
-		}
-
-		public ObservableGroup()
-			: this(null)
-		{
-
-		}
+		public event EventHandler<ContinueExceptionEventArgs> PropertyError;
 
 		#endregion
 
@@ -67,7 +19,7 @@ namespace ObservableHelpers.Observables
 		public virtual void OnError(Exception exception, bool defaultIgnoreAndContinue = true)
 		{
 			var args = new ContinueExceptionEventArgs(exception, defaultIgnoreAndContinue);
-			PropertyErrorHandler?.Invoke(this, args);
+			PropertyError?.Invoke(this, args);
 			if (!args.IgnoreAndContinue)
 			{
 				throw args.Exception;
@@ -76,7 +28,7 @@ namespace ObservableHelpers.Observables
 
 		public virtual void OnError(ContinueExceptionEventArgs args)
 		{
-			PropertyErrorHandler?.Invoke(this, args);
+			PropertyError?.Invoke(this, args);
 			if (!args.IgnoreAndContinue)
 			{
 				throw args.Exception;
@@ -104,7 +56,7 @@ namespace ObservableHelpers.Observables
 				return;
 			}
 
-			var changedItems = collection is List<T> ? (List<T>)collection : new List<T>(collection);
+			var changedItems = collection is List<T> list ? list : new List<T>(collection);
 
 			RaiseChangeNotificationEvents(
 				action: NotifyCollectionChangedAction.Add,

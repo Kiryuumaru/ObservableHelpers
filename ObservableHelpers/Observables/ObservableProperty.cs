@@ -12,79 +12,14 @@ using System.Threading.Tasks;
 
 namespace ObservableHelpers.Observables
 {
-    public abstract class ObservableProperty : IAttributed, IObservable
+    public abstract class ObservableProperty : IObservable
     {
         #region Properties
 
-        public AttributeHolder Holder { get; } = new AttributeHolder();
+        private readonly SynchronizationContext context = AsyncOperationManager.SynchronizationContext;
 
-        private SynchronizationContext Context
-        {
-            get => Holder.GetAttribute<SynchronizationContext>(AsyncOperationManager.SynchronizationContext);
-            set => Holder.SetAttribute(value);
-        }
-
-        private PropertyChangedEventHandler PropertyChangedHandler
-        {
-            get => Holder.GetAttribute<PropertyChangedEventHandler>(delegate { });
-            set => Holder.SetAttribute(value);
-        }
-
-        private EventHandler<ContinueExceptionEventArgs> PropertyErrorHandler
-        {
-            get => Holder.GetAttribute<EventHandler<ContinueExceptionEventArgs>>(delegate { });
-            set => Holder.SetAttribute(value);
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged
-        {
-            add
-            {
-                lock (this)
-                {
-                    PropertyChangedHandler += value;
-                }
-            }
-            remove
-            {
-                lock (this)
-                {
-                    PropertyChangedHandler -= value;
-                }
-            }
-        }
-
-        public event EventHandler<ContinueExceptionEventArgs> PropertyError
-        {
-            add
-            {
-                lock (this)
-                {
-                    PropertyErrorHandler += value;
-                }
-            }
-            remove
-            {
-                lock (this)
-                {
-                    PropertyErrorHandler -= value;
-                }
-            }
-        }
-
-        #endregion
-
-        #region Initializers
-
-        public ObservableProperty(IAttributed attributed)
-        {
-            Holder.Inherit(attributed);
-        }
-
-        public ObservableProperty()
-        {
-            Holder.Inherit(null);
-        }
+        public event PropertyChangedEventHandler PropertyChanged;
+        public event EventHandler<ContinueExceptionEventArgs> PropertyError;
 
         #endregion
 
@@ -92,10 +27,10 @@ namespace ObservableHelpers.Observables
 
         public virtual void OnChanged(string propertyName = "")
         {
-            var propertyHandler = PropertyChangedHandler;
+            var propertyHandler = PropertyChanged;
             if (propertyHandler != null)
             {
-                Context.Post(s =>
+                context.Post(s =>
                 {
                     lock (this)
                     {
@@ -108,7 +43,7 @@ namespace ObservableHelpers.Observables
         public virtual void OnError(Exception exception, bool defaultIgnoreAndContinue = true)
         {
             var args = new ContinueExceptionEventArgs(exception, defaultIgnoreAndContinue);
-            PropertyErrorHandler?.Invoke(this, args);
+            PropertyError?.Invoke(this, args);
             if (!args.IgnoreAndContinue)
             {
                 throw args.Exception;
@@ -117,7 +52,7 @@ namespace ObservableHelpers.Observables
 
         public virtual void OnError(ContinueExceptionEventArgs args)
         {
-            PropertyErrorHandler?.Invoke(this, args);
+            PropertyError?.Invoke(this, args);
             if (!args.IgnoreAndContinue)
             {
                 throw args.Exception;
