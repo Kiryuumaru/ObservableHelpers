@@ -2,6 +2,13 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Company>Kiryuumaru</Company>
+    <Authors>Kiryuumaru</Authors>
+    <Description>Observable helpers with serializable and non serializable model wired with notifications</Description>
+    <RepositoryUrl>https://github.com/Kiryuumaru/ObservableHelpers</RepositoryUrl>
+    <PackageTags>MVVM helpers, Serializable observables, Observable helpers</PackageTags>
+    <PackageProjectUrl>https://github.com/Kiryuumaru/ObservableHelpers</PackageProjectUrl>
   </PropertyGroup>
 
 </Project>
