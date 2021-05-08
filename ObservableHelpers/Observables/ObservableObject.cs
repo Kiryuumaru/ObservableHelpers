@@ -36,15 +36,6 @@ namespace ObservableHelpers.Observables
 
         #endregion
 
-        #region Initializers
-
-        public ObservableObject()
-        {
-            InitializeProperties();
-        }
-
-        #endregion
-
         #region Methods
 
         protected void InitializeProperties()
