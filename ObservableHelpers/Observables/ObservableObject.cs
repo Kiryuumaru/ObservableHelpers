@@ -17,8 +17,8 @@ namespace ObservableHelpers.Observables
     {
         public ObservableProperty Property { get; set; }
         public string Key { get; set; }
-        public string Group { get; set; }
         public string PropertyName { get; set; }
+        public string Group { get; set; }
     }
 
     #endregion
@@ -38,45 +38,26 @@ namespace ObservableHelpers.Observables
 
         #region Methods
 
-        protected void InitializeProperties()
-        {
-            foreach (var property in GetType().GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static))
-            {
-                property.GetValue(this);
-            }
-        }
-
-        protected virtual PropertyHolder PropertyFactory(string key, string group, string propertyName, bool serializable)
-        {
-            ObservableProperty prop;
-            if (serializable) prop = new ObservableSerializableProperty();
-            else  prop = new ObservableNonSerializableProperty();
-            return new PropertyHolder()
-            {
-                Property = prop,
-                Key = key,
-                Group = group,
-                PropertyName = propertyName
-            };
-        }
-
-        protected virtual bool SetProperty<T>(
+        private bool SetPropertyInternal<T>(
             T value,
-            string key,
-            bool serializable = false,
+            string key = null,
+            string propertyName = null,
             string group = null,
-            [CallerMemberName] string propertyName = null,
+            bool serializable = false,
             Func<T, T, bool> validateValue = null,
             Func<(T value, ObservableProperty property), bool> customValueSetter = null)
         {
+            if (key == null && propertyName == null) throw new Exception("key and propertyName should not be both null");
+
             PropertyHolder propHolder = null;
             bool hasChanges = false;
 
             try
             {
-                lock(PropertyHolders)
+                lock (PropertyHolders)
                 {
-                    propHolder = PropertyHolders.FirstOrDefault(i => i.Key.Equals(key));
+                    if (key == null) propHolder = PropertyHolders.FirstOrDefault(i => i.PropertyName == propertyName);
+                    else propHolder = PropertyHolders.FirstOrDefault(i => i.Key == key);
                 }
 
                 if (propHolder != null)
@@ -109,10 +90,10 @@ namespace ObservableHelpers.Observables
                 }
                 else
                 {
-                    propHolder = PropertyFactory(key, group, propertyName, serializable);
+                    propHolder = PropertyFactory(key, propertyName, group, serializable);
                     if (customValueSetter == null) propHolder.Property.SetValue(value);
                     else customValueSetter.Invoke((value, propHolder.Property));
-                    lock(PropertyHolders)
+                    lock (PropertyHolders)
                     {
                         PropertyHolders.Add(propHolder);
                     }
@@ -125,32 +106,35 @@ namespace ObservableHelpers.Observables
                 return hasChanges;
             }
 
-            if (hasChanges) OnChanged(propHolder.Key, propHolder.Group, propHolder.PropertyName);
+            if (hasChanges) OnChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
             return hasChanges;
         }
 
-        protected virtual T GetProperty<T>(
-            string key,
-            bool serializable = false,
-            string group = null,
+        private T GetPropertyInternal<T>(
             T defaultValue = default,
+            string key = null,
             [CallerMemberName] string propertyName = null,
+            string group = null,
+            bool serializable = false,
             Func<(T value, ObservableProperty property), bool> customValueSetter = null)
         {
+            if (key == null && propertyName == null) throw new Exception("key and propertyName should not be both null");
+
             bool hasChanges = false;
 
             PropertyHolder propHolder = null;
-            lock(PropertyHolders)
+            lock (PropertyHolders)
             {
-                propHolder = PropertyHolders.FirstOrDefault(i => i.Key.Equals(key));
+                if (key == null) propHolder = PropertyHolders.FirstOrDefault(i => i.PropertyName == propertyName);
+                else propHolder = PropertyHolders.FirstOrDefault(i => i.Key == key);
             }
 
             if (propHolder == null)
             {
-                propHolder = PropertyFactory(key, group, propertyName, serializable);
+                propHolder = PropertyFactory(key, propertyName, group, serializable);
                 if (customValueSetter == null) propHolder.Property.SetValue(defaultValue);
                 else customValueSetter.Invoke((defaultValue, propHolder.Property));
-                lock(PropertyHolders)
+                lock (PropertyHolders)
                 {
                     PropertyHolders.Add(propHolder);
                 }
@@ -171,20 +155,99 @@ namespace ObservableHelpers.Observables
                 }
             }
 
-            if (hasChanges) OnChanged(propHolder.Key, propHolder.Group, propHolder.PropertyName);
+            if (hasChanges) OnChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
             return propHolder.Property.GetValue<T>();
         }
 
-        protected virtual bool DeleteProperty(string key)
+        protected void InitializeProperties()
+        {
+            foreach (var property in GetType().GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static))
+            {
+                property.GetValue(this);
+            }
+        }
+
+        protected virtual PropertyHolder PropertyFactory(string key, string propertyName, string group, bool serializable)
+        {
+            ObservableProperty prop;
+            if (serializable) prop = new ObservableSerializableProperty();
+            else  prop = new ObservableNonSerializableProperty();
+            return new PropertyHolder()
+            {
+                Property = prop,
+                Key = key,
+                PropertyName = propertyName,
+                Group = group
+            };
+        }
+
+        protected bool SetProperty<T>(
+            T value,
+            [CallerMemberName] string propertyName = null,
+            string group = null,
+            bool serializable = false,
+            Func<T, T, bool> validateValue = null,
+            Func<(T value, ObservableProperty property), bool> customValueSetter = null)
+        {
+            return SetPropertyInternal(value, null, propertyName, group, serializable, validateValue, customValueSetter);
+        }
+
+        protected bool SetPropertyWithKey<T>(
+            T value,
+            string key,
+            [CallerMemberName] string propertyName = null,
+            string group = null,
+            bool serializable = false,
+            Func<T, T, bool> validateValue = null,
+            Func<(T value, ObservableProperty property), bool> customValueSetter = null)
+        {
+            return SetPropertyInternal(value, key, propertyName, group, serializable, validateValue, customValueSetter);
+        }
+
+        protected T GetProperty<T>(
+            T defaultValue = default,
+            [CallerMemberName] string propertyName = null,
+            string group = null,
+            bool serializable = false,
+            Func<(T value, ObservableProperty property), bool> customValueSetter = null)
+        {
+            return GetPropertyInternal<T>(defaultValue, null, propertyName, group, serializable, customValueSetter);
+        }
+
+        protected T GetPropertyWithKey<T>(
+            string key,
+            T defaultValue = default,
+            [CallerMemberName] string propertyName = null,
+            string group = null,
+            bool serializable = false,
+            Func<(T value, ObservableProperty property), bool> customValueSetter = null)
+        {
+            return GetPropertyInternal(defaultValue, key, propertyName, group, serializable, customValueSetter);
+        }
+
+        protected virtual bool DeleteProperty(string propertyName)
         {
             PropertyHolder propHolder = null;
-            lock(PropertyHolders)
+            lock (PropertyHolders)
             {
-                propHolder = PropertyHolders.FirstOrDefault(i => i.Key.Equals(key));
+                propHolder = PropertyHolders.FirstOrDefault(i => i.PropertyName == propertyName);
             }
             if (propHolder == null) return false;
             bool hasChanges = propHolder.Property.SetNull();
-            if (hasChanges) OnChanged(propHolder.Key, propHolder.Group, propHolder.PropertyName);
+            if (hasChanges) OnChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
+            return hasChanges;
+        }
+
+        protected virtual bool DeletePropertyWithKey(string key)
+        {
+            PropertyHolder propHolder = null;
+            lock (PropertyHolders)
+            {
+                propHolder = PropertyHolders.FirstOrDefault(i => i.Key == key);
+            }
+            if (propHolder == null) return false;
+            bool hasChanges = propHolder.Property.SetNull();
+            if (hasChanges) OnChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
             return hasChanges;
         }
 
@@ -196,28 +259,35 @@ namespace ObservableHelpers.Observables
             }
         }
 
-        public virtual void OnChanged(
-            string key,
-            string group,
-            string propertyName)
+        public virtual void OnChanged(string key, string propertyName, string group)
         {
             context.Post(s =>
             {
                 lock(this)
                 {
-                    PropertyChanged?.Invoke(this, new ObservableObjectChangesEventArgs(key, group, propertyName));
+                    PropertyChanged?.Invoke(this, new ObservableObjectChangesEventArgs(key, propertyName, group));
                 }
             }, null);
         }
 
-        public virtual void OnChanged(string key)
+        public virtual void OnChanged(string propertyName)
+        {
+            PropertyHolder propHolder = null;
+            lock (PropertyHolders)
+            {
+                propHolder = PropertyHolders.FirstOrDefault(i => i.PropertyName == propertyName);
+            }
+            if (propHolder != null) OnChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
+        }
+
+        public virtual void OnChangedWithKey(string key)
         {
             PropertyHolder propHolder = null;
             lock (PropertyHolders)
             {
                 propHolder = PropertyHolders.FirstOrDefault(i => i.Key == key);
             }
-            if (propHolder != null) OnChanged(key, propHolder.Group, propHolder.PropertyName);
+            if (propHolder != null) OnChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
         }
 
         public virtual void OnError(Exception exception, bool defaultIgnoreAndContinue = true)
