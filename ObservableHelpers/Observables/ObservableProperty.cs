@@ -21,6 +21,8 @@ namespace ObservableHelpers.Observables
         public event PropertyChangedEventHandler PropertyChanged;
         public event EventHandler<ContinueExceptionEventArgs> PropertyError;
 
+        public abstract object Property { get; set; }
+
         #endregion
 
         #region Methods

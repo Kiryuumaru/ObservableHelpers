@@ -17,7 +17,7 @@ namespace ObservableHelpers.Observables
 
         private object objectHolder;
 
-        public object Object
+        public override object Property
         {
             get => GetObject();
             set => SetObject(value);
@@ -37,7 +37,7 @@ namespace ObservableHelpers.Observables
             }
             if (hasChanges)
             {
-                OnChanged(nameof(Object));
+                OnChanged(nameof(Property));
                 return true;
             }
             return hasChanges;

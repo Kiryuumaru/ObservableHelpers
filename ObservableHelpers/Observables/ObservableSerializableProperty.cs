@@ -17,10 +17,10 @@ namespace ObservableHelpers.Observables
 
         private string blobHolder;
 
-        public string Blob
+        public override object Property
         {
             get => GetBlob();
-            set => SetBlob(value);
+            set => SetBlob((string)value);
         }
 
         #endregion
@@ -37,7 +37,7 @@ namespace ObservableHelpers.Observables
             }
             if (hasChanges)
             {
-                OnChanged(nameof(Blob));
+                OnChanged(nameof(Property));
                 return true;
             }
             return hasChanges;
@@ -83,22 +83,6 @@ namespace ObservableHelpers.Observables
             return false;
         }
 
-        public override bool IsNull(string tag = null)
-        {
-            try
-            {
-                lock (this)
-                {
-                    return GetBlob(null, tag) == null;
-                }
-            }
-            catch (Exception ex)
-            {
-                OnError(ex);
-            }
-            return true;
-        }
-
         public override T GetValue<T>(T defaultValue = default, string tag = null)
         {
             try
@@ -113,6 +97,22 @@ namespace ObservableHelpers.Observables
                 OnError(ex);
             }
             return defaultValue;
+        }
+
+        public override bool IsNull(string tag = null)
+        {
+            try
+            {
+                lock (this)
+                {
+                    return GetBlob(null, tag) == null;
+                }
+            }
+            catch (Exception ex)
+            {
+                OnError(ex);
+            }
+            return true;
         }
 
         #endregion
