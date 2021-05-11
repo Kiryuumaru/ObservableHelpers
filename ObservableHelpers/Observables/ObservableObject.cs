@@ -28,6 +28,7 @@ namespace ObservableHelpers.Observables
         #region Properties
 
         private readonly SynchronizationContext context = AsyncOperationManager.SynchronizationContext;
+        private bool disableOnChanges;
 
         protected List<PropertyHolder> PropertyHolders { get; set; } = new List<PropertyHolder>();
 
@@ -159,12 +160,18 @@ namespace ObservableHelpers.Observables
             return propHolder.Property.GetValue<T>();
         }
 
-        protected void InitializeProperties()
+        protected void InitializeProperties(bool invokeOnChanges = true)
         {
-            foreach (var property in GetType().GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static))
+            if (!invokeOnChanges) disableOnChanges = true;
+            try
             {
-                property.GetValue(this);
+                foreach (var property in GetType().GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static))
+                {
+                    property.GetValue(this);
+                }
             }
+            catch { }
+            if (!invokeOnChanges) disableOnChanges = false;
         }
 
         protected virtual PropertyHolder PropertyFactory(string key, string propertyName, string group, bool serializable)
@@ -261,6 +268,7 @@ namespace ObservableHelpers.Observables
 
         public virtual void OnChanged(string key, string propertyName, string group)
         {
+            if (disableOnChanges) return;
             context.Post(s =>
             {
                 lock(this)
