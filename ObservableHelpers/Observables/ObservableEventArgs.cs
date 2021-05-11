@@ -11,8 +11,8 @@ namespace ObservableHelpers.Observables
         public string Group { get; }
         public ObservableObjectChangesEventArgs(
             string key,
-            string group,
-            string propertyName)
+            string propertyName,
+            string group)
             : base(propertyName)
         {
             Key = key;
