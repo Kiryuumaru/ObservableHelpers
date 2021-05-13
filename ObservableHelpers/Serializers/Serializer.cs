@@ -1,6 +1,5 @@
 ﻿using ObservableHelpers.Serializers.Additionals;
 using ObservableHelpers.Serializers.Primitives;
-using ObservableHelpers.Models;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -11,8 +10,8 @@ namespace ObservableHelpers.Serializers
 {
     public class SerializerHolder
     {
-        private Func<object, string> serialize;
-        private Func<string, object, object> deserialize;
+        private readonly Func<object, string> serialize;
+        private readonly Func<string, object, object> deserialize;
 
         public SerializerHolder(Func<object, string> serialize, Func<string, object, object> deserialize)
         {
@@ -40,33 +39,25 @@ namespace ObservableHelpers.Serializers
 
     public abstract class Serializer
     {
-        private static readonly List<Serializer> serializers = new List<Serializer>();
-        private static bool isInitialized = false;
-
-        static Serializer()
+        private static readonly List<Serializer> serializers = new List<Serializer>()
         {
-            if (!isInitialized)
-            {
-                isInitialized = true;
-                serializers.Add(new BoolSerializer());
-                serializers.Add(new ByteSerializer());
-                serializers.Add(new SByteSerializer());
-                serializers.Add(new CharSerializer());
-                serializers.Add(new DecimalSerializer());
-                serializers.Add(new DoubleSerializer());
-                serializers.Add(new FloatSerializer());
-                serializers.Add(new IntSerializer());
-                serializers.Add(new UIntSerializer());
-                serializers.Add(new LongSerializer());
-                serializers.Add(new ULongSerializer());
-                serializers.Add(new ShortSerializer());
-                serializers.Add(new UShortSerializer());
-                serializers.Add(new StringSerializer());
-                serializers.Add(new DateTimeSerializer());
-                serializers.Add(new SmallDateTimeSerializer());
-                serializers.Add(new TimeSpanSerializer());
-            }
-        }
+            new BoolSerializer(),
+            new ByteSerializer(),
+            new SByteSerializer(),
+            new CharSerializer(),
+            new DecimalSerializer(),
+            new DoubleSerializer(),
+            new FloatSerializer(),
+            new IntSerializer(),
+            new UIntSerializer(),
+            new LongSerializer(),
+            new ULongSerializer(),
+            new ShortSerializer(),
+            new UShortSerializer(),
+            new StringSerializer(),
+            new DateTimeSerializer(),
+            new TimeSpanSerializer()
+        };
 
         public static SerializerHolder GetSerializer(Type type)
         {
@@ -102,7 +93,6 @@ namespace ObservableHelpers.Serializers
                 {
                     if (conv.Type == type)
                     {
-                        var derivedConv = (Serializer)conv;
                         return new SerializerHolder(
                             conv.SerializeObject,
                             conv.DeserializeObject);

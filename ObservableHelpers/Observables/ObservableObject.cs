@@ -48,7 +48,10 @@ namespace ObservableHelpers.Observables
             Func<T, T, bool> validateValue = null,
             Func<(T value, ObservableProperty property), bool> customValueSetter = null)
         {
-            if (key == null && propertyName == null) throw new Exception("key and propertyName should not be both null");
+            if (key == null && propertyName == null)
+            {
+                OnError(new Exception("key and propertyName should not be both null"));
+            }
 
             PropertyHolder propHolder = null;
             bool hasChanges = false;
@@ -129,7 +132,10 @@ namespace ObservableHelpers.Observables
             bool serializable = false,
             Func<(T value, ObservableProperty property), bool> customValueSetter = null)
         {
-            if (key == null && propertyName == null) throw new Exception("key and propertyName should not be both null");
+            if (key == null && propertyName == null)
+            {
+                OnError(new Exception("key and propertyName should not be both null"));
+            }
 
             bool hasChanges = false;
 
@@ -164,6 +170,7 @@ namespace ObservableHelpers.Observables
                     propHolder.PropertyName = propertyName;
                     hasChanges = true;
                 }
+
                 if (hasChanges) OnChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
             }
 
