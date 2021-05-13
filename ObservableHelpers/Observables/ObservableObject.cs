@@ -77,27 +77,38 @@ namespace ObservableHelpers.Observables
                         hasChanges = true;
                     }
 
+                    var hasSetChanges = false;
+
                     if (validateValue?.Invoke(existingValue, value) ?? true)
                     {
                         if (customValueSetter == null)
                         {
-                            if (propHolder.Property.SetValue(value)) hasChanges = true;
+                            if (propHolder.Property.SetValue(value))
+                            {
+                                hasSetChanges = true;
+                                hasChanges = true;
+                            }
                         }
                         else
                         {
-                            if (customValueSetter.Invoke((value, propHolder.Property))) hasChanges = true;
+                            if (customValueSetter.Invoke((value, propHolder.Property)))
+                            {
+                                hasSetChanges = true;
+                                hasChanges = true;
+                            }
                         }
                     }
+                    if (!hasSetChanges && hasChanges) OnChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
                 }
                 else
                 {
                     propHolder = PropertyFactory(key, propertyName, group, serializable);
-                    if (customValueSetter == null) propHolder.Property.SetValue(value);
-                    else customValueSetter.Invoke((value, propHolder.Property));
                     lock (PropertyHolders)
                     {
                         PropertyHolders.Add(propHolder);
                     }
+                    if (customValueSetter == null) propHolder.Property.SetValue(value);
+                    else customValueSetter.Invoke((value, propHolder.Property));
                     hasChanges = true;
                 }
             }
@@ -107,7 +118,6 @@ namespace ObservableHelpers.Observables
                 return hasChanges;
             }
 
-            if (hasChanges) OnChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
             return hasChanges;
         }
 
@@ -133,12 +143,12 @@ namespace ObservableHelpers.Observables
             if (propHolder == null)
             {
                 propHolder = PropertyFactory(key, propertyName, group, serializable);
-                if (customValueSetter == null) propHolder.Property.SetValue(defaultValue);
-                else customValueSetter.Invoke((defaultValue, propHolder.Property));
                 lock (PropertyHolders)
                 {
                     PropertyHolders.Add(propHolder);
                 }
+                if (customValueSetter == null) propHolder.Property.SetValue(defaultValue);
+                else customValueSetter.Invoke((defaultValue, propHolder.Property));
                 hasChanges = true;
             }
             else
@@ -154,9 +164,9 @@ namespace ObservableHelpers.Observables
                     propHolder.PropertyName = propertyName;
                     hasChanges = true;
                 }
+                if (hasChanges) OnChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
             }
 
-            if (hasChanges) OnChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
             return propHolder.Property.GetValue<T>();
         }
 
@@ -179,13 +189,21 @@ namespace ObservableHelpers.Observables
             ObservableProperty prop;
             if (serializable) prop = new ObservableSerializableProperty();
             else  prop = new ObservableNonSerializableProperty();
-            return new PropertyHolder()
+            var propHolder = new PropertyHolder()
             {
                 Property = prop,
                 Key = key,
                 PropertyName = propertyName,
                 Group = group
             };
+            prop.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == nameof(prop.Property))
+                {
+                    OnChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
+                }
+            };
+            return propHolder;
         }
 
         protected bool SetProperty<T>(
@@ -240,9 +258,7 @@ namespace ObservableHelpers.Observables
                 propHolder = PropertyHolders.FirstOrDefault(i => i.PropertyName == propertyName);
             }
             if (propHolder == null) return false;
-            bool hasChanges = propHolder.Property.SetNull();
-            if (hasChanges) OnChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
-            return hasChanges;
+            return propHolder.Property.SetNull();
         }
 
         protected virtual bool DeletePropertyWithKey(string key)
@@ -253,9 +269,7 @@ namespace ObservableHelpers.Observables
                 propHolder = PropertyHolders.FirstOrDefault(i => i.Key == key);
             }
             if (propHolder == null) return false;
-            bool hasChanges = propHolder.Property.SetNull();
-            if (hasChanges) OnChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
-            return hasChanges;
+            return propHolder.Property.SetNull();
         }
 
         protected IEnumerable<PropertyHolder> GetRawProperties(string group = null)
