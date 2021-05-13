@@ -338,6 +338,24 @@ namespace ObservableHelpers.Observables
             }
         }
 
+        public bool SetNull(string tag = null)
+        {
+            var hasChanges = false;
+            lock (PropertyHolders)
+            {
+                foreach (var propHolder in PropertyHolders)
+                {
+                    if (propHolder.Property.SetNull(tag)) hasChanges = true;
+                }
+            }
+            return hasChanges;
+        }
+
+        public bool IsNull(string tag = null)
+        {
+            return PropertyHolders.All(i => i.Property.IsNull(tag));
+        }
+
         #endregion
     }
 }
