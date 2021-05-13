@@ -5,7 +5,7 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Company>Kiryuumaru</Company>
     <Authors>Kiryuumaru</Authors>
-    <Description>Changed ObservableProperty abstract to hold Property object</Description>
+    <Description>Observable helpers with serializable and non serializable model wired with notifications</Description>
     <RepositoryUrl>https://github.com/Kiryuumaru/ObservableHelpers</RepositoryUrl>
     <PackageTags>MVVM helpers, Serializable observables, Observable helpers</PackageTags>
     <PackageProjectUrl>https://github.com/Kiryuumaru/ObservableHelpers</PackageProjectUrl>
@@ -13,8 +13,8 @@
 
   <PropertyGroup>
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
-    <Version>1.0.7</Version>
-    <PackageReleaseNotes>* Added optional onChanges invokes on ObservableObject InitializeProperties</PackageReleaseNotes>
+    <Version>1.0.8</Version>
+    <PackageReleaseNotes>* Improved ObservableObject events</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
