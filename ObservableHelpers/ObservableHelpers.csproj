@@ -13,8 +13,8 @@
 
   <PropertyGroup>
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
-    <Version>1.0.8</Version>
-    <PackageReleaseNotes>* Improved ObservableObject events</PackageReleaseNotes>
+    <Version>1.0.9</Version>
+    <PackageReleaseNotes>* Removed SmallDateTime</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
