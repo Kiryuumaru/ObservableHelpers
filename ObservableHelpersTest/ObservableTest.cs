@@ -78,12 +78,12 @@ namespace ObservableHelpersTest
                 }
             };
             obj.Prop1 = "test";
-            obj.Prop2 = "test";
             obj.Prop1 = "test";
+            obj.Prop1 = "test1";
+            obj.Prop1 = "test1";
             obj.Prop2 = "test";
-            obj.Prop1 = "test1";
+            obj.Prop2 = "test";
             obj.Prop2 = "test1";
-            obj.Prop1 = "test1";
             obj.Prop2 = "test1";
             await Task.Delay(500);
             Assert.True(raiseProp1Count == 2 && raiseProp2Count == 2);
