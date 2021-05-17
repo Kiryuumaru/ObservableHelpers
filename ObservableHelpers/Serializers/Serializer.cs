@@ -159,7 +159,6 @@ namespace ObservableHelpers.Serializers
 
         public static void Register(Serializer serializer)
         {
-            if (serializers.Any(i => i.Type == serializer.Type)) throw new Exception("Serializer already registered");
             serializers.RemoveAll(i => i.Type == serializer.Type);
             serializers.Add(serializer);
         }
