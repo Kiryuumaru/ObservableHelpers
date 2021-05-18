@@ -83,7 +83,7 @@ namespace ObservableHelpers
             }
         }
 
-        public bool SetValue<T>(T value, string tag = null)
+        public virtual bool SetValue<T>(T value, string tag = null)
         {
             try
             {
@@ -96,7 +96,7 @@ namespace ObservableHelpers
             return false;
         }
 
-        public T GetValue<T>(T defaultValue = default, string tag = null)
+        public virtual T GetValue<T>(T defaultValue = default, string tag = null)
         {
             try
             {
