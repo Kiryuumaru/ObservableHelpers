@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text;
 
-namespace ObservableHelpers.Observables
+namespace ObservableHelpers
 {
     public interface IObservable : INotifyPropertyChanged
     {

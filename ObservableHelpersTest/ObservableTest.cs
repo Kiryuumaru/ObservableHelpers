@@ -1,4 +1,4 @@
-using ObservableHelpers.Observables;
+using ObservableHelpers;
 using System;
 using System.Threading.Tasks;
 using Xunit;
@@ -23,29 +23,10 @@ namespace ObservableHelpersTest
     public class ObservableTest
     {
         [Fact]
-        public async void ObservableSerializablePropertyTest()
+        public async void ObservablePropertyTest()
         {
             var raiseCount = 0;
-            var prop = new ObservableSerializableProperty();
-            prop.PropertyChanged += (s, e) =>
-            {
-                if (e.PropertyName == nameof(prop.Property))
-                {
-                    raiseCount++;
-                }
-            };
-            prop.SetValue("test");
-            prop.SetValue("test");
-            prop.SetValue("test1");
-            await Task.Delay(500);
-            Assert.Equal(2, raiseCount);
-        }
-
-        [Fact]
-        public async void ObservableNonSerializablePropertyTest()
-        {
-            var raiseCount = 0;
-            var prop = new ObservableNonSerializableProperty();
+            var prop = new ObservableProperty();
             prop.PropertyChanged += (s, e) =>
             {
                 if (e.PropertyName == nameof(prop.Property))

@@ -1,7 +1,4 @@
-﻿using ObservableHelpers.Serializers;
-using ObservableHelpers.Serializers.Additionals;
-using ObservableHelpers.Serializers.Primitives;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -9,15 +6,20 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 
-namespace ObservableHelpers.Observables
+namespace ObservableHelpers
 {
-    public class ObservableNonSerializableProperty : ObservableProperty, IObservable
+    public class ObservableProperty : IObservable
     {
         #region Properties
 
+        private readonly SynchronizationContext context = AsyncOperationManager.SynchronizationContext;
+
         private object objectHolder;
 
-        public override object Property
+        public event PropertyChangedEventHandler PropertyChanged;
+        public event EventHandler<ContinueExceptionEventArgs> PropertyError;
+
+        public object Property
         {
             get => GetObject();
             set => SetObject(value);
@@ -26,6 +28,36 @@ namespace ObservableHelpers.Observables
         #endregion
 
         #region Methods
+
+        public virtual void OnChanged(string propertyName = "")
+        {
+            context.Post(s =>
+            {
+                lock (this)
+                {
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+                }
+            }, null);
+        }
+
+        public virtual void OnError(Exception exception, bool defaultIgnoreAndContinue = true)
+        {
+            var args = new ContinueExceptionEventArgs(exception, defaultIgnoreAndContinue);
+            PropertyError?.Invoke(this, args);
+            if (!args.IgnoreAndContinue)
+            {
+                throw args.Exception;
+            }
+        }
+
+        public virtual void OnError(ContinueExceptionEventArgs args)
+        {
+            PropertyError?.Invoke(this, args);
+            if (!args.IgnoreAndContinue)
+            {
+                throw args.Exception;
+            }
+        }
 
         public virtual bool SetObject(object obj, string tag = null)
         {
@@ -51,7 +83,7 @@ namespace ObservableHelpers.Observables
             }
         }
 
-        public override bool SetValue<T>(T value, string tag = null)
+        public bool SetValue<T>(T value, string tag = null)
         {
             try
             {
@@ -67,39 +99,7 @@ namespace ObservableHelpers.Observables
             return false;
         }
 
-        public override bool SetNull(string tag = null)
-        {
-            try
-            {
-                lock (this)
-                {
-                    return SetObject(null, tag);
-                }
-            }
-            catch (Exception ex)
-            {
-                OnError(ex);
-            }
-            return false;
-        }
-
-        public override bool IsNull(string tag = null)
-        {
-            try
-            {
-                lock (this)
-                {
-                    return GetObject(null, tag) == null;
-                }
-            }
-            catch (Exception ex)
-            {
-                OnError(ex);
-            }
-            return true;
-        }
-
-        public override T GetValue<T>(T defaultValue = default, string tag = null)
+        public T GetValue<T>(T defaultValue = default, string tag = null)
         {
             try
             {
@@ -115,10 +115,42 @@ namespace ObservableHelpers.Observables
             return defaultValue;
         }
 
+        public bool SetNull(string tag = null)
+        {
+            try
+            {
+                lock (this)
+                {
+                    return SetObject(null, tag);
+                }
+            }
+            catch (Exception ex)
+            {
+                OnError(ex);
+            }
+            return false;
+        }
+
+        public bool IsNull(string tag = null)
+        {
+            try
+            {
+                lock (this)
+                {
+                    return GetObject(null, tag) == null;
+                }
+            }
+            catch (Exception ex)
+            {
+                OnError(ex);
+            }
+            return true;
+        }
+
         #endregion
     }
 
-    public class ObservableNonSerializableProperty<T> : ObservableNonSerializableProperty
+    public class ObservableProperty<T> : ObservableProperty
     {
         #region Properties
 

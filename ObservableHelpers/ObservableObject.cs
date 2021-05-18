@@ -1,5 +1,4 @@
-﻿using ObservableHelpers.Serializers;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -9,7 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ObservableHelpers.Observables
+namespace ObservableHelpers
 {
     #region Helpers
 
@@ -44,7 +43,6 @@ namespace ObservableHelpers.Observables
             string key = null,
             string propertyName = null,
             string group = null,
-            bool serializable = false,
             Func<T, T, bool> validateValue = null,
             Func<(T value, ObservableProperty property), bool> customValueSetter = null)
         {
@@ -105,7 +103,7 @@ namespace ObservableHelpers.Observables
                 }
                 else
                 {
-                    propHolder = PropertyFactory(key, propertyName, group, serializable);
+                    propHolder = PropertyFactory(key, propertyName, group);
                     lock (PropertyHolders)
                     {
                         PropertyHolders.Add(propHolder);
@@ -129,7 +127,6 @@ namespace ObservableHelpers.Observables
             string key = null,
             [CallerMemberName] string propertyName = null,
             string group = null,
-            bool serializable = false,
             Func<(T value, ObservableProperty property), bool> customValueSetter = null)
         {
             if (key == null && propertyName == null)
@@ -148,7 +145,7 @@ namespace ObservableHelpers.Observables
 
             if (propHolder == null)
             {
-                propHolder = PropertyFactory(key, propertyName, group, serializable);
+                propHolder = PropertyFactory(key, propertyName, group);
                 lock (PropertyHolders)
                 {
                     PropertyHolders.Add(propHolder);
@@ -191,11 +188,10 @@ namespace ObservableHelpers.Observables
             if (!invokeOnChanges) disableOnChanges = false;
         }
 
-        protected virtual PropertyHolder PropertyFactory(string key, string propertyName, string group, bool serializable)
+        protected virtual PropertyHolder PropertyFactory(string key, string propertyName, string group)
         {
             ObservableProperty prop;
-            if (serializable) prop = new ObservableSerializableProperty();
-            else  prop = new ObservableNonSerializableProperty();
+            prop = new ObservableProperty();
             var propHolder = new PropertyHolder()
             {
                 Property = prop,
@@ -217,11 +213,10 @@ namespace ObservableHelpers.Observables
             T value,
             [CallerMemberName] string propertyName = null,
             string group = null,
-            bool serializable = false,
             Func<T, T, bool> validateValue = null,
             Func<(T value, ObservableProperty property), bool> customValueSetter = null)
         {
-            return SetPropertyInternal(value, null, propertyName, group, serializable, validateValue, customValueSetter);
+            return SetPropertyInternal(value, null, propertyName, group, validateValue, customValueSetter);
         }
 
         protected bool SetPropertyWithKey<T>(
@@ -229,21 +224,19 @@ namespace ObservableHelpers.Observables
             string key,
             [CallerMemberName] string propertyName = null,
             string group = null,
-            bool serializable = false,
             Func<T, T, bool> validateValue = null,
             Func<(T value, ObservableProperty property), bool> customValueSetter = null)
         {
-            return SetPropertyInternal(value, key, propertyName, group, serializable, validateValue, customValueSetter);
+            return SetPropertyInternal(value, key, propertyName, group, validateValue, customValueSetter);
         }
 
         protected T GetProperty<T>(
             T defaultValue = default,
             [CallerMemberName] string propertyName = null,
             string group = null,
-            bool serializable = false,
             Func<(T value, ObservableProperty property), bool> customValueSetter = null)
         {
-            return GetPropertyInternal<T>(defaultValue, null, propertyName, group, serializable, customValueSetter);
+            return GetPropertyInternal<T>(defaultValue, null, propertyName, group, customValueSetter);
         }
 
         protected T GetPropertyWithKey<T>(
@@ -251,10 +244,9 @@ namespace ObservableHelpers.Observables
             T defaultValue = default,
             [CallerMemberName] string propertyName = null,
             string group = null,
-            bool serializable = false,
             Func<(T value, ObservableProperty property), bool> customValueSetter = null)
         {
-            return GetPropertyInternal(defaultValue, key, propertyName, group, serializable, customValueSetter);
+            return GetPropertyInternal(defaultValue, key, propertyName, group, customValueSetter);
         }
 
         protected virtual bool DeleteProperty(string propertyName)
