@@ -13,8 +13,8 @@
 
   <PropertyGroup>
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
-    <Version>1.0.12</Version>
-    <PackageReleaseNotes>* Breaking updates</PackageReleaseNotes>
+    <Version>1.0.13</Version>
+    <PackageReleaseNotes>* Fixed possible deadlock</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

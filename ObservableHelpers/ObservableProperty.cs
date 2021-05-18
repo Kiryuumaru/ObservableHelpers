@@ -87,10 +87,7 @@ namespace ObservableHelpers
         {
             try
             {
-                lock (this)
-                {
-                    return SetObject(value, tag);
-                }
+                return SetObject(value, tag);
             }
             catch (Exception ex)
             {
@@ -103,10 +100,7 @@ namespace ObservableHelpers
         {
             try
             {
-                lock (this)
-                {
-                    return (T)GetObject(defaultValue, tag);
-                }
+                return (T)GetObject(defaultValue, tag);
             }
             catch (Exception ex)
             {
@@ -119,10 +113,7 @@ namespace ObservableHelpers
         {
             try
             {
-                lock (this)
-                {
-                    return SetObject(null, tag);
-                }
+                return SetObject(null, tag);
             }
             catch (Exception ex)
             {
@@ -135,10 +126,7 @@ namespace ObservableHelpers
         {
             try
             {
-                lock (this)
-                {
-                    return GetObject(null, tag) == null;
-                }
+                return GetObject(null, tag) == null;
             }
             catch (Exception ex)
             {
