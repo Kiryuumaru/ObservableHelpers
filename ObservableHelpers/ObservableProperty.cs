@@ -29,37 +29,7 @@ namespace ObservableHelpers
 
         #region Methods
 
-        public virtual void OnChanged(string propertyName = "")
-        {
-            context.Post(s =>
-            {
-                lock (this)
-                {
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-                }
-            }, null);
-        }
-
-        public virtual void OnError(Exception exception, bool defaultIgnoreAndContinue = true)
-        {
-            var args = new ContinueExceptionEventArgs(exception, defaultIgnoreAndContinue);
-            PropertyError?.Invoke(this, args);
-            if (!args.IgnoreAndContinue)
-            {
-                throw args.Exception;
-            }
-        }
-
-        public virtual void OnError(ContinueExceptionEventArgs args)
-        {
-            PropertyError?.Invoke(this, args);
-            if (!args.IgnoreAndContinue)
-            {
-                throw args.Exception;
-            }
-        }
-
-        public virtual bool SetObject(object obj, string tag = null)
+        protected virtual bool SetObject(object obj, string tag = null)
         {
             var hasChanges = false;
             lock (this)
@@ -75,7 +45,7 @@ namespace ObservableHelpers
             return hasChanges;
         }
 
-        public virtual object GetObject(object defaultValue = null, string tag = null)
+        protected virtual object GetObject(object defaultValue = null, string tag = null)
         {
             lock (this)
             {
@@ -133,6 +103,36 @@ namespace ObservableHelpers
                 OnError(ex);
             }
             return true;
+        }
+
+        public virtual void OnChanged(string propertyName = "")
+        {
+            context.Post(s =>
+            {
+                lock (this)
+                {
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+                }
+            }, null);
+        }
+
+        public virtual void OnError(Exception exception, bool defaultIgnoreAndContinue = true)
+        {
+            var args = new ContinueExceptionEventArgs(exception, defaultIgnoreAndContinue);
+            PropertyError?.Invoke(this, args);
+            if (!args.IgnoreAndContinue)
+            {
+                throw args.Exception;
+            }
+        }
+
+        public virtual void OnError(ContinueExceptionEventArgs args)
+        {
+            PropertyError?.Invoke(this, args);
+            if (!args.IgnoreAndContinue)
+            {
+                throw args.Exception;
+            }
         }
 
         #endregion
