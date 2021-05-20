@@ -7,7 +7,6 @@ namespace ObservableHelpers
 {
     public interface IObservable : INotifyPropertyChanged
     {
-        void OnError(Exception exception, bool defaultIgnoreAndContinue = true);
-        void OnError(ContinueExceptionEventArgs args);
+        void OnError(Exception exception);
     }
 }

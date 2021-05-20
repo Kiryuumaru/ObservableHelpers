@@ -19,16 +19,4 @@ namespace ObservableHelpers
             Group = group;
         }
     }
-
-    public class ContinueExceptionEventArgs
-    {
-        public readonly Exception Exception;
-        public bool IgnoreAndContinue { get; set; }
-
-        public ContinueExceptionEventArgs(Exception exception, bool ignoreAndContinue)
-        {
-            Exception = exception;
-            IgnoreAndContinue = ignoreAndContinue;
-        }
-    }
 }

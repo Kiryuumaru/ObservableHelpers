@@ -17,7 +17,7 @@ namespace ObservableHelpers
         private object objectHolder;
 
         public event PropertyChangedEventHandler PropertyChanged;
-        public event EventHandler<ContinueExceptionEventArgs> PropertyError;
+        public event EventHandler<Exception> PropertyError;
 
         public object Property
         {
@@ -116,23 +116,9 @@ namespace ObservableHelpers
             }, null);
         }
 
-        public virtual void OnError(Exception exception, bool defaultIgnoreAndContinue = true)
+        public virtual void OnError(Exception exception)
         {
-            var args = new ContinueExceptionEventArgs(exception, defaultIgnoreAndContinue);
-            PropertyError?.Invoke(this, args);
-            if (!args.IgnoreAndContinue)
-            {
-                throw args.Exception;
-            }
-        }
-
-        public virtual void OnError(ContinueExceptionEventArgs args)
-        {
-            PropertyError?.Invoke(this, args);
-            if (!args.IgnoreAndContinue)
-            {
-                throw args.Exception;
-            }
+            PropertyError?.Invoke(this, exception);
         }
 
         #endregion

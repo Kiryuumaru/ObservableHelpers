@@ -21,7 +21,7 @@ namespace ObservableHelpers
 
         public event PropertyChangedEventHandler PropertyChanged;
         public event NotifyCollectionChangedEventHandler CollectionChanged;
-        public event EventHandler<ContinueExceptionEventArgs> PropertyError;
+        public event EventHandler<Exception> PropertyError;
 
         public ICollection<TKey> Keys
         {
@@ -97,23 +97,9 @@ namespace ObservableHelpers
             return (key, value);
         }
 
-        public virtual void OnError(Exception exception, bool defaultIgnoreAndContinue = true)
+        public virtual void OnError(Exception exception)
         {
-            var args = new ContinueExceptionEventArgs(exception, defaultIgnoreAndContinue);
-            PropertyError?.Invoke(this, args);
-            if (!args.IgnoreAndContinue)
-            {
-                throw args.Exception;
-            }
-        }
-
-        public virtual void OnError(ContinueExceptionEventArgs args)
-        {
-            PropertyError?.Invoke(this, args);
-            if (!args.IgnoreAndContinue)
-            {
-                throw args.Exception;
-            }
+            PropertyError?.Invoke(this, exception);
         }
 
         public void Add(TKey key, TValue value)

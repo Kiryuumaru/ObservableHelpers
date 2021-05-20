@@ -10,29 +10,15 @@ namespace ObservableHelpers
 	{
 		#region Properties
 
-		public event EventHandler<ContinueExceptionEventArgs> PropertyError;
+		public event EventHandler<Exception> PropertyError;
 
 		#endregion
 
 		#region Methods
 
-		public virtual void OnError(Exception exception, bool defaultIgnoreAndContinue = true)
+		public virtual void OnError(Exception exception)
 		{
-			var args = new ContinueExceptionEventArgs(exception, defaultIgnoreAndContinue);
-			PropertyError?.Invoke(this, args);
-			if (!args.IgnoreAndContinue)
-			{
-				throw args.Exception;
-			}
-		}
-
-		public virtual void OnError(ContinueExceptionEventArgs args)
-		{
-			PropertyError?.Invoke(this, args);
-			if (!args.IgnoreAndContinue)
-			{
-				throw args.Exception;
-			}
+			PropertyError?.Invoke(this, exception);
 		}
 
 		public void AddRange(IEnumerable<T> collection, NotifyCollectionChangedAction notificationMode = NotifyCollectionChangedAction.Add)
