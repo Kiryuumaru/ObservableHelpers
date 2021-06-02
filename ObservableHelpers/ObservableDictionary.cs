@@ -53,7 +53,57 @@ namespace ObservableHelpers
 
         #region Methods
 
-        private void NotifyObserversOfChange()
+        public virtual void OnError(Exception exception)
+        {
+            PropertyError?.Invoke(this, exception);
+        }
+
+        public virtual void Add(TKey key, TValue value)
+        {
+            TryAddWithNotification(key, value);
+        }
+
+        public virtual void Add(KeyValuePair<TKey, TValue> item)
+        {
+            TryAddWithNotification(item);
+        }
+
+        public virtual bool ContainsKey(TKey key)
+        {
+            return dictionary.ContainsKey(key);
+        }
+
+        public virtual bool Contains(KeyValuePair<TKey, TValue> item)
+        {
+            return ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).Contains(item);
+        }
+
+        public virtual bool TryGetValue(TKey key, out TValue value)
+        {
+            return dictionary.TryGetValue(key, out value);
+        }
+
+        public virtual bool Remove(TKey key)
+        {
+            return TryRemoveWithNotification(key, out _);
+        }
+
+        public virtual bool Remove(KeyValuePair<TKey, TValue> item)
+        {
+            return TryRemoveWithNotification(item.Key, out _);
+        }
+
+        public virtual void Clear()
+        {
+            ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).Clear();
+            NotifyObserversOfChange();
+        }
+
+        public virtual void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
+        {
+            ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).CopyTo(array, arrayIndex);
+        }
+        protected virtual void NotifyObserversOfChange()
         {
             context.Post(s =>
             {
@@ -67,26 +117,26 @@ namespace ObservableHelpers
             }, null);
         }
 
-        private bool TryAddWithNotification(KeyValuePair<TKey, TValue> item)
+        protected virtual bool TryAddWithNotification(KeyValuePair<TKey, TValue> item)
         {
             return TryAddWithNotification(item.Key, item.Value);
         }
 
-        private bool TryAddWithNotification(TKey key, TValue value)
+        protected virtual bool TryAddWithNotification(TKey key, TValue value)
         {
             bool result = dictionary.TryAdd(key, ValueFactory(key, value).value);
             if (result) NotifyObserversOfChange();
             return result;
         }
 
-        private bool TryRemoveWithNotification(TKey key, out TValue value)
+        protected virtual bool TryRemoveWithNotification(TKey key, out TValue value)
         {
             bool result = dictionary.TryRemove(key, out value);
             if (result) NotifyObserversOfChange();
             return result;
         }
 
-        private void UpdateWithNotification(TKey key, TValue value)
+        protected virtual void UpdateWithNotification(TKey key, TValue value)
         {
             dictionary[key] = ValueFactory(key, value).value;
             NotifyObserversOfChange();
@@ -95,57 +145,6 @@ namespace ObservableHelpers
         protected virtual (TKey key, TValue value) ValueFactory(TKey key, TValue value)
         {
             return (key, value);
-        }
-
-        public virtual void OnError(Exception exception)
-        {
-            PropertyError?.Invoke(this, exception);
-        }
-
-        public void Add(TKey key, TValue value)
-        {
-            TryAddWithNotification(key, value);
-        }
-
-        public void Add(KeyValuePair<TKey, TValue> item)
-        {
-            TryAddWithNotification(item);
-        }
-
-        public bool ContainsKey(TKey key)
-        {
-            return dictionary.ContainsKey(key);
-        }
-
-        public bool Contains(KeyValuePair<TKey, TValue> item)
-        {
-            return ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).Contains(item);
-        }
-
-        public bool TryGetValue(TKey key, out TValue value)
-        {
-            return dictionary.TryGetValue(key, out value);
-        }
-
-        public bool Remove(TKey key)
-        {
-            return TryRemoveWithNotification(key, out _);
-        }
-
-        public bool Remove(KeyValuePair<TKey, TValue> item)
-        {
-            return TryRemoveWithNotification(item.Key, out _);
-        }
-
-        public void Clear()
-        {
-            ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).Clear();
-            NotifyObserversOfChange();
-        }
-
-        public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
-        {
-            ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).CopyTo(array, arrayIndex);
         }
 
         IEnumerator<KeyValuePair<TKey, TValue>> IEnumerable<KeyValuePair<TKey, TValue>>.GetEnumerator()

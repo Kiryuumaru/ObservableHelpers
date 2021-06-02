@@ -38,6 +38,166 @@ namespace ObservableHelpers
 
         #region Methods
 
+        public virtual void OnChanged(string key, string propertyName, string group)
+        {
+            if (disableOnChanges) return;
+            context.Post(s =>
+            {
+                lock (this)
+                {
+                    PropertyChanged?.Invoke(this, new ObservableObjectChangesEventArgs(key, propertyName, group));
+                }
+            }, null);
+        }
+
+        public virtual void OnChanged(string propertyName)
+        {
+            PropertyHolder propHolder = null;
+            lock (PropertyHolders)
+            {
+                propHolder = PropertyHolders.FirstOrDefault(i => i.PropertyName == propertyName);
+            }
+            if (propHolder != null) OnChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
+        }
+
+        public virtual void OnChangedWithKey(string key)
+        {
+            PropertyHolder propHolder = null;
+            lock (PropertyHolders)
+            {
+                propHolder = PropertyHolders.FirstOrDefault(i => i.Key == key);
+            }
+            if (propHolder != null) OnChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
+        }
+
+        public virtual void OnError(Exception exception)
+        {
+            PropertyError?.Invoke(this, exception);
+        }
+
+        public virtual bool SetNull(string tag = null)
+        {
+            var hasChanges = false;
+            lock (PropertyHolders)
+            {
+                foreach (var propHolder in PropertyHolders)
+                {
+                    if (propHolder.Property.SetNull(tag)) hasChanges = true;
+                }
+            }
+            return hasChanges;
+        }
+
+        public virtual bool IsNull(string tag = null)
+        {
+            return PropertyHolders.All(i => i.Property.IsNull(tag));
+        }
+
+        protected void InitializeProperties(bool invokeOnChanges = true)
+        {
+            if (!invokeOnChanges) disableOnChanges = true;
+            try
+            {
+                foreach (var property in GetType().GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static))
+                {
+                    property.GetValue(this);
+                }
+            }
+            catch { }
+            if (!invokeOnChanges) disableOnChanges = false;
+        }
+
+        protected virtual PropertyHolder PropertyFactory(string key, string propertyName, string group)
+        {
+            ObservableProperty prop;
+            prop = new ObservableProperty();
+            var propHolder = new PropertyHolder()
+            {
+                Property = prop,
+                Key = key,
+                PropertyName = propertyName,
+                Group = group
+            };
+            prop.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == nameof(prop.Property))
+                {
+                    OnChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
+                }
+            };
+            return propHolder;
+        }
+
+        protected bool SetProperty<T>(
+            T value,
+            [CallerMemberName] string propertyName = null,
+            string group = null,
+            Func<T, T, bool> validateValue = null,
+            Func<(T value, ObservableProperty property), bool> customValueSetter = null)
+        {
+            return SetPropertyInternal(value, null, propertyName, group, validateValue, customValueSetter);
+        }
+
+        protected bool SetPropertyWithKey<T>(
+            T value,
+            string key,
+            [CallerMemberName] string propertyName = null,
+            string group = null,
+            Func<T, T, bool> validateValue = null,
+            Func<(T value, ObservableProperty property), bool> customValueSetter = null)
+        {
+            return SetPropertyInternal(value, key, propertyName, group, validateValue, customValueSetter);
+        }
+
+        protected T GetProperty<T>(
+            T defaultValue = default,
+            [CallerMemberName] string propertyName = null,
+            string group = null,
+            Func<(T value, ObservableProperty property), bool> customValueSetter = null)
+        {
+            return GetPropertyInternal<T>(defaultValue, null, propertyName, group, customValueSetter);
+        }
+
+        protected T GetPropertyWithKey<T>(
+            string key,
+            T defaultValue = default,
+            [CallerMemberName] string propertyName = null,
+            string group = null,
+            Func<(T value, ObservableProperty property), bool> customValueSetter = null)
+        {
+            return GetPropertyInternal(defaultValue, key, propertyName, group, customValueSetter);
+        }
+
+        protected virtual bool DeleteProperty(string propertyName)
+        {
+            PropertyHolder propHolder = null;
+            lock (PropertyHolders)
+            {
+                propHolder = PropertyHolders.FirstOrDefault(i => i.PropertyName == propertyName);
+            }
+            if (propHolder == null) return false;
+            return propHolder.Property.SetNull();
+        }
+
+        protected virtual bool DeletePropertyWithKey(string key)
+        {
+            PropertyHolder propHolder = null;
+            lock (PropertyHolders)
+            {
+                propHolder = PropertyHolders.FirstOrDefault(i => i.Key == key);
+            }
+            if (propHolder == null) return false;
+            return propHolder.Property.SetNull();
+        }
+
+        protected IEnumerable<PropertyHolder> GetRawProperties(string group = null)
+        {
+            lock(PropertyHolders)
+            {
+                return group == null ? PropertyHolders : PropertyHolders.Where(i => i.Group == group);
+            }
+        }
+
         private bool SetPropertyInternal<T>(
             T value,
             string key = null,
@@ -172,166 +332,6 @@ namespace ObservableHelpers
             }
 
             return propHolder.Property.GetValue<T>();
-        }
-
-        protected void InitializeProperties(bool invokeOnChanges = true)
-        {
-            if (!invokeOnChanges) disableOnChanges = true;
-            try
-            {
-                foreach (var property in GetType().GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static))
-                {
-                    property.GetValue(this);
-                }
-            }
-            catch { }
-            if (!invokeOnChanges) disableOnChanges = false;
-        }
-
-        protected virtual PropertyHolder PropertyFactory(string key, string propertyName, string group)
-        {
-            ObservableProperty prop;
-            prop = new ObservableProperty();
-            var propHolder = new PropertyHolder()
-            {
-                Property = prop,
-                Key = key,
-                PropertyName = propertyName,
-                Group = group
-            };
-            prop.PropertyChanged += (s, e) =>
-            {
-                if (e.PropertyName == nameof(prop.Property))
-                {
-                    OnChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
-                }
-            };
-            return propHolder;
-        }
-
-        protected bool SetProperty<T>(
-            T value,
-            [CallerMemberName] string propertyName = null,
-            string group = null,
-            Func<T, T, bool> validateValue = null,
-            Func<(T value, ObservableProperty property), bool> customValueSetter = null)
-        {
-            return SetPropertyInternal(value, null, propertyName, group, validateValue, customValueSetter);
-        }
-
-        protected bool SetPropertyWithKey<T>(
-            T value,
-            string key,
-            [CallerMemberName] string propertyName = null,
-            string group = null,
-            Func<T, T, bool> validateValue = null,
-            Func<(T value, ObservableProperty property), bool> customValueSetter = null)
-        {
-            return SetPropertyInternal(value, key, propertyName, group, validateValue, customValueSetter);
-        }
-
-        protected T GetProperty<T>(
-            T defaultValue = default,
-            [CallerMemberName] string propertyName = null,
-            string group = null,
-            Func<(T value, ObservableProperty property), bool> customValueSetter = null)
-        {
-            return GetPropertyInternal<T>(defaultValue, null, propertyName, group, customValueSetter);
-        }
-
-        protected T GetPropertyWithKey<T>(
-            string key,
-            T defaultValue = default,
-            [CallerMemberName] string propertyName = null,
-            string group = null,
-            Func<(T value, ObservableProperty property), bool> customValueSetter = null)
-        {
-            return GetPropertyInternal(defaultValue, key, propertyName, group, customValueSetter);
-        }
-
-        protected virtual bool DeleteProperty(string propertyName)
-        {
-            PropertyHolder propHolder = null;
-            lock (PropertyHolders)
-            {
-                propHolder = PropertyHolders.FirstOrDefault(i => i.PropertyName == propertyName);
-            }
-            if (propHolder == null) return false;
-            return propHolder.Property.SetNull();
-        }
-
-        protected virtual bool DeletePropertyWithKey(string key)
-        {
-            PropertyHolder propHolder = null;
-            lock (PropertyHolders)
-            {
-                propHolder = PropertyHolders.FirstOrDefault(i => i.Key == key);
-            }
-            if (propHolder == null) return false;
-            return propHolder.Property.SetNull();
-        }
-
-        protected IEnumerable<PropertyHolder> GetRawProperties(string group = null)
-        {
-            lock(PropertyHolders)
-            {
-                return group == null ? PropertyHolders : PropertyHolders.Where(i => i.Group == group);
-            }
-        }
-
-        public virtual void OnChanged(string key, string propertyName, string group)
-        {
-            if (disableOnChanges) return;
-            context.Post(s =>
-            {
-                lock(this)
-                {
-                    PropertyChanged?.Invoke(this, new ObservableObjectChangesEventArgs(key, propertyName, group));
-                }
-            }, null);
-        }
-
-        public virtual void OnChanged(string propertyName)
-        {
-            PropertyHolder propHolder = null;
-            lock (PropertyHolders)
-            {
-                propHolder = PropertyHolders.FirstOrDefault(i => i.PropertyName == propertyName);
-            }
-            if (propHolder != null) OnChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
-        }
-
-        public virtual void OnChangedWithKey(string key)
-        {
-            PropertyHolder propHolder = null;
-            lock (PropertyHolders)
-            {
-                propHolder = PropertyHolders.FirstOrDefault(i => i.Key == key);
-            }
-            if (propHolder != null) OnChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
-        }
-
-        public virtual void OnError(Exception exception)
-        {
-            PropertyError?.Invoke(this, exception);
-        }
-
-        public bool SetNull(string tag = null)
-        {
-            var hasChanges = false;
-            lock (PropertyHolders)
-            {
-                foreach (var propHolder in PropertyHolders)
-                {
-                    if (propHolder.Property.SetNull(tag)) hasChanges = true;
-                }
-            }
-            return hasChanges;
-        }
-
-        public bool IsNull(string tag = null)
-        {
-            return PropertyHolders.All(i => i.Property.IsNull(tag));
         }
 
         #endregion

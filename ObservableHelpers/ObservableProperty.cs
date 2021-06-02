@@ -29,30 +29,6 @@ namespace ObservableHelpers
 
         #region Methods
 
-        protected virtual bool SetObject(object obj, string tag = null)
-        {
-            var hasChanges = false;
-            lock (this)
-            {
-                hasChanges = objectHolder != obj;
-                if (hasChanges) objectHolder = obj;
-            }
-            if (hasChanges)
-            {
-                OnChanged(nameof(Property));
-                return true;
-            }
-            return hasChanges;
-        }
-
-        protected virtual object GetObject(object defaultValue = null, string tag = null)
-        {
-            lock (this)
-            {
-                return objectHolder ?? defaultValue;
-            }
-        }
-
         public virtual bool SetValue<T>(T value, string tag = null)
         {
             try
@@ -79,7 +55,7 @@ namespace ObservableHelpers
             return defaultValue;
         }
 
-        public bool SetNull(string tag = null)
+        public virtual bool SetNull(string tag = null)
         {
             try
             {
@@ -92,7 +68,7 @@ namespace ObservableHelpers
             return false;
         }
 
-        public bool IsNull(string tag = null)
+        public virtual bool IsNull(string tag = null)
         {
             try
             {
@@ -119,6 +95,30 @@ namespace ObservableHelpers
         public virtual void OnError(Exception exception)
         {
             PropertyError?.Invoke(this, exception);
+        }
+
+        protected virtual bool SetObject(object obj, string tag = null)
+        {
+            var hasChanges = false;
+            lock (this)
+            {
+                hasChanges = objectHolder != obj;
+                if (hasChanges) objectHolder = obj;
+            }
+            if (hasChanges)
+            {
+                OnChanged(nameof(Property));
+                return true;
+            }
+            return hasChanges;
+        }
+
+        protected virtual object GetObject(object defaultValue = null, string tag = null)
+        {
+            lock (this)
+            {
+                return objectHolder ?? defaultValue;
+            }
         }
 
         #endregion

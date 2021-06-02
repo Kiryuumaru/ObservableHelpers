@@ -21,7 +21,7 @@ namespace ObservableHelpers
 			PropertyError?.Invoke(this, exception);
 		}
 
-		public void AddRange(IEnumerable<T> collection, NotifyCollectionChangedAction notificationMode = NotifyCollectionChangedAction.Add)
+		public virtual void AddRange(IEnumerable<T> collection, NotifyCollectionChangedAction notificationMode = NotifyCollectionChangedAction.Add)
 		{
 			if (notificationMode != NotifyCollectionChangedAction.Add && notificationMode != NotifyCollectionChangedAction.Reset)
 				throw new ArgumentException("Mode must be either Add or Reset for AddRange.", nameof(notificationMode));
@@ -50,7 +50,7 @@ namespace ObservableHelpers
 				startingIndex: startIndex);
 		}
 
-		public void RemoveRange(IEnumerable<T> collection, NotifyCollectionChangedAction notificationMode = NotifyCollectionChangedAction.Reset)
+		public virtual void RemoveRange(IEnumerable<T> collection, NotifyCollectionChangedAction notificationMode = NotifyCollectionChangedAction.Reset)
 		{
 			if (notificationMode != NotifyCollectionChangedAction.Remove && notificationMode != NotifyCollectionChangedAction.Reset)
 				throw new ArgumentException("Mode must be either Remove or Reset for RemoveRange.", nameof(notificationMode));
@@ -92,9 +92,9 @@ namespace ObservableHelpers
 				changedItems: changedItems);
 		}
 
-		public void Replace(T item) => ReplaceRange(new T[] { item });
+		public virtual void Replace(T item) => ReplaceRange(new T[] { item });
 
-		public void ReplaceRange(IEnumerable<T> collection)
+		public virtual void ReplaceRange(IEnumerable<T> collection)
 		{
 			if (collection == null)
 				throw new ArgumentNullException(nameof(collection));
@@ -115,7 +115,7 @@ namespace ObservableHelpers
 			RaiseChangeNotificationEvents(action: NotifyCollectionChangedAction.Reset);
 		}
 
-		private bool AddArrangeCore(IEnumerable<T> collection)
+		protected virtual bool AddArrangeCore(IEnumerable<T> collection)
 		{
 			var itemAdded = false;
 			foreach (var item in collection)
@@ -126,7 +126,7 @@ namespace ObservableHelpers
 			return itemAdded;
 		}
 
-		private void RaiseChangeNotificationEvents(NotifyCollectionChangedAction action, List<T> changedItems = null, int startingIndex = -1)
+		protected virtual void RaiseChangeNotificationEvents(NotifyCollectionChangedAction action, List<T> changedItems = null, int startingIndex = -1)
 		{
 			OnPropertyChanged(new PropertyChangedEventArgs(nameof(Count)));
 			OnPropertyChanged(new PropertyChangedEventArgs("Item[]"));
