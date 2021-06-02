@@ -131,7 +131,7 @@ namespace ObservableHelpers
 
         protected virtual bool TryRemoveWithNotification(TKey key, out TValue value)
         {
-            bool result = dictionary.TryRemove(key, out value);
+            bool result = ValueRemove(key, out value);
             if (result) NotifyObserversOfChange();
             return result;
         }
@@ -145,6 +145,13 @@ namespace ObservableHelpers
         protected virtual (TKey key, TValue value) ValueFactory(TKey key, TValue value)
         {
             return (key, value);
+        }
+
+        protected virtual bool ValueRemove(TKey key, out TValue value)
+        {
+            bool result = dictionary.TryRemove(key, out value);
+            if (result) NotifyObserversOfChange();
+            return result;
         }
 
         IEnumerator<KeyValuePair<TKey, TValue>> IEnumerable<KeyValuePair<TKey, TValue>>.GetEnumerator()
