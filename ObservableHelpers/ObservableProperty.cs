@@ -29,11 +29,11 @@ namespace ObservableHelpers
 
         #region Methods
 
-        public virtual bool SetValue<T>(T value, string tag = null)
+        public virtual bool SetValue<T>(T value, object parameter = null)
         {
             try
             {
-                return SetObject(value, tag);
+                return SetObject(value, parameter);
             }
             catch (Exception ex)
             {
@@ -42,11 +42,11 @@ namespace ObservableHelpers
             return false;
         }
 
-        public virtual T GetValue<T>(T defaultValue = default, string tag = null)
+        public virtual T GetValue<T>(T defaultValue = default, object parameter = null)
         {
             try
             {
-                return (T)GetObject(defaultValue, tag);
+                return (T)GetObject(defaultValue, parameter);
             }
             catch (Exception ex)
             {
@@ -55,11 +55,11 @@ namespace ObservableHelpers
             return defaultValue;
         }
 
-        public virtual bool SetNull(string tag = null)
+        public virtual bool SetNull(object parameter = null)
         {
             try
             {
-                return SetObject(null, tag);
+                return SetObject(null, parameter);
             }
             catch (Exception ex)
             {
@@ -68,11 +68,11 @@ namespace ObservableHelpers
             return false;
         }
 
-        public virtual bool IsNull(string tag = null)
+        public virtual bool IsNull(object parameter = null)
         {
             try
             {
-                return GetObject(null, tag) == null;
+                return GetObject(null, parameter) == null;
             }
             catch (Exception ex)
             {
@@ -97,7 +97,7 @@ namespace ObservableHelpers
             PropertyError?.Invoke(this, exception);
         }
 
-        protected virtual bool SetObject(object obj, string tag = null)
+        protected virtual bool SetObject(object obj, object parameter = null)
         {
             var hasChanges = false;
             lock (this)
@@ -113,7 +113,7 @@ namespace ObservableHelpers
             return hasChanges;
         }
 
-        protected virtual object GetObject(object defaultValue = null, string tag = null)
+        protected virtual object GetObject(object defaultValue = null, object parameter = null)
         {
             lock (this)
             {
