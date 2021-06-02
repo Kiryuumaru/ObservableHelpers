@@ -90,7 +90,10 @@ namespace ObservableHelpers
 
         public virtual bool IsNull(string tag = null)
         {
-            return PropertyHolders.All(i => i.Property.IsNull(tag));
+            lock (PropertyHolders)
+            {
+                return PropertyHolders.All(i => i.Property.IsNull(tag));
+            }
         }
 
         protected void InitializeProperties(bool invokeOnChanges = true)
