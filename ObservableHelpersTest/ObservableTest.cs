@@ -71,24 +71,6 @@ namespace ObservableHelpersTest
         }
 
         [Fact]
-        public async void ObservableGroupTest()
-        {
-            var raiseCount = 0;
-            var group = new ObservableGroup<string>();
-            group.CollectionChanged += (s, e) =>
-            {
-                raiseCount++;
-            };
-            group.Add("test");
-            group.Add("test");
-            group.Add("test");
-            group.Add("test");
-            group.Add("test");
-            await Task.Delay(500);
-            Assert.True(raiseCount == 5 && group.Count == 5);
-        }
-
-        [Fact]
         public async void ObservableDictionaryTest()
         {
             var raiseCount = 0;

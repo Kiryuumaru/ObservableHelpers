@@ -20,8 +20,11 @@ namespace ObservableHelpers
         private readonly ConcurrentDictionary<TKey, TValue> dictionary = new ConcurrentDictionary<TKey, TValue>();
 
         public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler PropertyChangedInternal;
         public event NotifyCollectionChangedEventHandler CollectionChanged;
+        public event NotifyCollectionChangedEventHandler CollectionChangedInternal;
         public event EventHandler<Exception> PropertyError;
+        public event EventHandler<Exception> PropertyErrorInternal;
 
         public ICollection<TKey> Keys
         {
@@ -52,11 +55,6 @@ namespace ObservableHelpers
         #endregion
 
         #region Methods
-
-        public virtual void OnError(Exception exception)
-        {
-            PropertyError?.Invoke(this, exception);
-        }
 
         public virtual void Add(TKey key, TValue value)
         {
@@ -103,8 +101,13 @@ namespace ObservableHelpers
         {
             ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).CopyTo(array, arrayIndex);
         }
+
         protected virtual void NotifyObserversOfChange()
         {
+            CollectionChangedInternal?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+            PropertyChangedInternal?.Invoke(this, new PropertyChangedEventArgs(nameof(Count)));
+            PropertyChangedInternal?.Invoke(this, new PropertyChangedEventArgs(nameof(Keys)));
+            PropertyChangedInternal?.Invoke(this, new PropertyChangedEventArgs(nameof(Values)));
             context.Post(s =>
             {
                 lock (this)
@@ -114,6 +117,15 @@ namespace ObservableHelpers
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Keys)));
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Values)));
                 }
+            }, null);
+        }
+
+        protected virtual void OnError(Exception exception)
+        {
+            PropertyErrorInternal?.Invoke(this, exception);
+            context.Post(s =>
+            {
+                PropertyError?.Invoke(this, exception);
             }, null);
         }
 

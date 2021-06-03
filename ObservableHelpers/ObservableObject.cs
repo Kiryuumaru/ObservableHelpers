@@ -32,48 +32,13 @@ namespace ObservableHelpers
         protected List<PropertyHolder> PropertyHolders { get; set; } = new List<PropertyHolder>();
 
         public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler PropertyChangedInternal;
         public event EventHandler<Exception> PropertyError;
+        public event EventHandler<Exception> PropertyErrorInternal;
 
         #endregion
 
         #region Methods
-
-        public virtual void OnChanged(string key, string propertyName, string group)
-        {
-            if (disableOnChanges) return;
-            context.Post(s =>
-            {
-                lock (this)
-                {
-                    PropertyChanged?.Invoke(this, new ObservableObjectChangesEventArgs(key, propertyName, group));
-                }
-            }, null);
-        }
-
-        public virtual void OnChanged(string propertyName)
-        {
-            PropertyHolder propHolder = null;
-            lock (PropertyHolders)
-            {
-                propHolder = PropertyHolders.FirstOrDefault(i => i.PropertyName == propertyName);
-            }
-            if (propHolder != null) OnChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
-        }
-
-        public virtual void OnChangedWithKey(string key)
-        {
-            PropertyHolder propHolder = null;
-            lock (PropertyHolders)
-            {
-                propHolder = PropertyHolders.FirstOrDefault(i => i.Key == key);
-            }
-            if (propHolder != null) OnChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
-        }
-
-        public virtual void OnError(Exception exception)
-        {
-            PropertyError?.Invoke(this, exception);
-        }
 
         public virtual bool SetNull(string tag = null)
         {
@@ -94,6 +59,48 @@ namespace ObservableHelpers
             {
                 return PropertyHolders.All(i => i.Property.IsNull(tag));
             }
+        }
+
+        protected virtual void OnChanged(string key, string propertyName, string group)
+        {
+            if (disableOnChanges) return;
+            PropertyChangedInternal?.Invoke(this, new ObservableObjectChangesEventArgs(key, propertyName, group));
+            context.Post(s =>
+            {
+                lock (this)
+                {
+                    PropertyChanged?.Invoke(this, new ObservableObjectChangesEventArgs(key, propertyName, group));
+                }
+            }, null);
+        }
+
+        protected virtual void OnChanged(string propertyName)
+        {
+            PropertyHolder propHolder = null;
+            lock (PropertyHolders)
+            {
+                propHolder = PropertyHolders.FirstOrDefault(i => i.PropertyName == propertyName);
+            }
+            if (propHolder != null) OnChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
+        }
+
+        protected virtual void OnChangedWithKey(string key)
+        {
+            PropertyHolder propHolder = null;
+            lock (PropertyHolders)
+            {
+                propHolder = PropertyHolders.FirstOrDefault(i => i.Key == key);
+            }
+            if (propHolder != null) OnChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
+        }
+
+        protected virtual void OnError(Exception exception)
+        {
+            PropertyErrorInternal?.Invoke(this, exception);
+            context.Post(s =>
+            {
+                PropertyError?.Invoke(this, exception);
+            }, null);
         }
 
         protected void InitializeProperties(bool invokeOnChanges = true)
@@ -121,7 +128,7 @@ namespace ObservableHelpers
                 PropertyName = propertyName,
                 Group = group
             };
-            prop.PropertyChanged += (s, e) =>
+            prop.PropertyChangedInternal += (s, e) =>
             {
                 if (e.PropertyName == nameof(prop.Property))
                 {

@@ -17,7 +17,9 @@ namespace ObservableHelpers
         private object objectHolder;
 
         public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler PropertyChangedInternal;
         public event EventHandler<Exception> PropertyError;
+        public event EventHandler<Exception> PropertyErrorInternal;
 
         public object Property
         {
@@ -81,22 +83,6 @@ namespace ObservableHelpers
             return true;
         }
 
-        public virtual void OnChanged(string propertyName = "")
-        {
-            context.Post(s =>
-            {
-                lock (this)
-                {
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-                }
-            }, null);
-        }
-
-        public virtual void OnError(Exception exception)
-        {
-            PropertyError?.Invoke(this, exception);
-        }
-
         protected virtual bool SetObject(object obj, object parameter = null)
         {
             var hasChanges = false;
@@ -119,6 +105,27 @@ namespace ObservableHelpers
             {
                 return objectHolder ?? defaultValue;
             }
+        }
+
+        protected virtual void OnChanged(string propertyName = "")
+        {
+            PropertyChangedInternal?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            context.Post(s =>
+            {
+                lock (this)
+                {
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+                }
+            }, null);
+        }
+
+        protected virtual void OnError(Exception exception)
+        {
+            PropertyErrorInternal?.Invoke(this, exception);
+            context.Post(s =>
+            {
+                PropertyError?.Invoke(this, exception);
+            }, null);
         }
 
         #endregion
