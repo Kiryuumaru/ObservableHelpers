@@ -142,10 +142,10 @@ namespace ObservableHelpers
             T value,
             [CallerMemberName] string propertyName = null,
             string group = null,
-            Func<T, T, bool> validateValue = null,
-            Func<(T value, ObservableProperty property), bool> customValueSetter = null)
+            object parameter = null,
+            Func<T, T, bool> validateValue = null)
         {
-            return SetPropertyInternal(value, null, propertyName, group, validateValue, customValueSetter);
+            return SetPropertyInternal(value, null, propertyName, group, parameter, validateValue);
         }
 
         protected bool SetPropertyWithKey<T>(
@@ -153,19 +153,19 @@ namespace ObservableHelpers
             string key,
             [CallerMemberName] string propertyName = null,
             string group = null,
-            Func<T, T, bool> validateValue = null,
-            Func<(T value, ObservableProperty property), bool> customValueSetter = null)
+            object parameter = null,
+            Func<T, T, bool> validateValue = null)
         {
-            return SetPropertyInternal(value, key, propertyName, group, validateValue, customValueSetter);
+            return SetPropertyInternal(value, key, propertyName, group, parameter, validateValue);
         }
 
         protected T GetProperty<T>(
             T defaultValue = default,
             [CallerMemberName] string propertyName = null,
             string group = null,
-            Func<(T value, ObservableProperty property), bool> customValueSetter = null)
+            object parameter = null)
         {
-            return GetPropertyInternal<T>(defaultValue, null, propertyName, group, customValueSetter);
+            return GetPropertyInternal(defaultValue, null, propertyName, group, parameter);
         }
 
         protected T GetPropertyWithKey<T>(
@@ -173,9 +173,9 @@ namespace ObservableHelpers
             T defaultValue = default,
             [CallerMemberName] string propertyName = null,
             string group = null,
-            Func<(T value, ObservableProperty property), bool> customValueSetter = null)
+            object parameter = null)
         {
-            return GetPropertyInternal(defaultValue, key, propertyName, group, customValueSetter);
+            return GetPropertyInternal(defaultValue, key, propertyName, group, parameter);
         }
 
         protected virtual bool DeleteProperty(string propertyName)
@@ -213,8 +213,8 @@ namespace ObservableHelpers
             string key = null,
             string propertyName = null,
             string group = null,
-            Func<T, T, bool> validateValue = null,
-            Func<(T value, ObservableProperty property), bool> customValueSetter = null)
+            object parameter = null,
+            Func<T, T, bool> validateValue = null)
         {
             if (key == null && propertyName == null)
             {
@@ -234,7 +234,7 @@ namespace ObservableHelpers
 
                 if (propHolder != null)
                 {
-                    var existingValue = propHolder.Property.GetValue<T>();
+                    var existingValue = propHolder.Property.GetValue<T>(default, parameter);
 
                     if (propHolder.Group != group)
                     {
@@ -252,21 +252,10 @@ namespace ObservableHelpers
 
                     if (validateValue?.Invoke(existingValue, value) ?? true)
                     {
-                        if (customValueSetter == null)
+                        if (propHolder.Property.SetValue(value, parameter))
                         {
-                            if (propHolder.Property.SetValue(value))
-                            {
-                                hasSetChanges = true;
-                                hasChanges = true;
-                            }
-                        }
-                        else
-                        {
-                            if (customValueSetter.Invoke((value, propHolder.Property)))
-                            {
-                                hasSetChanges = true;
-                                hasChanges = true;
-                            }
+                            hasSetChanges = true;
+                            hasChanges = true;
                         }
                     }
                     if (!hasSetChanges && hasChanges) OnChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
@@ -278,8 +267,7 @@ namespace ObservableHelpers
                     {
                         PropertyHolders.Add(propHolder);
                     }
-                    if (customValueSetter == null) propHolder.Property.SetValue(value);
-                    else customValueSetter.Invoke((value, propHolder.Property));
+                    propHolder.Property.SetValue(value, parameter);
                     hasChanges = true;
                 }
             }
@@ -297,7 +285,7 @@ namespace ObservableHelpers
             string key = null,
             [CallerMemberName] string propertyName = null,
             string group = null,
-            Func<(T value, ObservableProperty property), bool> customValueSetter = null)
+            object parameter = null)
         {
             if (key == null && propertyName == null)
             {
@@ -320,8 +308,7 @@ namespace ObservableHelpers
                 {
                     PropertyHolders.Add(propHolder);
                 }
-                if (customValueSetter == null) propHolder.Property.SetValue(defaultValue);
-                else customValueSetter.Invoke((defaultValue, propHolder.Property));
+                propHolder.Property.SetValue(defaultValue, parameter);
                 hasChanges = true;
             }
             else
@@ -341,7 +328,7 @@ namespace ObservableHelpers
                 if (hasChanges) OnChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
             }
 
-            return propHolder.Property.GetValue<T>();
+            return propHolder.Property.GetValue(defaultValue, parameter);
         }
 
         #endregion
