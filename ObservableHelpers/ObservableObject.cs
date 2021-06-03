@@ -40,24 +40,24 @@ namespace ObservableHelpers
 
         #region Methods
 
-        public virtual bool SetNull(string tag = null)
+        public virtual bool SetNull(object parameter = null)
         {
             var hasChanges = false;
             lock (PropertyHolders)
             {
                 foreach (var propHolder in PropertyHolders)
                 {
-                    if (propHolder.Property.SetNull(tag)) hasChanges = true;
+                    if (propHolder.Property.SetNull(parameter)) hasChanges = true;
                 }
             }
             return hasChanges;
         }
 
-        public virtual bool IsNull(string tag = null)
+        public virtual bool IsNull(object parameter = null)
         {
             lock (PropertyHolders)
             {
-                return PropertyHolders.All(i => i.Property.IsNull(tag));
+                return PropertyHolders.All(i => i.Property.IsNull(parameter));
             }
         }
 
