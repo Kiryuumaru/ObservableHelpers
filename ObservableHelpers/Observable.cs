@@ -7,7 +7,7 @@ using System.Threading;
 
 namespace ObservableHelpers
 {
-    public abstract class Observable : SyncContext, INotifyPropertyChanged
+    public abstract class Observable : SyncContext, IObservable
     {
         public event PropertyChangedEventHandler PropertyChanged;
         public event PropertyChangedEventHandler PropertyChangedInternal;

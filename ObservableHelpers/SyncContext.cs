@@ -11,7 +11,7 @@ namespace ObservableHelpers
     {
         private readonly SynchronizationContext context = AsyncOperationManager.SynchronizationContext;
 
-        protected virtual void SynchronizationContextPost(Action action)
+        protected void SynchronizationContextPost(Action action)
         {
             context.Post(s => action(), null);
         }
