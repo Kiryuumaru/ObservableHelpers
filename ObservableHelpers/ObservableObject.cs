@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -22,19 +23,11 @@ namespace ObservableHelpers
 
     #endregion
 
-    public class ObservableObject : IObservable
+    public class ObservableObject : Observable
     {
         #region Properties
 
-        private readonly SynchronizationContext context = AsyncOperationManager.SynchronizationContext;
-        private bool disableOnChanges;
-
         protected List<PropertyHolder> PropertyHolders { get; set; } = new List<PropertyHolder>();
-
-        public event PropertyChangedEventHandler PropertyChanged;
-        public event PropertyChangedEventHandler PropertyChangedInternal;
-        public event EventHandler<Exception> PropertyError;
-        public event EventHandler<Exception> PropertyErrorInternal;
 
         #endregion
 
@@ -42,6 +35,8 @@ namespace ObservableHelpers
 
         public virtual bool SetNull(object parameter = null)
         {
+            VerifyNotDisposedOrDisposing();
+
             var hasChanges = false;
             lock (PropertyHolders)
             {
@@ -55,57 +50,37 @@ namespace ObservableHelpers
 
         public virtual bool IsNull(object parameter = null)
         {
+            VerifyNotDisposedOrDisposing();
+
             lock (PropertyHolders)
             {
                 return PropertyHolders.All(i => i.Property.IsNull(parameter));
             }
         }
 
-        protected virtual void OnChanged(string key, string propertyName, string group)
+        protected virtual void InvokeOnChanged(string key, string propertyName, string group)
         {
-            if (disableOnChanges) return;
-            PropertyChangedInternal?.Invoke(this, new ObservableObjectChangesEventArgs(key, propertyName, group));
-            context.Post(s =>
-            {
-                lock (this)
-                {
-                    PropertyChanged?.Invoke(this, new ObservableObjectChangesEventArgs(key, propertyName, group));
-                }
-            }, null);
+            VerifyNotDisposedOrDisposing();
+
+            InvokeOnChanged(new ObservableObjectChangesEventArgs(key, propertyName, group));
         }
 
-        protected virtual void OnChanged(string propertyName)
+        protected virtual void InvokeOnChangedWithKey(string key)
         {
-            PropertyHolder propHolder = null;
-            lock (PropertyHolders)
-            {
-                propHolder = PropertyHolders.FirstOrDefault(i => i.PropertyName == propertyName);
-            }
-            if (propHolder != null) OnChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
-        }
+            VerifyNotDisposedOrDisposing();
 
-        protected virtual void OnChangedWithKey(string key)
-        {
             PropertyHolder propHolder = null;
             lock (PropertyHolders)
             {
                 propHolder = PropertyHolders.FirstOrDefault(i => i.Key == key);
             }
-            if (propHolder != null) OnChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
+            if (propHolder != null) InvokeOnChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
         }
 
-        protected virtual void OnError(Exception exception)
+        protected void InitializeProperties()
         {
-            PropertyErrorInternal?.Invoke(this, exception);
-            context.Post(s =>
-            {
-                PropertyError?.Invoke(this, exception);
-            }, null);
-        }
+            VerifyNotDisposedOrDisposing();
 
-        protected void InitializeProperties(bool invokeOnChanges = true)
-        {
-            if (!invokeOnChanges) disableOnChanges = true;
             try
             {
                 foreach (var property in GetType().GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static))
@@ -114,11 +89,12 @@ namespace ObservableHelpers
                 }
             }
             catch { }
-            if (!invokeOnChanges) disableOnChanges = false;
         }
 
         protected virtual PropertyHolder PropertyFactory(string key, string propertyName, string group)
         {
+            VerifyNotDisposedOrDisposing();
+
             ObservableProperty prop;
             prop = new ObservableProperty();
             var propHolder = new PropertyHolder()
@@ -132,7 +108,7 @@ namespace ObservableHelpers
             {
                 if (e.PropertyName == nameof(prop.Property))
                 {
-                    OnChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
+                    InvokeOnChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
                 }
             };
             return propHolder;
@@ -145,6 +121,8 @@ namespace ObservableHelpers
             object parameter = null,
             Func<T, T, bool> validateValue = null)
         {
+            VerifyNotDisposedOrDisposing();
+
             return SetPropertyInternal(value, null, propertyName, group, parameter, validateValue);
         }
 
@@ -156,6 +134,8 @@ namespace ObservableHelpers
             object parameter = null,
             Func<T, T, bool> validateValue = null)
         {
+            VerifyNotDisposedOrDisposing();
+
             return SetPropertyInternal(value, key, propertyName, group, parameter, validateValue);
         }
 
@@ -165,6 +145,8 @@ namespace ObservableHelpers
             string group = null,
             object parameter = null)
         {
+            VerifyNotDisposedOrDisposing();
+
             return GetPropertyInternal(defaultValue, null, propertyName, group, parameter);
         }
 
@@ -175,11 +157,15 @@ namespace ObservableHelpers
             string group = null,
             object parameter = null)
         {
+            VerifyNotDisposedOrDisposing();
+
             return GetPropertyInternal(defaultValue, key, propertyName, group, parameter);
         }
 
         protected virtual bool DeleteProperty(string propertyName)
         {
+            VerifyNotDisposedOrDisposing();
+
             PropertyHolder propHolder = null;
             lock (PropertyHolders)
             {
@@ -191,6 +177,8 @@ namespace ObservableHelpers
 
         protected virtual bool DeletePropertyWithKey(string key)
         {
+            VerifyNotDisposedOrDisposing();
+
             PropertyHolder propHolder = null;
             lock (PropertyHolders)
             {
@@ -202,7 +190,9 @@ namespace ObservableHelpers
 
         protected IEnumerable<PropertyHolder> GetRawProperties(string group = null)
         {
-            lock(PropertyHolders)
+            VerifyNotDisposedOrDisposing();
+
+            lock (PropertyHolders)
             {
                 return group == null ? PropertyHolders : PropertyHolders.Where(i => i.Group == group);
             }
@@ -216,9 +206,11 @@ namespace ObservableHelpers
             object parameter = null,
             Func<T, T, bool> validateValue = null)
         {
+            VerifyNotDisposedOrDisposing();
+
             if (key == null && propertyName == null)
             {
-                OnError(new Exception("key and propertyName should not be both null"));
+                InvokeOnError(new Exception("key and propertyName should not be both null"));
             }
 
             PropertyHolder propHolder = null;
@@ -258,7 +250,7 @@ namespace ObservableHelpers
                             hasChanges = true;
                         }
                     }
-                    if (!hasSetChanges && hasChanges) OnChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
+                    if (!hasSetChanges && hasChanges) InvokeOnChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
                 }
                 else
                 {
@@ -273,7 +265,7 @@ namespace ObservableHelpers
             }
             catch (Exception ex)
             {
-                OnError(ex);
+                InvokeOnError(ex);
                 return hasChanges;
             }
 
@@ -287,9 +279,11 @@ namespace ObservableHelpers
             string group = null,
             object parameter = null)
         {
+            VerifyNotDisposedOrDisposing();
+
             if (key == null && propertyName == null)
             {
-                OnError(new Exception("key and propertyName should not be both null"));
+                InvokeOnError(new Exception("key and propertyName should not be both null"));
             }
 
             bool hasChanges = false;
@@ -325,7 +319,7 @@ namespace ObservableHelpers
                     hasChanges = true;
                 }
 
-                if (hasChanges) OnChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
+                if (hasChanges) InvokeOnChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
             }
 
             return propHolder.Property.GetValue(defaultValue, parameter);

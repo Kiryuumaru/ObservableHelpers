@@ -13,8 +13,8 @@
 
   <PropertyGroup>
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
-    <Version>1.0.23</Version>
-    <PackageReleaseNotes>* Bug fixes</PackageReleaseNotes>
+    <Version>1.0.24</Version>
+    <PackageReleaseNotes>* Proper disposables</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

@@ -8,18 +8,11 @@ using System.Threading;
 
 namespace ObservableHelpers
 {
-    public class ObservableProperty : IObservable
+    public class ObservableProperty : Observable
     {
         #region Properties
 
-        private readonly SynchronizationContext context = AsyncOperationManager.SynchronizationContext;
-
         private object objectHolder;
-
-        public event PropertyChangedEventHandler PropertyChanged;
-        public event PropertyChangedEventHandler PropertyChangedInternal;
-        public event EventHandler<Exception> PropertyError;
-        public event EventHandler<Exception> PropertyErrorInternal;
 
         public object Property
         {
@@ -33,58 +26,68 @@ namespace ObservableHelpers
 
         public virtual bool SetValue<T>(T value, object parameter = null)
         {
+            VerifyNotDisposedOrDisposing();
+
             try
             {
                 return SetObject(value, parameter);
             }
             catch (Exception ex)
             {
-                OnError(ex);
+                InvokeOnError(ex);
             }
             return false;
         }
 
         public virtual T GetValue<T>(T defaultValue = default, object parameter = null)
         {
+            VerifyNotDisposedOrDisposing();
+
             try
             {
                 return (T)GetObject(defaultValue, parameter);
             }
             catch (Exception ex)
             {
-                OnError(ex);
+                InvokeOnError(ex);
             }
             return defaultValue;
         }
 
         public virtual bool SetNull(object parameter = null)
         {
+            VerifyNotDisposedOrDisposing();
+
             try
             {
                 return SetObject(null, parameter);
             }
             catch (Exception ex)
             {
-                OnError(ex);
+                InvokeOnError(ex);
             }
             return false;
         }
 
         public virtual bool IsNull(object parameter = null)
         {
+            VerifyNotDisposedOrDisposing();
+
             try
             {
                 return GetObject(null, parameter) == null;
             }
             catch (Exception ex)
             {
-                OnError(ex);
+                InvokeOnError(ex);
             }
             return true;
         }
 
         protected virtual bool SetObject(object obj, object parameter = null)
         {
+            VerifyNotDisposedOrDisposing();
+
             var hasChanges = false;
             lock (this)
             {
@@ -93,7 +96,7 @@ namespace ObservableHelpers
             }
             if (hasChanges)
             {
-                OnChanged(nameof(Property));
+                InvokeOnChanged(nameof(Property));
                 return true;
             }
             return hasChanges;
@@ -101,31 +104,12 @@ namespace ObservableHelpers
 
         protected virtual object GetObject(object defaultValue = null, object parameter = null)
         {
+            VerifyNotDisposedOrDisposing();
+
             lock (this)
             {
                 return objectHolder ?? defaultValue;
             }
-        }
-
-        protected virtual void OnChanged(string propertyName = "")
-        {
-            PropertyChangedInternal?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-            context.Post(s =>
-            {
-                lock (this)
-                {
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-                }
-            }, null);
-        }
-
-        protected virtual void OnError(Exception exception)
-        {
-            PropertyErrorInternal?.Invoke(this, exception);
-            context.Post(s =>
-            {
-                PropertyError?.Invoke(this, exception);
-            }, null);
         }
 
         #endregion
