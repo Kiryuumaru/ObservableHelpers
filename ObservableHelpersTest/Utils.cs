@@ -94,7 +94,7 @@ namespace ObservableHelpersTest
             int indexDigits = FromBase62(d[0].ToString());
             int indexCount = FromBase62(d.Substring(1, indexDigits));
             var indices = d.Substring(1 + indexDigits, indexDigits * indexCount);
-            var dataPart = d.Substring(1 + indexDigits + (indexDigits * indexCount));
+            var dataPart = d[(1 + indexDigits + (indexDigits * indexCount))..];
             string[] datas = new string[indexCount];
             var currIndex = 0;
             for (int i = 0; i < indexCount; i++)

@@ -35,7 +35,7 @@ namespace ObservableHelpers
 
         public virtual bool SetNull(object parameter = null)
         {
-            VerifyNotDisposedOrDisposing();
+            VerifyNotDisposed();
 
             var hasChanges = false;
             lock (PropertyHolders)
@@ -50,7 +50,7 @@ namespace ObservableHelpers
 
         public virtual bool IsNull(object parameter = null)
         {
-            VerifyNotDisposedOrDisposing();
+            VerifyNotDisposed();
 
             lock (PropertyHolders)
             {
@@ -60,14 +60,14 @@ namespace ObservableHelpers
 
         protected virtual void InvokeOnChanged(string key, string propertyName, string group)
         {
-            VerifyNotDisposedOrDisposing();
+            VerifyNotDisposed();
 
             InvokeOnChanged(new ObservableObjectChangesEventArgs(key, propertyName, group));
         }
 
         protected virtual void InvokeOnChangedWithKey(string key)
         {
-            VerifyNotDisposedOrDisposing();
+            VerifyNotDisposed();
 
             PropertyHolder propHolder = null;
             lock (PropertyHolders)
@@ -79,7 +79,7 @@ namespace ObservableHelpers
 
         protected void InitializeProperties()
         {
-            VerifyNotDisposedOrDisposing();
+            VerifyNotDisposed();
 
             try
             {
@@ -93,7 +93,7 @@ namespace ObservableHelpers
 
         protected virtual PropertyHolder PropertyFactory(string key, string propertyName, string group)
         {
-            VerifyNotDisposedOrDisposing();
+            VerifyNotDisposed();
 
             ObservableProperty prop;
             prop = new ObservableProperty();
@@ -121,7 +121,7 @@ namespace ObservableHelpers
             object parameter = null,
             Func<T, T, bool> validateValue = null)
         {
-            VerifyNotDisposedOrDisposing();
+            VerifyNotDisposed();
 
             return SetPropertyInternal(value, null, propertyName, group, parameter, validateValue);
         }
@@ -134,7 +134,7 @@ namespace ObservableHelpers
             object parameter = null,
             Func<T, T, bool> validateValue = null)
         {
-            VerifyNotDisposedOrDisposing();
+            VerifyNotDisposed();
 
             return SetPropertyInternal(value, key, propertyName, group, parameter, validateValue);
         }
@@ -145,7 +145,7 @@ namespace ObservableHelpers
             string group = null,
             object parameter = null)
         {
-            VerifyNotDisposedOrDisposing();
+            VerifyNotDisposed();
 
             return GetPropertyInternal(defaultValue, null, propertyName, group, parameter);
         }
@@ -157,14 +157,14 @@ namespace ObservableHelpers
             string group = null,
             object parameter = null)
         {
-            VerifyNotDisposedOrDisposing();
+            VerifyNotDisposed();
 
             return GetPropertyInternal(defaultValue, key, propertyName, group, parameter);
         }
 
         protected virtual bool DeleteProperty(string propertyName)
         {
-            VerifyNotDisposedOrDisposing();
+            VerifyNotDisposed();
 
             PropertyHolder propHolder = null;
             lock (PropertyHolders)
@@ -177,7 +177,7 @@ namespace ObservableHelpers
 
         protected virtual bool DeletePropertyWithKey(string key)
         {
-            VerifyNotDisposedOrDisposing();
+            VerifyNotDisposed();
 
             PropertyHolder propHolder = null;
             lock (PropertyHolders)
@@ -190,7 +190,7 @@ namespace ObservableHelpers
 
         protected IEnumerable<PropertyHolder> GetRawProperties(string group = null)
         {
-            VerifyNotDisposedOrDisposing();
+            VerifyNotDisposed();
 
             lock (PropertyHolders)
             {
@@ -206,7 +206,7 @@ namespace ObservableHelpers
             object parameter = null,
             Func<T, T, bool> validateValue = null)
         {
-            VerifyNotDisposedOrDisposing();
+            VerifyNotDisposed();
 
             if (key == null && propertyName == null)
             {
@@ -279,7 +279,7 @@ namespace ObservableHelpers
             string group = null,
             object parameter = null)
         {
-            VerifyNotDisposedOrDisposing();
+            VerifyNotDisposed();
 
             if (key == null && propertyName == null)
             {

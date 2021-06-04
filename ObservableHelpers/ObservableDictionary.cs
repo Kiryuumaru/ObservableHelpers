@@ -54,56 +54,56 @@ namespace ObservableHelpers
 
         public virtual void Add(TKey key, TValue value)
         {
-            VerifyNotDisposedOrDisposing();
+            VerifyNotDisposed();
 
             TryAddWithNotification(key, value);
         }
 
         public virtual void Add(KeyValuePair<TKey, TValue> item)
         {
-            VerifyNotDisposedOrDisposing();
+            VerifyNotDisposed();
 
             TryAddWithNotification(item);
         }
 
         public virtual bool ContainsKey(TKey key)
         {
-            VerifyNotDisposedOrDisposing();
+            VerifyNotDisposed();
 
             return dictionary.ContainsKey(key);
         }
 
         public virtual bool Contains(KeyValuePair<TKey, TValue> item)
         {
-            VerifyNotDisposedOrDisposing();
+            VerifyNotDisposed();
 
             return ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).Contains(item);
         }
 
         public virtual bool TryGetValue(TKey key, out TValue value)
         {
-            VerifyNotDisposedOrDisposing();
+            VerifyNotDisposed();
 
             return dictionary.TryGetValue(key, out value);
         }
 
         public virtual bool Remove(TKey key)
         {
-            VerifyNotDisposedOrDisposing();
+            VerifyNotDisposed();
 
             return TryRemoveWithNotification(key, out _);
         }
 
         public virtual bool Remove(KeyValuePair<TKey, TValue> item)
         {
-            VerifyNotDisposedOrDisposing();
+            VerifyNotDisposed();
 
             return TryRemoveWithNotification(item.Key, out _);
         }
 
         public virtual void Clear()
         {
-            VerifyNotDisposedOrDisposing();
+            VerifyNotDisposed();
 
             ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).Clear();
             NotifyObserversOfChange();
@@ -111,14 +111,14 @@ namespace ObservableHelpers
 
         public virtual void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
         {
-            VerifyNotDisposedOrDisposing();
+            VerifyNotDisposed();
 
             ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).CopyTo(array, arrayIndex);
         }
 
         protected virtual void NotifyObserversOfChange()
         {
-            VerifyNotDisposedOrDisposing();
+            VerifyNotDisposed();
 
             CollectionChangedInternal?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
             SynchronizationContextPost(delegate { CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset)); });
@@ -126,14 +126,14 @@ namespace ObservableHelpers
 
         protected virtual bool TryAddWithNotification(KeyValuePair<TKey, TValue> item)
         {
-            VerifyNotDisposedOrDisposing();
+            VerifyNotDisposed();
 
             return TryAddWithNotification(item.Key, item.Value);
         }
 
         protected virtual bool TryAddWithNotification(TKey key, TValue value)
         {
-            VerifyNotDisposedOrDisposing();
+            VerifyNotDisposed();
 
             bool result = dictionary.TryAdd(key, ValueFactory(key, value).value);
             if (result) NotifyObserversOfChange();
@@ -142,7 +142,7 @@ namespace ObservableHelpers
 
         protected virtual bool TryRemoveWithNotification(TKey key, out TValue value)
         {
-            VerifyNotDisposedOrDisposing();
+            VerifyNotDisposed();
 
             bool result = ValueRemove(key, out value);
             if (result) NotifyObserversOfChange();
@@ -151,7 +151,7 @@ namespace ObservableHelpers
 
         protected virtual void UpdateWithNotification(TKey key, TValue value)
         {
-            VerifyNotDisposedOrDisposing();
+            VerifyNotDisposed();
 
             dictionary[key] = ValueFactory(key, value).value;
             NotifyObserversOfChange();
@@ -159,14 +159,14 @@ namespace ObservableHelpers
 
         protected virtual (TKey key, TValue value) ValueFactory(TKey key, TValue value)
         {
-            VerifyNotDisposedOrDisposing();
+            VerifyNotDisposed();
 
             return (key, value);
         }
 
         protected virtual bool ValueRemove(TKey key, out TValue value)
         {
-            VerifyNotDisposedOrDisposing();
+            VerifyNotDisposed();
 
             bool result = dictionary.TryRemove(key, out value);
             if (result) NotifyObserversOfChange();
@@ -175,14 +175,14 @@ namespace ObservableHelpers
 
         IEnumerator<KeyValuePair<TKey, TValue>> IEnumerable<KeyValuePair<TKey, TValue>>.GetEnumerator()
         {
-            VerifyNotDisposedOrDisposing();
+            VerifyNotDisposed();
 
             return ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            VerifyNotDisposedOrDisposing();
+            VerifyNotDisposed();
 
             return ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).GetEnumerator();
         }

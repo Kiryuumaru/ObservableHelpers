@@ -26,7 +26,7 @@ namespace ObservableHelpers
 
         public virtual bool SetValue<T>(T value, object parameter = null)
         {
-            VerifyNotDisposedOrDisposing();
+            VerifyNotDisposed();
 
             try
             {
@@ -41,7 +41,7 @@ namespace ObservableHelpers
 
         public virtual T GetValue<T>(T defaultValue = default, object parameter = null)
         {
-            VerifyNotDisposedOrDisposing();
+            VerifyNotDisposed();
 
             try
             {
@@ -56,7 +56,7 @@ namespace ObservableHelpers
 
         public virtual bool SetNull(object parameter = null)
         {
-            VerifyNotDisposedOrDisposing();
+            VerifyNotDisposed();
 
             try
             {
@@ -71,7 +71,7 @@ namespace ObservableHelpers
 
         public virtual bool IsNull(object parameter = null)
         {
-            VerifyNotDisposedOrDisposing();
+            VerifyNotDisposed();
 
             try
             {
@@ -86,7 +86,7 @@ namespace ObservableHelpers
 
         protected virtual bool SetObject(object obj, object parameter = null)
         {
-            VerifyNotDisposedOrDisposing();
+            VerifyNotDisposed();
 
             var hasChanges = false;
             lock (this)
@@ -104,7 +104,7 @@ namespace ObservableHelpers
 
         protected virtual object GetObject(object defaultValue = null, object parameter = null)
         {
-            VerifyNotDisposedOrDisposing();
+            VerifyNotDisposed();
 
             lock (this)
             {
