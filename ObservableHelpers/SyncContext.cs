@@ -9,11 +9,11 @@ namespace ObservableHelpers
 {
     public abstract class SyncContext : Disposable
     {
-        private readonly AsyncOperation context;
+        private readonly SynchronizationContext context;
 
         protected SyncContext()
         {
-            context = AsyncOperationManager.CreateOperation(null);
+            context = AsyncOperationManager.SynchronizationContext;
         }
 
         protected void SynchronizationContextPost(Action action)
