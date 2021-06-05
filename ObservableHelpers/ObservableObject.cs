@@ -104,7 +104,7 @@ namespace ObservableHelpers
                 PropertyName = propertyName,
                 Group = group
             };
-            prop.PropertyChangedInternal += (s, e) =>
+            prop.PropertyChanged += (s, e) =>
             {
                 if (e.PropertyName == nameof(prop.Property))
                 {

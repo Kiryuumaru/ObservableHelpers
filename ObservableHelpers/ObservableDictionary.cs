@@ -20,7 +20,6 @@ namespace ObservableHelpers
         private readonly ConcurrentDictionary<TKey, TValue> dictionary = new ConcurrentDictionary<TKey, TValue>();
 
         public event NotifyCollectionChangedEventHandler CollectionChanged;
-        public event NotifyCollectionChangedEventHandler CollectionChangedInternal;
 
         public ICollection<TKey> Keys
         {
@@ -120,8 +119,10 @@ namespace ObservableHelpers
         {
             VerifyNotDisposed();
 
-            CollectionChangedInternal?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
-            SynchronizationContextPost(delegate { CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset)); });
+            SynchronizationContextPost(delegate
+            {
+                CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+            });
         }
 
         protected virtual bool TryAddWithNotification(KeyValuePair<TKey, TValue> item)
