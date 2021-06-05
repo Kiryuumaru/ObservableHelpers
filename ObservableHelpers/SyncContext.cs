@@ -9,16 +9,31 @@ namespace ObservableHelpers
 {
     public abstract class SyncContext : Disposable
     {
-        private readonly SynchronizationContext context;
+        private SynchronizationContext context;
 
         protected SyncContext()
         {
-            context = AsyncOperationManager.SynchronizationContext;
+            SetSynchronizationContext();
         }
 
         protected void SynchronizationContextPost(Action action)
         {
             context.Post(s => action(), null);
+        }
+
+        public void SetSynchronizationContext()
+        {
+            context = AsyncOperationManager.SynchronizationContext;
+        }
+
+        public void SetSynchronizationContext(SynchronizationContext context)
+        {
+            this.context = context;
+        }
+
+        public void SetSynchronizationContext(SyncContext syncContext)
+        {
+            context = syncContext.context;
         }
     }
 }
