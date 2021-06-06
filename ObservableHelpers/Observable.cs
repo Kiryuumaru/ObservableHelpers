@@ -14,12 +14,7 @@ namespace ObservableHelpers
 
         protected virtual void OnPropertyChanged(PropertyChangedEventArgs args)
         {
-            if (IsDisposed)
-            {
-                return;
-            }
-
-            SynchronizationContextPost(delegate
+            SynchronizationContextQueue(delegate
             {
                 PropertyChanged?.Invoke(this, args);
             });
@@ -32,12 +27,7 @@ namespace ObservableHelpers
 
         protected virtual void OnError(Exception exception)
         {
-            if (IsDisposed)
-            {
-                return;
-            }
-
-            SynchronizationContextPost(delegate
+            SynchronizationContextQueue(delegate
             {
                 Error?.Invoke(this, exception);
             });

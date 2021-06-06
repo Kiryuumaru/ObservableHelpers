@@ -119,9 +119,11 @@ namespace ObservableHelpers
         {
             VerifyNotDisposed();
 
-            SynchronizationContextPost(delegate
+            var args = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset);
+
+            SynchronizationContextQueue(delegate
             {
-                CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+                CollectionChanged?.Invoke(this, args);
             });
         }
 
