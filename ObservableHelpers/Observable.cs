@@ -14,7 +14,7 @@ namespace ObservableHelpers
 
         protected virtual void OnPropertyChanged(PropertyChangedEventArgs args)
         {
-            if (IsDisposedOrDisposing)
+            if (IsDisposed)
             {
                 return;
             }
@@ -32,7 +32,7 @@ namespace ObservableHelpers
 
         protected virtual void OnError(Exception exception)
         {
-            if (IsDisposedOrDisposing)
+            if (IsDisposed)
             {
                 return;
             }
