@@ -12,7 +12,7 @@ namespace ObservableHelpers
         public event PropertyChangedEventHandler PropertyChanged;
         public event EventHandler<Exception> PropertyError;
 
-        protected virtual void InvokeOnChanged(PropertyChangedEventArgs args)
+        protected virtual void OnPropertyChanged(PropertyChangedEventArgs args)
         {
             SynchronizationContextPost(delegate
             {
@@ -20,12 +20,12 @@ namespace ObservableHelpers
             });
         }
 
-        protected virtual void InvokeOnChanged(string propertyName)
+        protected virtual void OnPropertyChanged(string propertyName)
         {
-            InvokeOnChanged(new PropertyChangedEventArgs(propertyName));
+            OnPropertyChanged(new PropertyChangedEventArgs(propertyName));
         }
 
-        protected virtual void InvokeOnError(Exception exception)
+        protected virtual void OnError(Exception exception)
         {
             SynchronizationContextPost(delegate
             {
@@ -33,9 +33,9 @@ namespace ObservableHelpers
             });
         }
 
-        protected virtual void InvokeOnError(string message)
+        protected virtual void OnError(string message)
         {
-            InvokeOnError(new Exception(message));
+            OnError(new Exception(message));
         }
     }
 }

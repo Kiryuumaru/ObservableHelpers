@@ -34,7 +34,7 @@ namespace ObservableHelpers
             }
             catch (Exception ex)
             {
-                InvokeOnError(ex);
+                OnError(ex);
             }
             return false;
         }
@@ -49,7 +49,7 @@ namespace ObservableHelpers
             }
             catch (Exception ex)
             {
-                InvokeOnError(ex);
+                OnError(ex);
             }
             return defaultValue;
         }
@@ -64,7 +64,7 @@ namespace ObservableHelpers
             }
             catch (Exception ex)
             {
-                InvokeOnError(ex);
+                OnError(ex);
             }
             return false;
         }
@@ -79,7 +79,7 @@ namespace ObservableHelpers
             }
             catch (Exception ex)
             {
-                InvokeOnError(ex);
+                OnError(ex);
             }
             return true;
         }
@@ -96,7 +96,7 @@ namespace ObservableHelpers
             }
             if (hasChanges)
             {
-                InvokeOnChanged(nameof(Property));
+                OnPropertyChanged(nameof(Property));
                 return true;
             }
             return hasChanges;

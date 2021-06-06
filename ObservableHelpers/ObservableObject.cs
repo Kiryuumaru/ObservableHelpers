@@ -58,14 +58,14 @@ namespace ObservableHelpers
             }
         }
 
-        protected virtual void InvokeOnChanged(string key, string propertyName, string group)
+        protected virtual void OnPropertyChanged(string key, string propertyName, string group)
         {
             VerifyNotDisposed();
 
-            InvokeOnChanged(new ObservableObjectChangesEventArgs(key, propertyName, group));
+            OnPropertyChanged(new ObservableObjectChangesEventArgs(key, propertyName, group));
         }
 
-        protected virtual void InvokeOnChangedWithKey(string key)
+        protected virtual void OnPropertyChangedWithKey(string key)
         {
             VerifyNotDisposed();
 
@@ -74,7 +74,7 @@ namespace ObservableHelpers
             {
                 propHolder = PropertyHolders.FirstOrDefault(i => i.Key == key);
             }
-            if (propHolder != null) InvokeOnChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
+            if (propHolder != null) OnPropertyChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
         }
 
         protected void InitializeProperties()
@@ -108,7 +108,7 @@ namespace ObservableHelpers
             {
                 if (e.PropertyName == nameof(prop.Property))
                 {
-                    InvokeOnChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
+                    OnPropertyChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
                 }
             };
             return propHolder;
@@ -210,7 +210,7 @@ namespace ObservableHelpers
 
             if (key == null && propertyName == null)
             {
-                InvokeOnError(new Exception("key and propertyName should not be both null"));
+                OnError(new Exception("key and propertyName should not be both null"));
             }
 
             PropertyHolder propHolder = null;
@@ -250,7 +250,7 @@ namespace ObservableHelpers
                             hasChanges = true;
                         }
                     }
-                    if (!hasSetChanges && hasChanges) InvokeOnChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
+                    if (!hasSetChanges && hasChanges) OnPropertyChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
                 }
                 else
                 {
@@ -265,7 +265,7 @@ namespace ObservableHelpers
             }
             catch (Exception ex)
             {
-                InvokeOnError(ex);
+                OnError(ex);
                 return hasChanges;
             }
 
@@ -283,7 +283,7 @@ namespace ObservableHelpers
 
             if (key == null && propertyName == null)
             {
-                InvokeOnError(new Exception("key and propertyName should not be both null"));
+                OnError(new Exception("key and propertyName should not be both null"));
             }
 
             bool hasChanges = false;
@@ -319,7 +319,7 @@ namespace ObservableHelpers
                     hasChanges = true;
                 }
 
-                if (hasChanges) InvokeOnChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
+                if (hasChanges) OnPropertyChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
             }
 
             return propHolder.Property.GetValue(defaultValue, parameter);
