@@ -51,14 +51,20 @@ namespace ObservableHelpers
 
         protected void SynchronizationContextPost(Action action)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return;
+            }
 
             contextFactory.Invoke().Post(s => action(), null);
         }
 
         protected void SynchronizationContextSend(Action action)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return;
+            }
 
             contextFactory.Invoke().Send(s => action(), null);
         }

@@ -13,7 +13,7 @@
 
   <PropertyGroup>
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
-    <Version>1.0.40</Version>
+    <Version>1.0.41</Version>
     <PackageReleaseNotes>* Bug fixes</PackageReleaseNotes>
   </PropertyGroup>
 
