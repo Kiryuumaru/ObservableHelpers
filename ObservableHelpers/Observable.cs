@@ -14,7 +14,7 @@ namespace ObservableHelpers
 
         protected virtual void OnPropertyChanged(PropertyChangedEventArgs args)
         {
-            SynchronizationContextQueue(delegate
+            SynchronizationContextPost(delegate
             {
                 PropertyChanged?.Invoke(this, args);
             });
@@ -27,7 +27,7 @@ namespace ObservableHelpers
 
         protected virtual void OnError(Exception exception)
         {
-            SynchronizationContextQueue(delegate
+            SynchronizationContextPost(delegate
             {
                 Error?.Invoke(this, exception);
             });
