@@ -49,7 +49,15 @@ namespace ObservableHelpers
         {
             VerifyNotDisposed();
 
-            contextFactory.Invoke().Post(s => action(), null);
+            contextFactory.Invoke().Post(s =>
+            {
+                if (IsDisposedOrDisposing)
+                {
+                    return;
+                }
+
+                action();
+            }, null);
         }
     }
 }
