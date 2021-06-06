@@ -9,6 +9,6 @@ namespace ObservableHelpers
 {
     public interface IObservable : INotifyPropertyChanged
     {
-        event EventHandler<Exception> PropertyError;
+        event EventHandler<Exception> Error;
     }
 }

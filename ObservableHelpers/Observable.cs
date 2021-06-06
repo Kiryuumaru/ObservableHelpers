@@ -10,7 +10,7 @@ namespace ObservableHelpers
     public abstract class Observable : SyncContext, IObservable
     {
         public event PropertyChangedEventHandler PropertyChanged;
-        public event EventHandler<Exception> PropertyError;
+        public event EventHandler<Exception> Error;
 
         protected virtual void OnPropertyChanged(PropertyChangedEventArgs args)
         {
@@ -29,7 +29,7 @@ namespace ObservableHelpers
         {
             SynchronizationContextPost(delegate
             {
-                PropertyError?.Invoke(this, exception);
+                Error?.Invoke(this, exception);
             });
         }
 
