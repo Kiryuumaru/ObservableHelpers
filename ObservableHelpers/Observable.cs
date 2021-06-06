@@ -14,16 +14,18 @@ namespace ObservableHelpers
 
         protected virtual void OnPropertyChanged(PropertyChangedEventArgs args)
         {
-            if (IsDisposed)
+            if (IsDisposedOrDisposing)
             {
                 return;
             }
+
             SynchronizationContextPost(delegate
             {
-                if (IsDisposed)
+                if (IsDisposedOrDisposing)
                 {
                     return;
                 }
+
                 PropertyChanged?.Invoke(this, args);
             });
         }
@@ -35,16 +37,18 @@ namespace ObservableHelpers
 
         protected virtual void OnError(Exception exception)
         {
-            if (IsDisposed)
+            if (IsDisposedOrDisposing)
             {
                 return;
             }
+
             SynchronizationContextPost(delegate
             {
-                if (IsDisposed)
+                if (IsDisposedOrDisposing)
                 {
                     return;
                 }
+
                 Error?.Invoke(this, exception);
             });
         }
