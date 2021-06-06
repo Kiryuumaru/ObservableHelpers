@@ -47,10 +47,7 @@ namespace ObservableHelpers
 
         protected void SynchronizationContextPost(Action action)
         {
-            if (IsDisposedOrDisposing)
-            {
-                return;
-            }
+            VerifyNotDisposed();
 
             contextFactory.Invoke().Post(s => action(), null);
         }

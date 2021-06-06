@@ -14,6 +14,11 @@ namespace ObservableHelpers
 
         protected virtual void OnPropertyChanged(PropertyChangedEventArgs args)
         {
+            if (IsDisposedOrDisposing)
+            {
+                return;
+            }
+
             SynchronizationContextPost(delegate
             {
                 PropertyChanged?.Invoke(this, args);
@@ -27,6 +32,11 @@ namespace ObservableHelpers
 
         protected virtual void OnError(Exception exception)
         {
+            if (IsDisposedOrDisposing)
+            {
+                return;
+            }
+
             SynchronizationContextPost(delegate
             {
                 Error?.Invoke(this, exception);
