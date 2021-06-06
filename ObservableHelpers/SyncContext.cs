@@ -12,9 +12,6 @@ namespace ObservableHelpers
     {
         private Func<SynchronizationContext> contextFactory;
 
-        private readonly Queue<Action> actionQueue = new Queue<Action>();
-        private bool isActionQueueRunning;
-
         protected SyncContext()
         {
             SetSynchronizationContext();
@@ -56,7 +53,14 @@ namespace ObservableHelpers
                 return;
             }
 
-            contextFactory.Invoke().Post(s => action(), null);
+            contextFactory.Invoke().Post(s =>
+            {
+                if (IsDisposed)
+                {
+                    return;
+                }
+                action();
+            }, null);
         }
 
         protected void SynchronizationContextSend(Action action)
@@ -66,51 +70,14 @@ namespace ObservableHelpers
                 return;
             }
 
-            contextFactory.Invoke().Send(s => action(), null);
-        }
-
-        protected void SynchronizationContextQueue(Action action)
-        {
-            if (IsDisposed)
+            contextFactory.Invoke().Send(s =>
             {
-                return;
-            }
-
-            Task.Run(delegate
-            {
-                lock (actionQueue)
+                if (IsDisposed)
                 {
-                    actionQueue.Enqueue(action);
+                    return;
                 }
-
-                if (isActionQueueRunning) return;
-                isActionQueueRunning = true;
-                while (true)
-                {
-                    if (IsDisposed)
-                    {
-                        break;
-                    }
-
-                    Action actionToInvoke = null;
-                    lock (actionQueue)
-                    {
-                        try
-                        {
-                            actionToInvoke = actionQueue.Dequeue();
-                        }
-                        catch { }
-                    }
-
-                    if (IsDisposed || actionToInvoke == null)
-                    {
-                        break;
-                    }
-
-                    contextFactory.Invoke().Send(s => actionToInvoke(), null);
-                }
-                isActionQueueRunning = false;
-            });
+                action();
+            }, null);
         }
     }
 }
