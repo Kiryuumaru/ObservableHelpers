@@ -208,65 +208,54 @@ namespace ObservableHelpers
         {
             VerifyNotDisposed();
 
-            if (key == null && propertyName == null)
-            {
-                OnError(new Exception("key and propertyName should not be both null"));
-            }
+            if (key == null && propertyName == null) throw new Exception("key and propertyName should not be both null");
 
             PropertyHolder propHolder = null;
             bool hasChanges = false;
 
-            try
+            lock (PropertyHolders)
             {
-                lock (PropertyHolders)
+                if (key == null) propHolder = PropertyHolders.FirstOrDefault(i => i.PropertyName == propertyName);
+                else propHolder = PropertyHolders.FirstOrDefault(i => i.Key == key);
+            }
+
+            if (propHolder != null)
+            {
+                var existingValue = propHolder.Property.GetValue<T>(default, parameter);
+
+                if (propHolder.Group != group)
                 {
-                    if (key == null) propHolder = PropertyHolders.FirstOrDefault(i => i.PropertyName == propertyName);
-                    else propHolder = PropertyHolders.FirstOrDefault(i => i.Key == key);
-                }
-
-                if (propHolder != null)
-                {
-                    var existingValue = propHolder.Property.GetValue<T>(default, parameter);
-
-                    if (propHolder.Group != group)
-                    {
-                        propHolder.Group = group;
-                        hasChanges = true;
-                    }
-
-                    if (propHolder.PropertyName != propertyName)
-                    {
-                        propHolder.PropertyName = propertyName;
-                        hasChanges = true;
-                    }
-
-                    var hasSetChanges = false;
-
-                    if (validateValue?.Invoke(existingValue, value) ?? true)
-                    {
-                        if (propHolder.Property.SetValue(value, parameter))
-                        {
-                            hasSetChanges = true;
-                            hasChanges = true;
-                        }
-                    }
-                    if (!hasSetChanges && hasChanges) OnPropertyChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
-                }
-                else
-                {
-                    propHolder = PropertyFactory(key, propertyName, group);
-                    lock (PropertyHolders)
-                    {
-                        PropertyHolders.Add(propHolder);
-                    }
-                    propHolder.Property.SetValue(value, parameter);
+                    propHolder.Group = group;
                     hasChanges = true;
                 }
+
+                if (propHolder.PropertyName != propertyName)
+                {
+                    propHolder.PropertyName = propertyName;
+                    hasChanges = true;
+                }
+
+                var hasSetChanges = false;
+
+                if (validateValue?.Invoke(existingValue, value) ?? true)
+                {
+                    if (propHolder.Property.SetValue(value, parameter))
+                    {
+                        hasSetChanges = true;
+                        hasChanges = true;
+                    }
+                }
+                if (!hasSetChanges && hasChanges) OnPropertyChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
             }
-            catch (Exception ex)
+            else
             {
-                OnError(ex);
-                return hasChanges;
+                propHolder = PropertyFactory(key, propertyName, group);
+                lock (PropertyHolders)
+                {
+                    PropertyHolders.Add(propHolder);
+                }
+                propHolder.Property.SetValue(value, parameter);
+                hasChanges = true;
             }
 
             return hasChanges;
@@ -281,10 +270,7 @@ namespace ObservableHelpers
         {
             VerifyNotDisposed();
 
-            if (key == null && propertyName == null)
-            {
-                OnError(new Exception("key and propertyName should not be both null"));
-            }
+            if (key == null && propertyName == null) throw new Exception("key and propertyName should not be both null");
 
             bool hasChanges = false;
 

@@ -28,60 +28,28 @@ namespace ObservableHelpers
         {
             VerifyNotDisposed();
 
-            try
-            {
-                return SetObject(value, parameter);
-            }
-            catch (Exception ex)
-            {
-                OnError(ex);
-            }
-            return false;
+            return SetObject(value, parameter);
         }
 
         public virtual T GetValue<T>(T defaultValue = default, object parameter = null)
         {
             VerifyNotDisposed();
 
-            try
-            {
-                return (T)GetObject(defaultValue, parameter);
-            }
-            catch (Exception ex)
-            {
-                OnError(ex);
-            }
-            return defaultValue;
+            return (T)GetObject(defaultValue, parameter);
         }
 
         public virtual bool SetNull(object parameter = null)
         {
             VerifyNotDisposed();
 
-            try
-            {
-                return SetObject(null, parameter);
-            }
-            catch (Exception ex)
-            {
-                OnError(ex);
-            }
-            return false;
+            return SetObject(null, parameter);
         }
 
         public virtual bool IsNull(object parameter = null)
         {
             VerifyNotDisposed();
 
-            try
-            {
-                return GetObject(null, parameter) == null;
-            }
-            catch (Exception ex)
-            {
-                OnError(ex);
-            }
-            return true;
+            return GetObject(null, parameter) == null;
         }
 
         protected virtual bool SetObject(object obj, object parameter = null)
