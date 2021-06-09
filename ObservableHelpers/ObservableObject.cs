@@ -41,7 +41,7 @@ namespace ObservableHelpers
                 hasChanges = true;
             }
 
-            if (Property != property)
+            if (!Property?.Equals(property) ?? property != null)
             {
                 Property = property;
                 hasChanges = true;
