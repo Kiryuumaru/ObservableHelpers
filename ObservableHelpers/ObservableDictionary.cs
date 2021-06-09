@@ -51,6 +51,24 @@ namespace ObservableHelpers
 
         #region Methods
 
+        public virtual bool SetNull()
+        {
+            VerifyNotDisposed();
+
+            var hasChanges = Count != 0;
+
+            Clear();
+
+            return hasChanges;
+        }
+
+        public virtual bool IsNull()
+        {
+            VerifyNotDisposed();
+
+            return Count == 0;
+        }
+
         public virtual void Add(TKey key, TValue value)
         {
             VerifyNotDisposed();

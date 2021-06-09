@@ -33,7 +33,7 @@ namespace ObservableHelpers
 
         #region Methods
 
-        public virtual bool SetNull(object parameter = null)
+        public virtual bool SetNull()
         {
             VerifyNotDisposed();
 
@@ -42,19 +42,19 @@ namespace ObservableHelpers
             {
                 foreach (var propHolder in PropertyHolders)
                 {
-                    if (propHolder.Property.SetNull(parameter)) hasChanges = true;
+                    if (propHolder.Property.SetNull()) hasChanges = true;
                 }
             }
             return hasChanges;
         }
 
-        public virtual bool IsNull(object parameter = null)
+        public virtual bool IsNull()
         {
             VerifyNotDisposed();
 
             lock (PropertyHolders)
             {
-                return PropertyHolders.All(i => i.Property.IsNull(parameter));
+                return PropertyHolders.All(i => i.Property.IsNull());
             }
         }
 
@@ -118,12 +118,11 @@ namespace ObservableHelpers
             T value,
             [CallerMemberName] string propertyName = null,
             string group = null,
-            object parameter = null,
             Func<T, T, bool> validateValue = null)
         {
             VerifyNotDisposed();
 
-            return SetPropertyInternal(value, null, propertyName, group, parameter, validateValue);
+            return SetPropertyInternal(value, null, propertyName, group, validateValue);
         }
 
         protected bool SetPropertyWithKey<T>(
@@ -131,35 +130,32 @@ namespace ObservableHelpers
             string key,
             [CallerMemberName] string propertyName = null,
             string group = null,
-            object parameter = null,
             Func<T, T, bool> validateValue = null)
         {
             VerifyNotDisposed();
 
-            return SetPropertyInternal(value, key, propertyName, group, parameter, validateValue);
+            return SetPropertyInternal(value, key, propertyName, group, validateValue);
         }
 
         protected T GetProperty<T>(
             T defaultValue = default,
             [CallerMemberName] string propertyName = null,
-            string group = null,
-            object parameter = null)
+            string group = null)
         {
             VerifyNotDisposed();
 
-            return GetPropertyInternal(defaultValue, null, propertyName, group, parameter);
+            return GetPropertyInternal(defaultValue, null, propertyName, group);
         }
 
         protected T GetPropertyWithKey<T>(
             string key,
             T defaultValue = default,
             [CallerMemberName] string propertyName = null,
-            string group = null,
-            object parameter = null)
+            string group = null)
         {
             VerifyNotDisposed();
 
-            return GetPropertyInternal(defaultValue, key, propertyName, group, parameter);
+            return GetPropertyInternal(defaultValue, key, propertyName, group);
         }
 
         protected virtual bool DeleteProperty(string propertyName)
@@ -203,7 +199,6 @@ namespace ObservableHelpers
             string key = null,
             string propertyName = null,
             string group = null,
-            object parameter = null,
             Func<T, T, bool> validateValue = null)
         {
             VerifyNotDisposed();
@@ -221,7 +216,7 @@ namespace ObservableHelpers
 
             if (propHolder != null)
             {
-                var existingValue = propHolder.Property.GetValue<T>(default, parameter);
+                var existingValue = propHolder.Property.GetValue<T>();
 
                 if (propHolder.Group != group)
                 {
@@ -239,7 +234,7 @@ namespace ObservableHelpers
 
                 if (validateValue?.Invoke(existingValue, value) ?? true)
                 {
-                    if (propHolder.Property.SetValue(value, parameter))
+                    if (propHolder.Property.SetValue(value))
                     {
                         hasSetChanges = true;
                         hasChanges = true;
@@ -254,7 +249,7 @@ namespace ObservableHelpers
                 {
                     PropertyHolders.Add(propHolder);
                 }
-                propHolder.Property.SetValue(value, parameter);
+                propHolder.Property.SetValue(value);
                 hasChanges = true;
             }
 
@@ -265,8 +260,7 @@ namespace ObservableHelpers
             T defaultValue = default,
             string key = null,
             [CallerMemberName] string propertyName = null,
-            string group = null,
-            object parameter = null)
+            string group = null)
         {
             VerifyNotDisposed();
 
@@ -288,7 +282,7 @@ namespace ObservableHelpers
                 {
                     PropertyHolders.Add(propHolder);
                 }
-                propHolder.Property.SetValue(defaultValue, parameter);
+                propHolder.Property.SetValue(defaultValue);
                 hasChanges = true;
             }
             else
@@ -308,7 +302,7 @@ namespace ObservableHelpers
                 if (hasChanges) OnPropertyChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
             }
 
-            return propHolder.Property.GetValue(defaultValue, parameter);
+            return propHolder.Property.GetValue<T>();
         }
 
         #endregion

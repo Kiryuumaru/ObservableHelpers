@@ -24,60 +24,55 @@ namespace ObservableHelpers
 
         #region Methods
 
-        public virtual bool SetValue<T>(T value, object parameter = null)
+        public virtual bool SetValue<T>(T value)
         {
             VerifyNotDisposed();
 
-            return SetObject(value, parameter);
+            return SetObject(value);
         }
 
-        public virtual T GetValue<T>(T defaultValue = default, object parameter = null)
+        public virtual T GetValue<T>()
         {
             VerifyNotDisposed();
 
-            return (T)GetObject(defaultValue, parameter);
+            return (T)GetObject();
         }
 
-        public virtual bool SetNull(object parameter = null)
+        public virtual bool SetNull()
         {
             VerifyNotDisposed();
 
-            return SetObject(null, parameter);
+            return SetObject(null);
         }
 
-        public virtual bool IsNull(object parameter = null)
+        public virtual bool IsNull()
         {
             VerifyNotDisposed();
 
-            return GetObject(null, parameter) == null;
+            return GetObject() == null;
         }
 
-        protected virtual bool SetObject(object obj, object parameter = null)
+        protected virtual bool SetObject(object obj)
         {
             VerifyNotDisposed();
 
-            var hasChanges = false;
-            lock (this)
+            if (objectHolder != obj)
             {
-                hasChanges = objectHolder != obj;
-                if (hasChanges) objectHolder = obj;
-            }
-            if (hasChanges)
-            {
+                objectHolder = obj;
                 OnPropertyChanged(nameof(Property));
                 return true;
             }
-            return hasChanges;
+            else
+            {
+                return false;
+            }
         }
 
-        protected virtual object GetObject(object defaultValue = null, object parameter = null)
+        protected virtual object GetObject()
         {
             VerifyNotDisposed();
 
-            lock (this)
-            {
-                return objectHolder ?? defaultValue;
-            }
+            return objectHolder;
         }
 
         #endregion
