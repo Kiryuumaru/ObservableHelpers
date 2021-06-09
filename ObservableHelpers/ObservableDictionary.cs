@@ -51,7 +51,7 @@ namespace ObservableHelpers
 
         #region Methods
 
-        public virtual bool SetNull()
+        public override bool SetNull()
         {
             VerifyNotDisposed();
 
@@ -62,7 +62,7 @@ namespace ObservableHelpers
             return hasChanges;
         }
 
-        public virtual bool IsNull()
+        public override bool IsNull()
         {
             VerifyNotDisposed();
 

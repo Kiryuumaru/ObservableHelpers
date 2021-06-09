@@ -7,9 +7,13 @@ using System.Threading;
 
 namespace ObservableHelpers
 {
-    public abstract class Observable : SyncContext, INotifyPropertyChanged
+    public abstract class Observable : SyncContext, INullableObject, INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
+
+        public abstract bool SetNull();
+
+        public abstract bool IsNull();
 
         protected virtual void OnPropertyChanged(PropertyChangedEventArgs args)
         {

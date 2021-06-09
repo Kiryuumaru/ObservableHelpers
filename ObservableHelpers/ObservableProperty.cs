@@ -24,6 +24,20 @@ namespace ObservableHelpers
 
         #region Methods
 
+        public override bool SetNull()
+        {
+            VerifyNotDisposed();
+
+            return SetObject(null);
+        }
+
+        public override bool IsNull()
+        {
+            VerifyNotDisposed();
+
+            return GetObject() == null;
+        }
+
         public virtual bool SetValue<T>(T value)
         {
             VerifyNotDisposed();
@@ -36,20 +50,6 @@ namespace ObservableHelpers
             VerifyNotDisposed();
 
             return (T)GetObject();
-        }
-
-        public virtual bool SetNull()
-        {
-            VerifyNotDisposed();
-
-            return SetObject(null);
-        }
-
-        public virtual bool IsNull()
-        {
-            VerifyNotDisposed();
-
-            return GetObject() == null;
         }
 
         protected virtual bool SetObject(object obj)
