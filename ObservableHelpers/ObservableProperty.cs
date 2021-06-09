@@ -12,13 +12,13 @@ namespace ObservableHelpers
     {
         #region Properties
 
-        private object objectHolder;
-
         public object Property
         {
             get => GetObject();
             set => SetObject(value);
         }
+
+        private object objectHolder;
 
         #endregion
 

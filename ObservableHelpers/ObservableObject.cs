@@ -15,10 +15,89 @@ namespace ObservableHelpers
 
     public class PropertyHolder
     {
-        public ObservableProperty Property { get; set; }
+        public object Property { get; set; }
         public string Key { get; set; }
         public string PropertyName { get; set; }
         public string Group { get; set; }
+
+        public bool CopyToSelf(object property, string key, string propertyName, string group)
+        {
+            var hasChanges = false;
+            if (Key != key)
+            {
+                Key = key;
+                hasChanges = true;
+            }
+
+            if (PropertyName != propertyName)
+            {
+                PropertyName = propertyName;
+                hasChanges = true;
+            }
+
+            if (Group != group)
+            {
+                Group = group;
+                hasChanges = true;
+            }
+
+            if (Property != property)
+            {
+                Property = property;
+                hasChanges = true;
+            }
+            return hasChanges;
+        }
+
+        public bool CopyToSelf(PropertyHolder propertyHolder)
+        {
+            return CopyToSelf(propertyHolder.Property, propertyHolder.Key, propertyHolder.PropertyName, propertyHolder.Group);
+        }
+
+        public override bool Equals(object obj) => Equals(obj as PropertyHolder);
+
+        public bool Equals(PropertyHolder prop)
+        {
+            if (prop is null)
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, prop))
+            {
+                return true;
+            }
+
+            if (GetType() != prop.GetType())
+            {
+                return false;
+            }
+
+            return
+                (Key == prop.Key) &&
+                (PropertyName == prop.PropertyName) &&
+                (Group == prop.Group) &&
+                (Property?.Equals(prop.Property) ?? prop.Property == null);
+        }
+
+        public override int GetHashCode() => (Key, PropertyName, Group, Property).GetHashCode();
+
+        public static bool operator ==(PropertyHolder left, PropertyHolder right)
+        {
+            if (left is null)
+            {
+                if (right is null)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(PropertyHolder lhs, PropertyHolder rhs) => !(lhs == rhs);
+
     }
 
     #endregion
@@ -42,7 +121,11 @@ namespace ObservableHelpers
             {
                 foreach (var propHolder in PropertyHolders)
                 {
-                    if (propHolder.Property.SetNull()) hasChanges = true;
+                    if (propHolder.Property != null)
+                    {
+                        propHolder.Property = null;
+                        hasChanges = true;
+                    }
                 }
             }
             return hasChanges;
@@ -54,7 +137,7 @@ namespace ObservableHelpers
 
             lock (PropertyHolders)
             {
-                return PropertyHolders.All(i => i.Property.IsNull());
+                return PropertyHolders.All(i => i == null);
             }
         }
 
@@ -91,50 +174,25 @@ namespace ObservableHelpers
             catch { }
         }
 
-        protected virtual PropertyHolder PropertyFactory(string key, string propertyName, string group)
-        {
-            VerifyNotDisposed();
-
-            ObservableProperty prop;
-            prop = new ObservableProperty();
-            var propHolder = new PropertyHolder()
-            {
-                Property = prop,
-                Key = key,
-                PropertyName = propertyName,
-                Group = group
-            };
-            prop.PropertyChanged += (s, e) =>
-            {
-                if (e.PropertyName == nameof(prop.Property))
-                {
-                    OnPropertyChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
-                }
-            };
-            return propHolder;
-        }
-
         protected bool SetProperty<T>(
             T value,
             [CallerMemberName] string propertyName = null,
-            string group = null,
-            Func<T, T, bool> validateValue = null)
+            string group = null)
         {
             VerifyNotDisposed();
 
-            return SetPropertyInternal(value, null, propertyName, group, validateValue);
+            return SetPropertyInternal(value, null, propertyName, group);
         }
 
         protected bool SetPropertyWithKey<T>(
             T value,
             string key,
             [CallerMemberName] string propertyName = null,
-            string group = null,
-            Func<T, T, bool> validateValue = null)
+            string group = null)
         {
             VerifyNotDisposed();
 
-            return SetPropertyInternal(value, key, propertyName, group, validateValue);
+            return SetPropertyInternal(value, key, propertyName, group);
         }
 
         protected T GetProperty<T>(
@@ -168,7 +226,15 @@ namespace ObservableHelpers
                 propHolder = PropertyHolders.FirstOrDefault(i => i.PropertyName == propertyName);
             }
             if (propHolder == null) return false;
-            return propHolder.Property.SetNull();
+            if (propHolder.Property != null)
+            {
+                propHolder.Property = null;
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         protected virtual bool DeletePropertyWithKey(string key)
@@ -181,7 +247,15 @@ namespace ObservableHelpers
                 propHolder = PropertyHolders.FirstOrDefault(i => i.Key == key);
             }
             if (propHolder == null) return false;
-            return propHolder.Property.SetNull();
+            if (propHolder.Property != null)
+            {
+                propHolder.Property = null;
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         protected IEnumerable<PropertyHolder> GetRawProperties(string group = null)
@@ -190,70 +264,105 @@ namespace ObservableHelpers
 
             lock (PropertyHolders)
             {
-                return group == null ? PropertyHolders : PropertyHolders.Where(i => i.Group == group);
+                return group == null ? PropertyHolders.ToList() : PropertyHolders.Where(i => i.Group == group).ToList();
             }
+        }
+
+        protected bool Set(PropertyHolder propertyHolder)
+        {
+            VerifyNotDisposed();
+
+            bool hasChanges = false;
+            var existing = Get(propertyHolder.Key, propertyHolder.PropertyName);
+
+            if (existing == null)
+            {
+                existing = propertyHolder;
+                lock (PropertyHolders)
+                {
+                    PropertyHolders.Add(propertyHolder);
+                }
+                hasChanges = true;
+            }
+            else
+            {
+                if (existing.CopyToSelf(propertyHolder))
+                {
+                    hasChanges = true;
+                }
+            }
+
+            if (hasChanges)
+            {
+                OnPropertyChanged(existing.Key, existing.PropertyName, existing.Group);
+            }
+
+            return hasChanges;
+        }
+
+        protected PropertyHolder Get(string key, string propertyName)
+        {
+            VerifyNotDisposed();
+
+            if (key == null && propertyName == null) throw new Exception("key and propertyName should not be both null");
+
+            lock (PropertyHolders)
+            {
+                if (key == null)
+                {
+                    return PropertyHolders.FirstOrDefault(i => i.PropertyName == propertyName);
+                }
+                else
+                {
+                    return PropertyHolders.FirstOrDefault(i => i.Key == key);
+                }
+            }
+        }
+
+        protected bool Delete(string key, string propertyName)
+        {
+            VerifyNotDisposed();
+
+            if (key == null && propertyName == null) throw new Exception("key and propertyName should not be both null");
+
+            bool hasChanges = false;
+            PropertyHolder propHolder = null;
+            lock (PropertyHolders)
+            {
+                if (key == null)
+                {
+                    propHolder = PropertyHolders.FirstOrDefault(i => i.PropertyName == propertyName);
+                }
+                else
+                {
+                    propHolder = PropertyHolders.FirstOrDefault(i => i.Key == key);
+                }
+            }
+            if (propHolder?.Property != null)
+            {
+                propHolder.Property = null;
+                hasChanges = true;
+                OnPropertyChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
+            }
+
+            return hasChanges;
         }
 
         private bool SetPropertyInternal<T>(
             T value,
             string key = null,
             string propertyName = null,
-            string group = null,
-            Func<T, T, bool> validateValue = null)
+            string group = null)
         {
             VerifyNotDisposed();
-
-            if (key == null && propertyName == null) throw new Exception("key and propertyName should not be both null");
-
-            PropertyHolder propHolder = null;
-            bool hasChanges = false;
-
-            lock (PropertyHolders)
+            
+            return Set(new PropertyHolder()
             {
-                if (key == null) propHolder = PropertyHolders.FirstOrDefault(i => i.PropertyName == propertyName);
-                else propHolder = PropertyHolders.FirstOrDefault(i => i.Key == key);
-            }
-
-            if (propHolder != null)
-            {
-                var existingValue = propHolder.Property.GetValue<T>();
-
-                if (propHolder.Group != group)
-                {
-                    propHolder.Group = group;
-                    hasChanges = true;
-                }
-
-                if (propHolder.PropertyName != propertyName)
-                {
-                    propHolder.PropertyName = propertyName;
-                    hasChanges = true;
-                }
-
-                var hasSetChanges = false;
-
-                if (validateValue?.Invoke(existingValue, value) ?? true)
-                {
-                    if (propHolder.Property.SetValue(value))
-                    {
-                        hasSetChanges = true;
-                        hasChanges = true;
-                    }
-                }
-                if (!hasSetChanges && hasChanges) OnPropertyChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
-            }
-            else
-            {
-                propHolder = PropertyFactory(key, propertyName, group);
-                lock (PropertyHolders)
-                {
-                    PropertyHolders.Add(propHolder);
-                }
-                propHolder.Property.SetValue(value);
-                hasChanges = true;
-            }
-
-            return hasChanges;
+                Property = value,
+                Key = key,
+                PropertyName = propertyName,
+                Group = group
+            });
         }
 
         private T GetPropertyInternal<T>(
@@ -264,45 +373,36 @@ namespace ObservableHelpers
         {
             VerifyNotDisposed();
 
-            if (key == null && propertyName == null) throw new Exception("key and propertyName should not be both null");
-
-            bool hasChanges = false;
-
-            PropertyHolder propHolder = null;
-            lock (PropertyHolders)
+            PropertyHolder propHolder = Get(key, propertyName);
+            PropertyHolder newPropHolder = new PropertyHolder()
             {
-                if (key == null) propHolder = PropertyHolders.FirstOrDefault(i => i.PropertyName == propertyName);
-                else propHolder = PropertyHolders.FirstOrDefault(i => i.Key == key);
-            }
+                Property = defaultValue,
+                Key = key,
+                PropertyName = propertyName,
+                Group = group
+            };
 
-            if (propHolder == null)
+            if (propHolder != null)
             {
-                propHolder = PropertyFactory(key, propertyName, group);
-                lock (PropertyHolders)
+                if (propHolder.CopyToSelf(propHolder.Property, key, propertyName, group))
                 {
-                    PropertyHolders.Add(propHolder);
+                    OnPropertyChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
                 }
-                propHolder.Property.SetValue(defaultValue);
-                hasChanges = true;
             }
             else
             {
-                if (propHolder.Group != group)
-                {
-                    propHolder.Group = group;
-                    hasChanges = true;
-                }
-
-                if (propHolder.PropertyName != propertyName)
-                {
-                    propHolder.PropertyName = propertyName;
-                    hasChanges = true;
-                }
-
-                if (hasChanges) OnPropertyChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
+                propHolder = newPropHolder;
+                Set(newPropHolder);
             }
 
-            return propHolder.Property.GetValue<T>();
+            if (propHolder.Property is T tObj)
+            {
+                return tObj;
+            }
+            else
+            {
+                return defaultValue;
+            }
         }
 
         #endregion

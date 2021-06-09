@@ -68,6 +68,7 @@ namespace ObservableHelpersTest
             obj.Prop2 = "test1";
             await Task.Delay(500);
             Assert.True(raiseProp1Count == 2 && raiseProp2Count == 2);
+            Assert.True(obj.Prop1 == obj.Prop2);
         }
 
         [Fact]
