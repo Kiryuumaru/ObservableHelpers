@@ -45,11 +45,20 @@ namespace ObservableHelpers
             return SetObject(value);
         }
 
-        public virtual T GetValue<T>()
+        public virtual T GetValue<T>(T defaultValue = default)
         {
             VerifyNotDisposed();
 
-            return (T)GetObject();
+            var obj = GetObject();
+
+            if (obj is T tObj)
+            {
+                return tObj;
+            }
+            else
+            {
+                return defaultValue;
+            }
         }
 
         protected virtual bool SetObject(object obj)
