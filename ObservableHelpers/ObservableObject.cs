@@ -239,13 +239,6 @@ namespace ObservableHelpers
             string group = null)
         {
             PropertyHolder propHolder = Get(key, propertyName);
-            PropertyHolder newPropHolder = new PropertyHolder()
-            {
-                Property = defaultValue,
-                Key = key,
-                PropertyName = propertyName,
-                Group = group
-            };
 
             if (propHolder != null)
             {
@@ -256,8 +249,14 @@ namespace ObservableHelpers
             }
             else
             {
-                propHolder = newPropHolder;
-                Set(newPropHolder);
+                propHolder = new PropertyHolder()
+                {
+                    Property = defaultValue,
+                    Key = key,
+                    PropertyName = propertyName,
+                    Group = group
+                };
+                Set(propHolder);
             }
 
             if (propHolder.Property is T tObj)
