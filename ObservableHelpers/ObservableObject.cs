@@ -15,7 +15,7 @@ namespace ObservableHelpers
     {
         #region Helpers
 
-        protected class PropertyHolder
+        protected class NamedProperty
         {
             public ObservableProperty Property { get; set; }
             public string Key { get; set; }
@@ -27,7 +27,7 @@ namespace ObservableHelpers
 
         #region Properties
 
-        private readonly List<PropertyHolder> propertyHolders = new List<PropertyHolder>();
+        private readonly List<NamedProperty> namedProperties = new List<NamedProperty>();
 
         #endregion
 
@@ -38,9 +38,9 @@ namespace ObservableHelpers
             VerifyNotDisposed();
 
             var hasChanges = false;
-            lock (propertyHolders)
+            lock (namedProperties)
             {
-                foreach (var propHolder in propertyHolders)
+                foreach (var propHolder in namedProperties)
                 {
                     if (propHolder.Property.SetNull()) hasChanges = true;
                 }
@@ -52,9 +52,9 @@ namespace ObservableHelpers
         {
             VerifyNotDisposed();
 
-            lock (propertyHolders)
+            lock (namedProperties)
             {
-                return propertyHolders.All(i => i.Property.IsNull());
+                return namedProperties.All(i => i.Property.IsNull());
             }
         }
 
@@ -118,10 +118,10 @@ namespace ObservableHelpers
         {
             VerifyNotDisposed();
 
-            PropertyHolder propHolder = null;
-            lock (propertyHolders)
+            NamedProperty propHolder = null;
+            lock (namedProperties)
             {
-                propHolder = propertyHolders.FirstOrDefault(i => i.PropertyName == propertyName);
+                propHolder = namedProperties.FirstOrDefault(i => i.PropertyName == propertyName);
             }
             if (propHolder == null) return false;
             return propHolder.Property.SetNull();
@@ -131,35 +131,35 @@ namespace ObservableHelpers
         {
             VerifyNotDisposed();
 
-            PropertyHolder propHolder = null;
-            lock (propertyHolders)
+            NamedProperty propHolder = null;
+            lock (namedProperties)
             {
-                propHolder = propertyHolders.FirstOrDefault(i => i.Key == key);
+                propHolder = namedProperties.FirstOrDefault(i => i.Key == key);
             }
             if (propHolder == null) return false;
             return propHolder.Property.SetNull();
         }
 
-        protected IEnumerable<PropertyHolder> GetRawProperties(string group = null)
+        protected IEnumerable<NamedProperty> GetRawProperties(string group = null)
         {
             VerifyNotDisposed();
 
-            lock (propertyHolders)
+            lock (namedProperties)
             {
-                return group == null ? propertyHolders.ToList() : propertyHolders.Where(i => i.Group == group).ToList();
+                return group == null ? namedProperties.ToList() : namedProperties.Where(i => i.Group == group).ToList();
             }
         }
 
-        protected void AddCore(PropertyHolder propertyHolder)
+        protected void AddCore(NamedProperty namedProperty)
         {
             VerifyNotDisposed();
 
             bool exists = false;
-            lock (propertyHolders)
+            lock (namedProperties)
             {
-                if (propertyHolder.Key == null)
+                if (namedProperty.Key == null)
                 {
-                    if (propertyHolders.Any(i => i.PropertyName == propertyHolder.PropertyName))
+                    if (namedProperties.Any(i => i.PropertyName == namedProperty.PropertyName))
                     {
                         exists = true;
                         throw new Exception("Property already exists");
@@ -167,14 +167,14 @@ namespace ObservableHelpers
                 }
                 else
                 {
-                    if (propertyHolders.Any(i => i.Key == propertyHolder.Key))
+                    if (namedProperties.Any(i => i.Key == namedProperty.Key))
                     {
                         exists = true;
                     }
                 }
                 if (!exists)
                 {
-                    propertyHolders.Add(propertyHolder);
+                    namedProperties.Add(namedProperty);
                 }
             }
             if (exists)
@@ -183,21 +183,21 @@ namespace ObservableHelpers
             }
         }
 
-        protected PropertyHolder GetCore(string key, string propertyName)
+        protected NamedProperty GetCore(string key, string propertyName)
         {
             VerifyNotDisposed();
 
             if (key == null && propertyName == null) throw new Exception("key and propertyName should not be both null");
 
-            lock (propertyHolders)
+            lock (namedProperties)
             {
                 if (key == null)
                 {
-                    return propertyHolders.FirstOrDefault(i => i.PropertyName == propertyName);
+                    return namedProperties.FirstOrDefault(i => i.PropertyName == propertyName);
                 }
                 else
                 {
-                    return propertyHolders.FirstOrDefault(i => i.Key == key);
+                    return namedProperties.FirstOrDefault(i => i.Key == key);
                 }
             }
         }
@@ -209,15 +209,15 @@ namespace ObservableHelpers
             if (key == null && propertyName == null) throw new Exception("key and propertyName should not be both null");
 
             int removedCount = 0;
-            lock (propertyHolders)
+            lock (namedProperties)
             {
                 if (key == null)
                 {
-                    removedCount = propertyHolders.RemoveAll(i => i.PropertyName == propertyName);
+                    removedCount = namedProperties.RemoveAll(i => i.PropertyName == propertyName);
                 }
                 else
                 {
-                    removedCount = propertyHolders.RemoveAll(i => i.Key == key);
+                    removedCount = namedProperties.RemoveAll(i => i.Key == key);
                 }
             }
             return removedCount != 0;
@@ -229,18 +229,18 @@ namespace ObservableHelpers
 
             if (key == null && propertyName == null) throw new Exception("key and propertyName should not be both null");
 
-            lock (propertyHolders)
+            lock (namedProperties)
             {
                 if (key == null)
                 {
-                    if (propertyHolders.Any(i => i.PropertyName == propertyName))
+                    if (namedProperties.Any(i => i.PropertyName == propertyName))
                     {
                         return true;
                     }
                 }
                 else
                 {
-                    if (propertyHolders.Any(i => i.Key == key))
+                    if (namedProperties.Any(i => i.Key == key))
                     {
                         return true;
                     }
@@ -260,19 +260,19 @@ namespace ObservableHelpers
         {
             VerifyNotDisposed();
 
-            PropertyHolder propHolder = null;
-            lock (propertyHolders)
+            NamedProperty propHolder = null;
+            lock (namedProperties)
             {
-                propHolder = propertyHolders.FirstOrDefault(i => i.Key == key);
+                propHolder = namedProperties.FirstOrDefault(i => i.Key == key);
             }
             if (propHolder != null) OnPropertyChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
         }
 
-        protected virtual PropertyHolder PropertyFactory(string key, string propertyName, string group)
+        protected virtual NamedProperty NamedPropertyFactory(string key, string propertyName, string group)
         {
             VerifyNotDisposed();
 
-            return new PropertyHolder()
+            return new NamedProperty()
             {
                 Property = new ObservableProperty(),
                 Key = key,
@@ -281,17 +281,17 @@ namespace ObservableHelpers
             };
         }
 
-        protected PropertyHolder MakePropertyHolder(string key, string propertyName, string group)
+        protected NamedProperty MakeNamedProperty(string key, string propertyName, string group)
         {
-            PropertyHolder propHolder = PropertyFactory(key, propertyName, group);
-            propHolder.Property.PropertyChanged += (s, e) =>
+            NamedProperty namedProperty = NamedPropertyFactory(key, propertyName, group);
+            namedProperty.Property.PropertyChanged += (s, e) =>
             {
-                if (e.PropertyName == nameof(propHolder.Property.Property))
+                if (e.PropertyName == nameof(namedProperty.Property.Property))
                 {
-                    OnPropertyChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
+                    OnPropertyChanged(namedProperty.Key, namedProperty.PropertyName, namedProperty.Group);
                 }
             };
-            return propHolder;
+            return namedProperty;
         }
 
         private bool SetPropertyInternal<T>(
@@ -301,7 +301,7 @@ namespace ObservableHelpers
             string group = null)
         {
             bool hasChanges = false;
-            PropertyHolder propHolder = GetCore(key, propertyName);
+            NamedProperty propHolder = GetCore(key, propertyName);
 
             if (propHolder != null)
             {
@@ -332,7 +332,7 @@ namespace ObservableHelpers
             }
             else
             {
-                propHolder = MakePropertyHolder(key, propertyName, group);
+                propHolder = MakeNamedProperty(key, propertyName, group);
                 AddCore(propHolder);
                 propHolder.Property.SetValue(value);
                 hasChanges = true;
@@ -348,11 +348,11 @@ namespace ObservableHelpers
             string group = null)
         {
             bool hasChanges = false;
-            PropertyHolder propHolder = GetCore(key, propertyName);
+            NamedProperty propHolder = GetCore(key, propertyName);
 
             if (propHolder == null)
             {
-                propHolder = MakePropertyHolder(key, propertyName, group);
+                propHolder = MakeNamedProperty(key, propertyName, group);
                 AddCore(propHolder);
                 propHolder.Property.SetValue(defaultValue);
             }
