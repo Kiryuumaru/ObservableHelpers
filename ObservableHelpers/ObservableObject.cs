@@ -106,7 +106,7 @@ namespace ObservableHelpers
     {
         #region Properties
 
-        protected List<PropertyHolder> PropertyHolders { get; set; } = new List<PropertyHolder>();
+        private readonly List<PropertyHolder> propertyHolders = new List<PropertyHolder>();
 
         #endregion
 
@@ -117,9 +117,9 @@ namespace ObservableHelpers
             VerifyNotDisposed();
 
             var hasChanges = false;
-            lock (PropertyHolders)
+            lock (propertyHolders)
             {
-                foreach (var propHolder in PropertyHolders)
+                foreach (var propHolder in propertyHolders)
                 {
                     if (propHolder.Property != null)
                     {
@@ -135,9 +135,9 @@ namespace ObservableHelpers
         {
             VerifyNotDisposed();
 
-            lock (PropertyHolders)
+            lock (propertyHolders)
             {
-                return PropertyHolders.All(i => i == null);
+                return propertyHolders.All(i => i == null);
             }
         }
 
@@ -153,9 +153,9 @@ namespace ObservableHelpers
             VerifyNotDisposed();
 
             PropertyHolder propHolder = null;
-            lock (PropertyHolders)
+            lock (propertyHolders)
             {
-                propHolder = PropertyHolders.FirstOrDefault(i => i.Key == key);
+                propHolder = propertyHolders.FirstOrDefault(i => i.Key == key);
             }
             if (propHolder != null) OnPropertyChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
         }
@@ -221,9 +221,9 @@ namespace ObservableHelpers
             VerifyNotDisposed();
 
             PropertyHolder propHolder = null;
-            lock (PropertyHolders)
+            lock (propertyHolders)
             {
-                propHolder = PropertyHolders.FirstOrDefault(i => i.PropertyName == propertyName);
+                propHolder = propertyHolders.FirstOrDefault(i => i.PropertyName == propertyName);
             }
             if (propHolder == null) return false;
             if (propHolder.Property != null)
@@ -242,9 +242,9 @@ namespace ObservableHelpers
             VerifyNotDisposed();
 
             PropertyHolder propHolder = null;
-            lock (PropertyHolders)
+            lock (propertyHolders)
             {
-                propHolder = PropertyHolders.FirstOrDefault(i => i.Key == key);
+                propHolder = propertyHolders.FirstOrDefault(i => i.Key == key);
             }
             if (propHolder == null) return false;
             if (propHolder.Property != null)
@@ -262,9 +262,9 @@ namespace ObservableHelpers
         {
             VerifyNotDisposed();
 
-            lock (PropertyHolders)
+            lock (propertyHolders)
             {
-                return group == null ? PropertyHolders.ToList() : PropertyHolders.Where(i => i.Group == group).ToList();
+                return group == null ? propertyHolders.ToList() : propertyHolders.Where(i => i.Group == group).ToList();
             }
         }
 
@@ -278,9 +278,9 @@ namespace ObservableHelpers
             if (existing == null)
             {
                 existing = propertyHolder;
-                lock (PropertyHolders)
+                lock (propertyHolders)
                 {
-                    PropertyHolders.Add(propertyHolder);
+                    propertyHolders.Add(propertyHolder);
                 }
                 hasChanges = true;
             }
@@ -306,15 +306,15 @@ namespace ObservableHelpers
 
             if (key == null && propertyName == null) throw new Exception("key and propertyName should not be both null");
 
-            lock (PropertyHolders)
+            lock (propertyHolders)
             {
                 if (key == null)
                 {
-                    return PropertyHolders.FirstOrDefault(i => i.PropertyName == propertyName);
+                    return propertyHolders.FirstOrDefault(i => i.PropertyName == propertyName);
                 }
                 else
                 {
-                    return PropertyHolders.FirstOrDefault(i => i.Key == key);
+                    return propertyHolders.FirstOrDefault(i => i.Key == key);
                 }
             }
         }
@@ -327,15 +327,15 @@ namespace ObservableHelpers
 
             bool hasChanges = false;
             PropertyHolder propHolder = null;
-            lock (PropertyHolders)
+            lock (propertyHolders)
             {
                 if (key == null)
                 {
-                    propHolder = PropertyHolders.FirstOrDefault(i => i.PropertyName == propertyName);
+                    propHolder = propertyHolders.FirstOrDefault(i => i.PropertyName == propertyName);
                 }
                 else
                 {
-                    propHolder = PropertyHolders.FirstOrDefault(i => i.Key == key);
+                    propHolder = propertyHolders.FirstOrDefault(i => i.Key == key);
                 }
             }
             if (propHolder?.Property != null)
