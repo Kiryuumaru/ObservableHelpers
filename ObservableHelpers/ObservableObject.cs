@@ -281,6 +281,19 @@ namespace ObservableHelpers
             };
         }
 
+        protected PropertyHolder MakePropertyHolder(string key, string propertyName, string group)
+        {
+            PropertyHolder propHolder = PropertyFactory(key, propertyName, group);
+            propHolder.Property.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == nameof(propHolder.Property.Property))
+                {
+                    OnPropertyChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
+                }
+            };
+            return propHolder;
+        }
+
         private bool SetPropertyInternal<T>(
             T value,
             string key = null,
@@ -364,21 +377,6 @@ namespace ObservableHelpers
             }
 
             return propHolder.Property.GetValue<T>();
-        }
-
-        private PropertyHolder MakePropertyHolder(string key, string propertyName, string group)
-        {
-            VerifyNotDisposed();
-
-            PropertyHolder propHolder = PropertyFactory(key, propertyName, group);
-            propHolder.Property.PropertyChanged += (s, e) =>
-            {
-                if (e.PropertyName == nameof(propHolder.Property.Property))
-                {
-                    OnPropertyChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
-                }
-            };
-            return propHolder;
         }
 
         #endregion
