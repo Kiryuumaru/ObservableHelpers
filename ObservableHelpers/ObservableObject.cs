@@ -223,8 +223,6 @@ namespace ObservableHelpers
             string propertyName = null,
             string group = null)
         {
-            VerifyNotDisposed();
-            
             return Set(new PropertyHolder()
             {
                 Property = value,
@@ -240,8 +238,6 @@ namespace ObservableHelpers
             [CallerMemberName] string propertyName = null,
             string group = null)
         {
-            VerifyNotDisposed();
-
             PropertyHolder propHolder = Get(key, propertyName);
             PropertyHolder newPropHolder = new PropertyHolder()
             {
