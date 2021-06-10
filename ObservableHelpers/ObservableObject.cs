@@ -13,6 +13,74 @@ namespace ObservableHelpers
 {
     public class ObservableObject : Observable
     {
+        #region HelperClasses
+
+        protected class PropertyHolder
+        {
+            public object Property { get; protected set; }
+
+            public string Key { get; protected set; }
+
+            public string PropertyName { get; protected set; }
+
+            public string Group { get; protected set; }
+
+            public PropertyHolder(object property, string key, string propertyName, string group)
+            {
+                CopyToSelf(property, key, propertyName, group);
+            }
+
+            public virtual bool UpdateProperty(object property)
+            {
+                if (!(Property?.Equals(property) ?? property == null))
+                {
+                    Property = property;
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            internal bool CopyToSelf(object property, string key, string propertyName, string group)
+            {
+                var hasChanges = false;
+                if (Key != key)
+                {
+                    Key = key;
+                    hasChanges = true;
+                }
+
+                if (PropertyName != propertyName)
+                {
+                    PropertyName = propertyName;
+                    hasChanges = true;
+                }
+
+                if (Group != group)
+                {
+                    Group = group;
+                    hasChanges = true;
+                }
+
+                if (UpdateProperty(property))
+                {
+                    Property = property;
+                    hasChanges = true;
+                }
+                return hasChanges;
+            }
+
+            internal bool CopyToSelf(PropertyHolder propertyHolder)
+            {
+                return CopyToSelf(propertyHolder.Property, propertyHolder.Key, propertyHolder.PropertyName, propertyHolder.Group);
+            }
+
+        }
+
+        #endregion
+
         #region Properties
 
         private readonly List<PropertyHolder> propertyHolders = new List<PropertyHolder>();
@@ -30,9 +98,8 @@ namespace ObservableHelpers
             {
                 foreach (var propHolder in propertyHolders)
                 {
-                    if (propHolder.Property != null)
+                    if (propHolder.UpdateProperty(null))
                     {
-                        propHolder.Property = null;
                         hasChanges = true;
                     }
                 }
@@ -119,12 +186,12 @@ namespace ObservableHelpers
 
         protected virtual bool DeleteProperty(string propertyName)
         {
-            return Delete(null, propertyName);
+            return Get(null, propertyName)?.UpdateProperty(null) ?? false;
         }
 
         protected virtual bool DeletePropertyWithKey(string key)
         {
-            return Delete(key, null);
+            return Get(key, null)?.UpdateProperty(null) ?? false;
         }
 
         protected IEnumerable<PropertyHolder> GetRawProperties(string group = null)
@@ -188,33 +255,25 @@ namespace ObservableHelpers
             }
         }
 
-        protected bool Delete(string key, string propertyName)
+        protected bool Remove(string key, string propertyName)
         {
             VerifyNotDisposed();
 
             if (key == null && propertyName == null) throw new Exception("key and propertyName should not be both null");
 
-            bool hasChanges = false;
-            PropertyHolder propHolder = null;
+            int removedCount = 0;
             lock (propertyHolders)
             {
                 if (key == null)
                 {
-                    propHolder = propertyHolders.FirstOrDefault(i => i.PropertyName == propertyName);
+                    removedCount = propertyHolders.RemoveAll(i => i.PropertyName == propertyName);
                 }
                 else
                 {
-                    propHolder = propertyHolders.FirstOrDefault(i => i.Key == key);
+                    removedCount = propertyHolders.RemoveAll(i => i.Key == key);
                 }
             }
-            if (propHolder?.Property != null)
-            {
-                propHolder.Property = null;
-                hasChanges = true;
-                OnPropertyChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
-            }
-
-            return hasChanges;
+            return removedCount != 0;
         }
 
         private bool SetPropertyInternal<T>(
@@ -223,13 +282,7 @@ namespace ObservableHelpers
             string propertyName = null,
             string group = null)
         {
-            return Set(new PropertyHolder()
-            {
-                Property = value,
-                Key = key,
-                PropertyName = propertyName,
-                Group = group
-            });
+            return Set(new PropertyHolder(value, key, propertyName, group));
         }
 
         private T GetPropertyInternal<T>(
@@ -249,13 +302,7 @@ namespace ObservableHelpers
             }
             else
             {
-                propHolder = new PropertyHolder()
-                {
-                    Property = defaultValue,
-                    Key = key,
-                    PropertyName = propertyName,
-                    Group = group
-                };
+                propHolder = new PropertyHolder(defaultValue, key, propertyName, group);
                 Set(propHolder);
             }
 
