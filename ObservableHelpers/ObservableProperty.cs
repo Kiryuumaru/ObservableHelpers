@@ -65,7 +65,7 @@ namespace ObservableHelpers
         {
             VerifyNotDisposed();
 
-            if (objectHolder != obj)
+            if (!(objectHolder?.Equals(obj) ?? obj == null))
             {
                 objectHolder = obj;
                 OnPropertyChanged(nameof(Property));
