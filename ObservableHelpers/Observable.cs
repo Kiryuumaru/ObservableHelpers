@@ -7,9 +7,16 @@ using System.Threading;
 
 namespace ObservableHelpers
 {
-    public abstract class Observable : SyncContext, INullableObject, INotifyPropertyChanged
+    public abstract class Observable : Disposable, INullableObject, ISynchronizationObject, INotifyPropertyChanged
     {
+        public SynchronizationOperation SynchronizationOperation { get; private set; }
+
         public event PropertyChangedEventHandler PropertyChanged;
+
+        protected Observable()
+        {
+            SynchronizationOperation = new SynchronizationOperation();
+        }
 
         public abstract bool SetNull();
 
@@ -17,7 +24,7 @@ namespace ObservableHelpers
 
         protected virtual void OnPropertyChanged(PropertyChangedEventArgs args)
         {
-            SynchronizationContextPost(delegate
+            SynchronizationOperation.ContextPost(delegate
             {
                 PropertyChanged?.Invoke(this, args);
             });

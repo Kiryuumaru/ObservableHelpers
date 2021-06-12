@@ -284,6 +284,7 @@ namespace ObservableHelpers
         protected NamedProperty MakeNamedProperty(string key, string propertyName, string group)
         {
             NamedProperty namedProperty = NamedPropertyFactory(key, propertyName, group);
+            namedProperty.Property.SynchronizationOperation.SetContext(this);
             namedProperty.Property.PropertyChanged += (s, e) =>
             {
                 if (e.PropertyName == nameof(namedProperty.Property.Property))

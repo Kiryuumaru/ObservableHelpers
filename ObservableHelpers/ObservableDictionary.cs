@@ -139,7 +139,7 @@ namespace ObservableHelpers
 
             var args = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset);
 
-            SynchronizationContextPost(delegate
+            SynchronizationOperation.ContextPost(delegate
             {
                 CollectionChanged?.Invoke(this, args);
             });
