@@ -287,6 +287,10 @@ namespace ObservableHelpers
             namedProperty.Property.SynchronizationOperation.SetContext(this);
             namedProperty.Property.PropertyChanged += (s, e) =>
             {
+                if (IsDisposed)
+                {
+                    return;
+                }
                 if (e.PropertyName == nameof(namedProperty.Property.Property))
                 {
                     OnPropertyChanged(namedProperty.Key, namedProperty.PropertyName, namedProperty.Group);
