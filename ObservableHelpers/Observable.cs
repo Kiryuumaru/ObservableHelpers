@@ -7,16 +7,9 @@ using System.Threading;
 
 namespace ObservableHelpers
 {
-    public abstract class Observable : Disposable, INullableObject, ISynchronizationObject, INotifyPropertyChanged
+    public abstract class Observable : SyncContext, INullableObject, INotifyPropertyChanged
     {
-        public SynchronizationOperation SynchronizationOperation { get; private set; }
-
         public event PropertyChangedEventHandler PropertyChanged;
-
-        protected Observable()
-        {
-            SynchronizationOperation = new SynchronizationOperation();
-        }
 
         public abstract bool SetNull();
 
