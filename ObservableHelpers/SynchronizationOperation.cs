@@ -62,5 +62,21 @@ namespace ObservableHelpers
         {
             contextFactory.Invoke().Send(s => action(), null);
         }
+
+        public async Task ContextSendAsync(Action action)
+        {
+            await Task.Run(delegate
+            {
+                contextFactory.Invoke().Send(s => action(), null);
+            });
+        }
+
+        public async Task ContextSendAsync(Func<Task> func)
+        {
+            await Task.Run(delegate
+            {
+                contextFactory.Invoke().Send(async s => await func(), null);
+            });
+        }
     }
 }

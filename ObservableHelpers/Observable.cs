@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace ObservableHelpers
 {
@@ -17,7 +18,7 @@ namespace ObservableHelpers
 
         protected virtual void OnPropertyChanged(PropertyChangedEventArgs args)
         {
-            SynchronizationOperation.ContextPost(delegate
+            ContextPost(delegate
             {
                 PropertyChanged?.Invoke(this, args);
             });
