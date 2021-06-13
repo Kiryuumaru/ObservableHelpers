@@ -18,6 +18,11 @@ namespace ObservableHelpers
             SetContext();
         }
 
+        public void SetContext()
+        {
+            SetContext(AsyncOperationManager.SynchronizationContext);
+        }
+
         public void SetContext(Action<(Action callback, object[] parameters)> contextPost, Action<(Action callback, object[] parameters)> contextSend)
         {
             this.contextPost = contextPost;
@@ -31,23 +36,18 @@ namespace ObservableHelpers
                 action => context.Send(s => action.callback(), null));
         }
 
-        public void SetContext()
-        {
-            SetContext(AsyncOperationManager.SynchronizationContext);
-        }
-
-        public void SetContext(SyncOperation syncContext)
+        public void SetContext(SyncOperation syncOperation)
         {
             SetContext(
-                action => syncContext.contextPost(action),
-                action => syncContext.contextSend(action));
+                action => syncOperation.contextPost(action),
+                action => syncOperation.contextSend(action));
         }
 
-        public void SetContext(IObservable observable)
+        public void SetContext(ISyncObject syncObject)
         {
             SetContext(
-                action => observable.SyncOperation.contextPost(action),
-                action => observable.SyncOperation.contextSend(action));
+                action => syncObject.SyncOperation.contextPost(action),
+                action => syncObject.SyncOperation.contextSend(action));
         }
 
         public void ContextPost(Action action, params object[] parameters)
