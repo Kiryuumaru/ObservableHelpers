@@ -101,21 +101,22 @@ namespace ObservableHelpersTest
             var context4 = new SyncContext();
             var context5 = new SyncContext();
 
+
             context5.SynchronizationOperation.SetContext(context4);
-            context4.SynchronizationOperation.SetContext(context3);
             context3.SynchronizationOperation.SetContext(context2);
-            context2.SynchronizationOperation.SetContext(context1);
             context1.SynchronizationOperation.SetContext(contextMain);
+            context4.SynchronizationOperation.SetContext(context3);
+            context2.SynchronizationOperation.SetContext(context1);
 
             contextMain.SynchronizationOperation.SetContext(
                 callback =>
                 {
                     hasPostRaised = true;
-                    callback();
+                    callback.callback();
                 }, callback =>
                 {
                     hasSendRaised = true;
-                    callback();
+                    callback.callback();
                 });
 
             context5.SynchronizationOperation.ContextPost(delegate { });

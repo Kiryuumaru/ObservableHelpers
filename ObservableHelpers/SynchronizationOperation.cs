@@ -10,15 +10,15 @@ namespace ObservableHelpers
 {
     public class SynchronizationOperation
     {
-        private Action<Action> contextPost;
-        private Action<Action> contextSend;
+        private Action<(Action callback, object[] parameters)> contextPost;
+        private Action<(Action callback, object[] parameters)> contextSend;
 
         public SynchronizationOperation()
         {
             SetContext();
         }
 
-        public void SetContext(Action<Action> contextPost, Action<Action> contextSend)
+        public void SetContext(Action<(Action callback, object[] parameters)> contextPost, Action<(Action callback, object[] parameters)> contextSend)
         {
             this.contextPost = contextPost;
             this.contextSend = contextSend;
@@ -27,8 +27,8 @@ namespace ObservableHelpers
         public void SetContext(SynchronizationContext context)
         {
             SetContext(
-                callback => context.Post(s => callback(), null),
-                callback => context.Send(s => callback(), null));
+                action => context.Post(s => action.callback(), null),
+                action => context.Send(s => action.callback(), null));
         }
 
         public void SetContext()
@@ -39,40 +39,40 @@ namespace ObservableHelpers
         public void SetContext(SynchronizationOperation syncContext)
         {
             SetContext(
-                callback => syncContext.contextPost(callback),
-                callback => syncContext.contextSend(callback));
+                action => syncContext.contextPost(action),
+                action => syncContext.contextSend(action));
         }
 
         public void SetContext(ISynchronizationObject syncObject)
         {
             SetContext(
-                callback => syncObject.SynchronizationOperation.contextPost(callback),
-                callback => syncObject.SynchronizationOperation.contextSend(callback));
+                action => syncObject.SynchronizationOperation.contextPost(action),
+                action => syncObject.SynchronizationOperation.contextSend(action));
         }
 
-        public void ContextPost(Action action)
+        public void ContextPost(Action action, params object[] parameters)
         {
-            contextPost(action);
+            contextPost((action, parameters));
         }
 
-        public void ContextSend(Action action)
+        public void ContextSend(Action action, params object[] parameters)
         {
-            contextSend(action);
+            contextSend((action, parameters));
         }
 
-        public async Task ContextSendAsync(Action action)
+        public async Task ContextSendAsync(Action action, params object[] parameters)
         {
             await Task.Run(delegate
             {
-                contextSend(action);
+                contextSend((action, parameters));
             });
         }
 
-        public async Task ContextSendAsync(Func<Task> func)
+        public async Task ContextSendAsync(Func<Task> func, params object[] parameters)
         {
             await Task.Run(delegate
             {
-                contextSend(async () => await func());
+                contextSend((async () => await func(), parameters));
             });
         }
     }
