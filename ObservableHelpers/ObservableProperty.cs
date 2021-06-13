@@ -28,14 +28,30 @@ namespace ObservableHelpers
         {
             VerifyNotDisposed();
 
-            return SetObject(null);
+            if (GetObject() is INullableObject model)
+            {
+                return model.SetNull();
+            }
+            else
+            {
+                return SetObject(null);
+            }
         }
 
         public override bool IsNull()
         {
             VerifyNotDisposed();
 
-            return GetObject() == null;
+            var obj = GetObject();
+
+            if (obj is INullableObject model)
+            {
+                return model.IsNull();
+            }
+            else
+            {
+                return obj == null;
+            }
         }
 
         public virtual bool SetValue<T>(T value)
