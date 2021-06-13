@@ -72,6 +72,25 @@ namespace ObservableHelpers
             catch { }
         }
 
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                lock (namedProperties)
+                {
+                    foreach (var item in namedProperties.ToList())
+                    {
+                        if (!item.Property.IsDisposed)
+                        {
+                            item.Property.Dispose();
+                        }
+                    }
+                    namedProperties.Clear();
+                }
+            }
+            base.Dispose(disposing);
+        }
+
         protected bool SetProperty<T>(
             T value,
             [CallerMemberName] string propertyName = null,
