@@ -8,8 +8,8 @@ using System.Threading.Tasks;
 
 namespace ObservableHelpers
 {
-    public interface ISynchronizationObject
+    public interface ISyncObject
     {
-        SynchronizationOperation SynchronizationOperation { get; }
+        SyncOperation SyncOperation { get; }
     }
 }

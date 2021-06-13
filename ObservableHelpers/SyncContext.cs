@@ -8,13 +8,13 @@ using System.Threading.Tasks;
 
 namespace ObservableHelpers
 {
-    public class SyncContext : Disposable, ISynchronizationObject
+    public class SyncContext : Disposable, ISyncObject
     {
-        public SynchronizationOperation SynchronizationOperation { get; private set; }
+        public SyncOperation SyncOperation { get; private set; }
 
         public SyncContext()
         {
-            SynchronizationOperation = new SynchronizationOperation();
+            SyncOperation = new SyncOperation();
         }
 
         protected void ContextPost(Action action)
@@ -23,7 +23,7 @@ namespace ObservableHelpers
             {
                 return;
             }
-            SynchronizationOperation.ContextPost(() =>
+            SyncOperation.ContextPost(() =>
             {
                 if (IsDisposed)
                 {
@@ -39,7 +39,7 @@ namespace ObservableHelpers
             {
                 return;
             }
-            SynchronizationOperation.ContextSend(() =>
+            SyncOperation.ContextSend(() =>
             {
                 if (IsDisposed)
                 {
@@ -55,7 +55,7 @@ namespace ObservableHelpers
             {
                 return;
             }
-            await SynchronizationOperation.ContextSendAsync(() =>
+            await SyncOperation.ContextSendAsync(() =>
             {
                 if (IsDisposed)
                 {
@@ -71,7 +71,7 @@ namespace ObservableHelpers
             {
                 return;
             }
-            await SynchronizationOperation.ContextSendAsync(async () =>
+            await SyncOperation.ContextSendAsync(async () =>
             {
                 if (IsDisposed)
                 {

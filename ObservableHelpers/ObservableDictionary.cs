@@ -156,7 +156,7 @@ namespace ObservableHelpers
         {
             VerifyNotDisposed();
 
-            bool result = dictionary.TryAdd(key, ValueFactory(key, value).value);
+            bool result = dictionary.TryAdd(key, MakeValue(key, value).value);
             if (result) NotifyObserversOfChange();
             return result;
         }
@@ -174,7 +174,7 @@ namespace ObservableHelpers
         {
             VerifyNotDisposed();
 
-            dictionary[key] = ValueFactory(key, value).value;
+            dictionary[key] = MakeValue(key, value).value;
             NotifyObserversOfChange();
         }
 
@@ -192,6 +192,20 @@ namespace ObservableHelpers
             bool result = dictionary.TryRemove(key, out value);
             if (result) NotifyObserversOfChange();
             return result;
+        }
+
+        protected (TKey key, TValue value) MakeValue(TKey key, TValue value)
+        {
+            VerifyNotDisposed();
+
+            var pair = ValueFactory(key, value);
+
+            if (value is ISyncObject sync)
+            {
+                sync.SyncOperation.SetContext(this);
+            }
+
+            return pair;
         }
 
         IEnumerator<KeyValuePair<TKey, TValue>> IEnumerable<KeyValuePair<TKey, TValue>>.GetEnumerator()

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace ObservableHelpers
 {
-    public abstract class Observable : SyncContext, INullableObject, INotifyPropertyChanged
+    public abstract class Observable : SyncContext, IObservable
     {
         public event PropertyChangedEventHandler PropertyChanged;
 

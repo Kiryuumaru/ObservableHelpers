@@ -303,7 +303,7 @@ namespace ObservableHelpers
         protected NamedProperty MakeNamedProperty(string key, string propertyName, string group)
         {
             NamedProperty namedProperty = NamedPropertyFactory(key, propertyName, group);
-            namedProperty.Property.SynchronizationOperation.SetContext(this);
+            namedProperty.Property.SyncOperation.SetContext(this);
             namedProperty.Property.PropertyChanged += (s, e) =>
             {
                 if (IsDisposed)
@@ -329,6 +329,8 @@ namespace ObservableHelpers
 
             if (propHolder != null)
             {
+                propHolder.Property.SyncOperation.SetContext(this);
+
                 if (propHolder.Group != group)
                 {
                     propHolder.Group = group;
@@ -382,6 +384,8 @@ namespace ObservableHelpers
             }
             else
             {
+                propHolder.Property.SyncOperation.SetContext(this);
+
                 if (propHolder.Group != group)
                 {
                     propHolder.Group = group;

@@ -8,12 +8,12 @@ using System.Threading.Tasks;
 
 namespace ObservableHelpers
 {
-    public class SynchronizationOperation
+    public class SyncOperation
     {
         private Action<(Action callback, object[] parameters)> contextPost;
         private Action<(Action callback, object[] parameters)> contextSend;
 
-        public SynchronizationOperation()
+        public SyncOperation()
         {
             SetContext();
         }
@@ -36,18 +36,18 @@ namespace ObservableHelpers
             SetContext(AsyncOperationManager.SynchronizationContext);
         }
 
-        public void SetContext(SynchronizationOperation syncContext)
+        public void SetContext(SyncOperation syncContext)
         {
             SetContext(
                 action => syncContext.contextPost(action),
                 action => syncContext.contextSend(action));
         }
 
-        public void SetContext(ISynchronizationObject syncObject)
+        public void SetContext(IObservable observable)
         {
             SetContext(
-                action => syncObject.SynchronizationOperation.contextPost(action),
-                action => syncObject.SynchronizationOperation.contextSend(action));
+                action => observable.SyncOperation.contextPost(action),
+                action => observable.SyncOperation.contextSend(action));
         }
 
         public void ContextPost(Action action, params object[] parameters)

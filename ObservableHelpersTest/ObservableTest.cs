@@ -102,13 +102,13 @@ namespace ObservableHelpersTest
             var context5 = new SyncContext();
 
 
-            context5.SynchronizationOperation.SetContext(context4);
-            context3.SynchronizationOperation.SetContext(context2);
-            context1.SynchronizationOperation.SetContext(contextMain);
-            context4.SynchronizationOperation.SetContext(context3);
-            context2.SynchronizationOperation.SetContext(context1);
+            context5.SyncOperation.SetContext(context4);
+            context3.SyncOperation.SetContext(context2);
+            context1.SyncOperation.SetContext(contextMain);
+            context4.SyncOperation.SetContext(context3);
+            context2.SyncOperation.SetContext(context1);
 
-            contextMain.SynchronizationOperation.SetContext(
+            contextMain.SyncOperation.SetContext(
                 callback =>
                 {
                     hasPostRaised = true;
@@ -119,8 +119,8 @@ namespace ObservableHelpersTest
                     callback.callback();
                 });
 
-            context5.SynchronizationOperation.ContextPost(delegate { });
-            context5.SynchronizationOperation.ContextSend(delegate { });
+            context5.SyncOperation.ContextPost(delegate { });
+            context5.SyncOperation.ContextSend(delegate { });
 
             await Task.Delay(500);
 

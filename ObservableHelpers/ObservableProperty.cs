@@ -57,6 +57,11 @@ namespace ObservableHelpers
             }
             else
             {
+                if (defaultValue is ISyncObject sync)
+                {
+                    sync.SyncOperation.SetContext(this);
+                }
+
                 return defaultValue;
             }
         }
@@ -64,6 +69,11 @@ namespace ObservableHelpers
         protected virtual bool SetObject(object obj)
         {
             VerifyNotDisposed();
+
+            if (obj is ISyncObject sync)
+            {
+                sync.SyncOperation.SetContext(this);
+            }
 
             if (!(objectHolder?.Equals(obj) ?? obj == null))
             {
@@ -80,6 +90,11 @@ namespace ObservableHelpers
         protected virtual object GetObject()
         {
             VerifyNotDisposed();
+
+            if (objectHolder is ISyncObject sync)
+            {
+                sync.SyncOperation.SetContext(this);
+            }
 
             return objectHolder;
         }
