@@ -10,64 +10,61 @@ namespace ObservableHelpers
 {
     public class SynchronizationOperation
     {
-        private Func<SynchronizationContext> contextFactory;
+        private Action<Action> contextPost;
+        private Action<Action> contextSend;
 
         public SynchronizationOperation()
         {
             SetContext();
         }
 
-        public void SetContext()
+        public void SetContext(Action<Action> contextPost, Action<Action> contextSend)
         {
-            SynchronizationContext context = AsyncOperationManager.SynchronizationContext;
-            contextFactory = new Func<SynchronizationContext>(() => context);
+            this.contextPost = contextPost;
+            this.contextSend = contextSend;
         }
 
         public void SetContext(SynchronizationContext context)
         {
-            contextFactory = new Func<SynchronizationContext>(() => context);
+            SetContext(
+                callback => context.Post(s => callback(), null),
+                callback => context.Send(s => callback(), null));
+        }
+
+        public void SetContext()
+        {
+            SetContext(AsyncOperationManager.SynchronizationContext);
         }
 
         public void SetContext(SynchronizationOperation syncContext)
         {
-            contextFactory = new Func<SynchronizationContext>(() => syncContext.contextFactory.Invoke());
+            SetContext(
+                callback => syncContext.contextPost(callback),
+                callback => syncContext.contextSend(callback));
         }
 
         public void SetContext(ISynchronizationObject syncObject)
         {
-            contextFactory = new Func<SynchronizationContext>(() => syncObject.SynchronizationOperation.contextFactory.Invoke());
-        }
-
-        public void SetContext(Func<SynchronizationContext> contextFactory)
-        {
-            this.contextFactory = new Func<SynchronizationContext>(() => contextFactory.Invoke());
-        }
-
-        public void SetContext(Func<SynchronizationOperation> contextFactory)
-        {
-            this.contextFactory = new Func<SynchronizationContext>(() => contextFactory.Invoke().contextFactory.Invoke());
-        }
-
-        public void SetContext(Func<ISynchronizationObject> contextFactory)
-        {
-            this.contextFactory = new Func<SynchronizationContext>(() => contextFactory.Invoke().SynchronizationOperation.contextFactory.Invoke());
+            SetContext(
+                callback => syncObject.SynchronizationOperation.contextPost(callback),
+                callback => syncObject.SynchronizationOperation.contextSend(callback));
         }
 
         public void ContextPost(Action action)
         {
-            contextFactory.Invoke().Post(s => action(), null);
+            contextPost(action);
         }
 
         public void ContextSend(Action action)
         {
-            contextFactory.Invoke().Send(s => action(), null);
+            contextSend(action);
         }
 
         public async Task ContextSendAsync(Action action)
         {
             await Task.Run(delegate
             {
-                contextFactory.Invoke().Send(s => action(), null);
+                contextSend(action);
             });
         }
 
@@ -75,7 +72,7 @@ namespace ObservableHelpers
         {
             await Task.Run(delegate
             {
-                contextFactory.Invoke().Send(async s => await func(), null);
+                contextSend(async () => await func());
             });
         }
     }

@@ -88,5 +88,42 @@ namespace ObservableHelpersTest
             await Task.Delay(500);
             Assert.True(raiseCount == 2 && dictionary.Count == 2);
         }
+
+        [Fact]
+        public async void SyncContextTest()
+        {
+            bool hasPostRaised = false;
+            bool hasSendRaised = false;
+            var contextMain = new SyncContext();
+            var context1 = new SyncContext();
+            var context2 = new SyncContext();
+            var context3 = new SyncContext();
+            var context4 = new SyncContext();
+            var context5 = new SyncContext();
+
+            context5.SynchronizationOperation.SetContext(context4);
+            context4.SynchronizationOperation.SetContext(context3);
+            context3.SynchronizationOperation.SetContext(context2);
+            context2.SynchronizationOperation.SetContext(context1);
+            context1.SynchronizationOperation.SetContext(contextMain);
+
+            contextMain.SynchronizationOperation.SetContext(
+                callback =>
+                {
+                    hasPostRaised = true;
+                    callback();
+                }, callback =>
+                {
+                    hasSendRaised = true;
+                    callback();
+                });
+
+            context5.SynchronizationOperation.ContextPost(delegate { });
+            context5.SynchronizationOperation.ContextSend(delegate { });
+
+            await Task.Delay(500);
+
+            Assert.True(hasPostRaised && hasSendRaised);
+        }
     }
 }
