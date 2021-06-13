@@ -49,9 +49,7 @@ namespace ObservableHelpers
         {
             VerifyNotDisposed();
 
-            var obj = GetObject();
-
-            if (obj is T tObj)
+            if (GetObject() is T tObj)
             {
                 return tObj;
             }
