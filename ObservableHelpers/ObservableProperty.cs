@@ -113,6 +113,18 @@ namespace ObservableHelpers
             return objectHolder;
         }
 
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (GetObject() is IDisposable model)
+                {
+                    model.Dispose();
+                }
+            }
+            base.Dispose(disposing);
+        }
+
         #endregion
     }
 
