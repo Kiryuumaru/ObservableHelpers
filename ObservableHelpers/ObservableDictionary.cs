@@ -122,8 +122,11 @@ namespace ObservableHelpers
         {
             VerifyNotDisposed();
 
-            ClearCore();
-            NotifyObserversOfChange();
+            if (ValidateClear())
+            {
+                ClearCore();
+                NotifyObserversOfChange();
+            }
         }
 
         public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
@@ -257,6 +260,13 @@ namespace ObservableHelpers
             VerifyNotDisposed();
 
             return ContainsKeyCore(key);
+        }
+
+        protected virtual bool ValidateClear()
+        {
+            VerifyNotDisposed();
+
+            return true;
         }
 
         protected virtual void NotifyObserversOfChange()
