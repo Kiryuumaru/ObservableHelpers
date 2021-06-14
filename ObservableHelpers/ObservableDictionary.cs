@@ -87,21 +87,21 @@ namespace ObservableHelpers
         {
             VerifyNotDisposed();
 
-            return dictionary.ContainsKey(key);
+            return ContainsKeyCore(key);
         }
 
         public virtual bool Contains(KeyValuePair<TKey, TValue> item)
         {
             VerifyNotDisposed();
 
-            return ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).Contains(item);
+            return ContainsCore(item);
         }
 
         public virtual bool TryGetValue(TKey key, out TValue value)
         {
             VerifyNotDisposed();
 
-            return dictionary.TryGetValue(key, out value);
+            return TryGetValueCore(key, out value);
         }
 
         public virtual bool Remove(TKey key)
@@ -122,7 +122,7 @@ namespace ObservableHelpers
         {
             VerifyNotDisposed();
 
-            ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).Clear();
+            ClearCore();
             NotifyObserversOfChange();
         }
 
@@ -130,7 +130,7 @@ namespace ObservableHelpers
         {
             VerifyNotDisposed();
 
-            ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).CopyTo(array, arrayIndex);
+            CopyToCore(array, arrayIndex);
         }
 
         protected virtual void NotifyObserversOfChange()
@@ -156,7 +156,7 @@ namespace ObservableHelpers
         {
             VerifyNotDisposed();
 
-            bool result = dictionary.TryAdd(key, MakeValue(key, value).value);
+            bool result = TryAddCore(key, MakeValue(key, value).value);
             if (result) NotifyObserversOfChange();
             return result;
         }
@@ -174,7 +174,7 @@ namespace ObservableHelpers
         {
             VerifyNotDisposed();
 
-            dictionary[key] = MakeValue(key, value).value;
+            UpdateCore(key, MakeValue(key, value).value);
             NotifyObserversOfChange();
         }
 
@@ -189,9 +189,7 @@ namespace ObservableHelpers
         {
             VerifyNotDisposed();
 
-            bool result = dictionary.TryRemove(key, out value);
-            if (result) NotifyObserversOfChange();
-            return result;
+            return TryRemoveCore(key, out value);
         }
 
         protected (TKey key, TValue value) MakeValue(TKey key, TValue value)
@@ -206,6 +204,46 @@ namespace ObservableHelpers
             }
 
             return pair;
+        }
+
+        protected bool TryGetValueCore(TKey key, out TValue value)
+        {
+            return dictionary.TryGetValue(key, out value);
+        }
+
+        protected bool ContainsKeyCore(TKey key)
+        {
+            return dictionary.ContainsKey(key);
+        }
+
+        protected bool ContainsCore(KeyValuePair<TKey, TValue> item)
+        {
+            return ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).Contains(item);
+        }
+
+        protected bool TryAddCore(TKey key, TValue value)
+        {
+            return dictionary.TryAdd(key, value);
+        }
+
+        protected void UpdateCore(TKey key, TValue value)
+        {
+            dictionary[key] = value;
+        }
+
+        protected bool TryRemoveCore(TKey key, out TValue value)
+        {
+            return dictionary.TryRemove(key, out value);
+        }
+
+        protected void ClearCore()
+        {
+            dictionary.Clear();
+        }
+
+        protected void CopyToCore(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
+        {
+            ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).CopyTo(array, arrayIndex);
         }
 
         IEnumerator<KeyValuePair<TKey, TValue>> IEnumerable<KeyValuePair<TKey, TValue>>.GetEnumerator()

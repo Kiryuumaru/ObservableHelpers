@@ -171,8 +171,6 @@ namespace ObservableHelpers
 
         protected void AddCore(NamedProperty namedProperty)
         {
-            VerifyNotDisposed();
-
             bool exists = false;
             lock (namedProperties)
             {
@@ -204,8 +202,6 @@ namespace ObservableHelpers
 
         protected NamedProperty GetCore(string key, string propertyName)
         {
-            VerifyNotDisposed();
-
             if (key == null && propertyName == null) throw new Exception("key and propertyName should not be both null");
 
             lock (namedProperties)
@@ -223,8 +219,6 @@ namespace ObservableHelpers
 
         protected bool RemoveCore(string key, string propertyName)
         {
-            VerifyNotDisposed();
-
             if (key == null && propertyName == null) throw new Exception("key and propertyName should not be both null");
 
             int removedCount = 0;
@@ -244,8 +238,6 @@ namespace ObservableHelpers
 
         protected bool ExistsCore(string key, string propertyName)
         {
-            VerifyNotDisposed();
-
             if (key == null && propertyName == null) throw new Exception("key and propertyName should not be both null");
 
             lock (namedProperties)
@@ -324,6 +316,8 @@ namespace ObservableHelpers
             string propertyName = null,
             string group = null)
         {
+            VerifyNotDisposed();
+
             bool hasChanges = false;
             NamedProperty propHolder = GetCore(key, propertyName);
 
@@ -373,6 +367,8 @@ namespace ObservableHelpers
             [CallerMemberName] string propertyName = null,
             string group = null)
         {
+            VerifyNotDisposed();
+
             bool hasChanges = false;
             NamedProperty propHolder = GetCore(key, propertyName);
 

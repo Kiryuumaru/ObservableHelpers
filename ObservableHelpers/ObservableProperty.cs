@@ -14,8 +14,8 @@ namespace ObservableHelpers
 
         public object Property
         {
-            get => GetObject();
-            set => SetObject(value);
+            get => GetObjectCore();
+            set => SetObjectCore(value);
         }
 
         private object objectHolder;
@@ -28,13 +28,13 @@ namespace ObservableHelpers
         {
             VerifyNotDisposed();
 
-            if (GetObject() is INullableObject model)
+            if (GetObjectCore() is INullableObject model)
             {
                 return model.SetNull();
             }
             else
             {
-                return SetObject(null);
+                return SetObjectCore(null);
             }
         }
 
@@ -42,7 +42,7 @@ namespace ObservableHelpers
         {
             VerifyNotDisposed();
 
-            var obj = GetObject();
+            var obj = GetObjectCore();
 
             if (obj is INullableObject model)
             {
@@ -58,14 +58,14 @@ namespace ObservableHelpers
         {
             VerifyNotDisposed();
 
-            return SetObject(value);
+            return SetObjectCore(value);
         }
 
         public virtual T GetValue<T>(T defaultValue = default)
         {
             VerifyNotDisposed();
 
-            if (GetObject() is T tObj)
+            if (GetObjectCore() is T tObj)
             {
                 return tObj;
             }
@@ -80,7 +80,7 @@ namespace ObservableHelpers
             }
         }
 
-        protected virtual bool SetObject(object obj)
+        protected bool SetObjectCore(object obj)
         {
             VerifyNotDisposed();
 
@@ -101,7 +101,7 @@ namespace ObservableHelpers
             }
         }
 
-        protected virtual object GetObject()
+        protected object GetObjectCore()
         {
             VerifyNotDisposed();
 
@@ -117,7 +117,7 @@ namespace ObservableHelpers
         {
             if (disposing)
             {
-                if (GetObject() is IDisposable model)
+                if (GetObjectCore() is IDisposable model)
                 {
                     model.Dispose();
                 }
