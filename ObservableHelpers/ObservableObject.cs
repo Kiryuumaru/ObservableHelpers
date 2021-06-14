@@ -171,6 +171,8 @@ namespace ObservableHelpers
 
         protected void AddCore(NamedProperty namedProperty)
         {
+            VerifyNotDisposed();
+
             bool exists = false;
             lock (namedProperties)
             {
@@ -202,6 +204,8 @@ namespace ObservableHelpers
 
         protected NamedProperty GetCore(string key, string propertyName)
         {
+            VerifyNotDisposed();
+
             if (key == null && propertyName == null) throw new Exception("key and propertyName should not be both null");
 
             lock (namedProperties)
@@ -219,6 +223,8 @@ namespace ObservableHelpers
 
         protected bool RemoveCore(string key, string propertyName)
         {
+            VerifyNotDisposed();
+
             if (key == null && propertyName == null) throw new Exception("key and propertyName should not be both null");
 
             int removedCount = 0;
@@ -238,6 +244,8 @@ namespace ObservableHelpers
 
         protected bool ExistsCore(string key, string propertyName)
         {
+            VerifyNotDisposed();
+
             if (key == null && propertyName == null) throw new Exception("key and propertyName should not be both null");
 
             lock (namedProperties)
@@ -260,23 +268,24 @@ namespace ObservableHelpers
             return false;
         }
 
-        protected void OnPropertyChanged(string key, string propertyName, string group)
+        protected NamedProperty MakeNamedProperty(string key, string propertyName, string group)
         {
             VerifyNotDisposed();
 
-            OnPropertyChanged(new ObservableObjectChangesEventArgs(key, propertyName, group));
-        }
-
-        protected void OnPropertyChangedWithKey(string key)
-        {
-            VerifyNotDisposed();
-
-            NamedProperty propHolder = null;
-            lock (namedProperties)
+            NamedProperty namedProperty = NamedPropertyFactory(key, propertyName, group);
+            namedProperty.Property.SyncOperation.SetContext(this);
+            namedProperty.Property.PropertyChanged += (s, e) =>
             {
-                propHolder = namedProperties.FirstOrDefault(i => i.Key == key);
-            }
-            if (propHolder != null) OnPropertyChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
+                if (IsDisposed)
+                {
+                    return;
+                }
+                if (e.PropertyName == nameof(namedProperty.Property.Property))
+                {
+                    OnPropertyChanged(namedProperty.Key, namedProperty.PropertyName, namedProperty.Group);
+                }
+            };
+            return namedProperty;
         }
 
         protected virtual NamedProperty NamedPropertyFactory(string key, string propertyName, string group)
@@ -292,22 +301,23 @@ namespace ObservableHelpers
             };
         }
 
-        protected NamedProperty MakeNamedProperty(string key, string propertyName, string group)
+        protected virtual void OnPropertyChanged(string key, string propertyName, string group)
         {
-            NamedProperty namedProperty = NamedPropertyFactory(key, propertyName, group);
-            namedProperty.Property.SyncOperation.SetContext(this);
-            namedProperty.Property.PropertyChanged += (s, e) =>
+            VerifyNotDisposed();
+
+            OnPropertyChanged(new ObservableObjectChangesEventArgs(key, propertyName, group));
+        }
+
+        protected virtual void OnPropertyChangedWithKey(string key)
+        {
+            VerifyNotDisposed();
+
+            NamedProperty propHolder = null;
+            lock (namedProperties)
             {
-                if (IsDisposed)
-                {
-                    return;
-                }
-                if (e.PropertyName == nameof(namedProperty.Property.Property))
-                {
-                    OnPropertyChanged(namedProperty.Key, namedProperty.PropertyName, namedProperty.Group);
-                }
-            };
-            return namedProperty;
+                propHolder = namedProperties.FirstOrDefault(i => i.Key == key);
+            }
+            if (propHolder != null) OnPropertyChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
         }
 
         private bool SetPropertyInternal<T>(

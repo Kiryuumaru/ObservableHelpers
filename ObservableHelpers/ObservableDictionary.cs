@@ -69,56 +69,56 @@ namespace ObservableHelpers
             return Count == 0;
         }
 
-        public virtual void Add(TKey key, TValue value)
+        public void Add(TKey key, TValue value)
         {
             VerifyNotDisposed();
 
             TryAddWithNotification(key, value);
         }
 
-        public virtual void Add(KeyValuePair<TKey, TValue> item)
+        public void Add(KeyValuePair<TKey, TValue> item)
         {
             VerifyNotDisposed();
 
             TryAddWithNotification(item);
         }
 
-        public virtual bool ContainsKey(TKey key)
+        public bool ContainsKey(TKey key)
         {
             VerifyNotDisposed();
 
             return ContainsKeyCore(key);
         }
 
-        public virtual bool Contains(KeyValuePair<TKey, TValue> item)
+        public bool Contains(KeyValuePair<TKey, TValue> item)
         {
             VerifyNotDisposed();
 
             return ContainsCore(item);
         }
 
-        public virtual bool TryGetValue(TKey key, out TValue value)
+        public bool TryGetValue(TKey key, out TValue value)
         {
             VerifyNotDisposed();
 
             return TryGetValueCore(key, out value);
         }
 
-        public virtual bool Remove(TKey key)
+        public bool Remove(TKey key)
         {
             VerifyNotDisposed();
 
             return TryRemoveWithNotification(key, out _);
         }
 
-        public virtual bool Remove(KeyValuePair<TKey, TValue> item)
+        public bool Remove(KeyValuePair<TKey, TValue> item)
         {
             VerifyNotDisposed();
 
             return TryRemoveWithNotification(item.Key, out _);
         }
 
-        public virtual void Clear()
+        public void Clear()
         {
             VerifyNotDisposed();
 
@@ -126,11 +126,137 @@ namespace ObservableHelpers
             NotifyObserversOfChange();
         }
 
-        public virtual void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
+        public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
         {
             VerifyNotDisposed();
 
             CopyToCore(array, arrayIndex);
+        }
+
+        protected bool TryAddWithNotification(KeyValuePair<TKey, TValue> item)
+        {
+            VerifyNotDisposed();
+
+            return TryAddWithNotification(item.Key, item.Value);
+        }
+
+        protected bool TryAddWithNotification(TKey key, TValue value)
+        {
+            VerifyNotDisposed();
+
+            if (ValidateSetItem(key, value))
+            {
+                bool result = TryAddCore(key, value);
+                if (result) NotifyObserversOfChange();
+                return result;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        protected bool TryRemoveWithNotification(TKey key, out TValue value)
+        {
+            VerifyNotDisposed();
+
+            if (ValidateRemoveItem(key))
+            {
+                bool result = TryRemoveCore(key, out value);
+                if (result) NotifyObserversOfChange();
+                return result;
+            }
+            else
+            {
+                value = default;
+                return false;
+            }
+        }
+
+        protected void UpdateWithNotification(TKey key, TValue value)
+        {
+            VerifyNotDisposed();
+
+            if (ValidateSetItem(key, value))
+            {
+                UpdateCore(key, value);
+                NotifyObserversOfChange();
+            }
+        }
+
+        protected bool TryGetValueCore(TKey key, out TValue value)
+        {
+            VerifyNotDisposed();
+
+            return dictionary.TryGetValue(key, out value);
+        }
+
+        protected bool ContainsKeyCore(TKey key)
+        {
+            VerifyNotDisposed();
+
+            return dictionary.ContainsKey(key);
+        }
+
+        protected bool ContainsCore(KeyValuePair<TKey, TValue> item)
+        {
+            VerifyNotDisposed();
+
+            return ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).Contains(item);
+        }
+
+        protected bool TryAddCore(TKey key, TValue value)
+        {
+            VerifyNotDisposed();
+
+            return dictionary.TryAdd(key, value);
+        }
+
+        protected void UpdateCore(TKey key, TValue value)
+        {
+            VerifyNotDisposed();
+
+            dictionary[key] = value;
+        }
+
+        protected bool TryRemoveCore(TKey key, out TValue value)
+        {
+            VerifyNotDisposed();
+
+            return dictionary.TryRemove(key, out value);
+        }
+
+        protected void ClearCore()
+        {
+            VerifyNotDisposed();
+
+            dictionary.Clear();
+        }
+
+        protected void CopyToCore(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
+        {
+            VerifyNotDisposed();
+
+            ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).CopyTo(array, arrayIndex);
+        }
+
+        protected virtual bool ValidateSetItem(TKey key, TValue value)
+        {
+            VerifyNotDisposed();
+
+            if (value is ISyncObject sync)
+            {
+                sync.SyncOperation.SetContext(this);
+            }
+
+            return true;
+        }
+
+        protected virtual bool ValidateRemoveItem(TKey key)
+        {
+            VerifyNotDisposed();
+
+            return ContainsKeyCore(key);
         }
 
         protected virtual void NotifyObserversOfChange()
@@ -143,107 +269,6 @@ namespace ObservableHelpers
             {
                 CollectionChanged?.Invoke(this, args);
             });
-        }
-
-        protected virtual bool TryAddWithNotification(KeyValuePair<TKey, TValue> item)
-        {
-            VerifyNotDisposed();
-
-            return TryAddWithNotification(item.Key, item.Value);
-        }
-
-        protected virtual bool TryAddWithNotification(TKey key, TValue value)
-        {
-            VerifyNotDisposed();
-
-            bool result = TryAddCore(key, MakeValue(key, value).value);
-            if (result) NotifyObserversOfChange();
-            return result;
-        }
-
-        protected virtual bool TryRemoveWithNotification(TKey key, out TValue value)
-        {
-            VerifyNotDisposed();
-
-            bool result = ValueRemove(key, out value);
-            if (result) NotifyObserversOfChange();
-            return result;
-        }
-
-        protected virtual void UpdateWithNotification(TKey key, TValue value)
-        {
-            VerifyNotDisposed();
-
-            UpdateCore(key, MakeValue(key, value).value);
-            NotifyObserversOfChange();
-        }
-
-        protected virtual (TKey key, TValue value) ValueFactory(TKey key, TValue value)
-        {
-            VerifyNotDisposed();
-
-            return (key, value);
-        }
-
-        protected virtual bool ValueRemove(TKey key, out TValue value)
-        {
-            VerifyNotDisposed();
-
-            return TryRemoveCore(key, out value);
-        }
-
-        protected (TKey key, TValue value) MakeValue(TKey key, TValue value)
-        {
-            VerifyNotDisposed();
-
-            var pair = ValueFactory(key, value);
-
-            if (value is ISyncObject sync)
-            {
-                sync.SyncOperation.SetContext(this);
-            }
-
-            return pair;
-        }
-
-        protected bool TryGetValueCore(TKey key, out TValue value)
-        {
-            return dictionary.TryGetValue(key, out value);
-        }
-
-        protected bool ContainsKeyCore(TKey key)
-        {
-            return dictionary.ContainsKey(key);
-        }
-
-        protected bool ContainsCore(KeyValuePair<TKey, TValue> item)
-        {
-            return ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).Contains(item);
-        }
-
-        protected bool TryAddCore(TKey key, TValue value)
-        {
-            return dictionary.TryAdd(key, value);
-        }
-
-        protected void UpdateCore(TKey key, TValue value)
-        {
-            dictionary[key] = value;
-        }
-
-        protected bool TryRemoveCore(TKey key, out TValue value)
-        {
-            return dictionary.TryRemove(key, out value);
-        }
-
-        protected void ClearCore()
-        {
-            dictionary.Clear();
-        }
-
-        protected void CopyToCore(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
-        {
-            ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).CopyTo(array, arrayIndex);
         }
 
         IEnumerator<KeyValuePair<TKey, TValue>> IEnumerable<KeyValuePair<TKey, TValue>>.GetEnumerator()

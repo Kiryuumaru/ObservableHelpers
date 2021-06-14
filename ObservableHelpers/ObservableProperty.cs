@@ -80,7 +80,7 @@ namespace ObservableHelpers
             }
         }
 
-        protected bool SetObjectCore(object obj)
+        protected virtual bool SetObjectCore(object obj)
         {
             VerifyNotDisposed();
 
@@ -101,7 +101,7 @@ namespace ObservableHelpers
             }
         }
 
-        protected object GetObjectCore()
+        protected virtual object GetObjectCore()
         {
             VerifyNotDisposed();
 
@@ -136,6 +136,19 @@ namespace ObservableHelpers
         {
             get => GetValue<T>();
             set => SetValue(Value);
+        }
+
+        #endregion
+
+        #region Methods
+
+        protected override void OnPropertyChanged(string propertyName)
+        {
+            base.OnPropertyChanged(propertyName);
+            if (propertyName == nameof(Property))
+            {
+                base.OnPropertyChanged(nameof(Value));
+            }
         }
 
         #endregion
