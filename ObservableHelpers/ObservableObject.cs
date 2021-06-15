@@ -413,13 +413,10 @@ namespace ObservableHelpers
 
                 var hasSetChanges = false;
 
-                if (!propHolder.Property.IsDisposed)
+                if (propHolder.Property.SetValue(value))
                 {
-                    if (propHolder.Property.SetValue(value))
-                    {
-                        hasSetChanges = true;
-                        hasChanges = true;
-                    }
+                    hasSetChanges = true;
+                    hasChanges = true;
                 }
 
                 if (!hasSetChanges && hasChanges)
@@ -488,14 +485,7 @@ namespace ObservableHelpers
                 }
             }
 
-            if (propHolder.Property.IsDisposed)
-            {
-                return defaultValue;
-            }
-            else
-            {
-                return propHolder.Property.GetValue<T>();
-            }
+            return propHolder.Property.GetValue(defaultValue);
         }
 
         #endregion
