@@ -59,14 +59,7 @@ namespace ObservableHelpers
 
             if (obj is INullableObject model)
             {
-                if (model.IsDisposed)
-                {
-                    return true;
-                }
-                else
-                {
-                    return model.IsNull();
-                }
+                return model.IsNull();
             }
             else
             {
