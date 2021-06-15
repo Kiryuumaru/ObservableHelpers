@@ -7,7 +7,7 @@ using System.Threading;
 
 namespace ObservableHelpers
 {
-    public abstract class Disposable : object, IDisposable
+    public abstract class Disposable : object, IDisposableObject
     {
         private const int DisposalNotStarted = 0;
         private const int DisposalStarted = 1;

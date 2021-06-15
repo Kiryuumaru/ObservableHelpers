@@ -8,8 +8,12 @@ using System.Threading.Tasks;
 
 namespace ObservableHelpers
 {
-    public interface IObservable : IDisposableObject, ISyncObject, INullableObject, INotifyPropertyChanged
+    public interface IDisposableObject : IDisposable
     {
+        bool IsDisposing { get; }
 
+        bool IsDisposed { get; }
+
+        bool IsDisposedOrDisposing { get; }
     }
 }
