@@ -170,7 +170,6 @@ namespace ObservableHelpers
                     if (namedProperties.Any(i => i.PropertyName == namedProperty.PropertyName))
                     {
                         exists = true;
-                        throw new Exception("Property already exists");
                     }
                 }
                 else
