@@ -72,25 +72,6 @@ namespace ObservableHelpers
             catch { }
         }
 
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                lock (namedProperties)
-                {
-                    foreach (var item in namedProperties.ToList())
-                    {
-                        if (!item.Property.IsDisposed)
-                        {
-                            item.Property.Dispose();
-                        }
-                    }
-                    namedProperties.Clear();
-                }
-            }
-            base.Dispose(disposing);
-        }
-
         protected bool SetProperty<T>(
             T value,
             [CallerMemberName] string propertyName = null,
@@ -137,26 +118,34 @@ namespace ObservableHelpers
         {
             VerifyNotDisposed();
 
-            NamedProperty propHolder = null;
-            lock (namedProperties)
-            {
-                propHolder = namedProperties.FirstOrDefault(i => i.PropertyName == propertyName);
-            }
-            if (propHolder == null) return false;
-            return propHolder.Property.SetNull();
+            return DeletePropertyCore(null, propertyName);
         }
 
         protected bool DeletePropertyWithKey(string key)
         {
             VerifyNotDisposed();
 
-            NamedProperty propHolder = null;
-            lock (namedProperties)
+            return DeletePropertyCore(key, null);
+        }
+
+        protected NamedProperty MakeNamedProperty(string key, string propertyName, string group)
+        {
+            VerifyNotDisposed();
+
+            NamedProperty namedProperty = NamedPropertyFactory(key, propertyName, group);
+            namedProperty.Property.SyncOperation.SetContext(this);
+            namedProperty.Property.PropertyChanged += (s, e) =>
             {
-                propHolder = namedProperties.FirstOrDefault(i => i.Key == key);
-            }
-            if (propHolder == null) return false;
-            return propHolder.Property.SetNull();
+                if (IsDisposed)
+                {
+                    return;
+                }
+                if (e.PropertyName == nameof(namedProperty.Property.Property))
+                {
+                    OnPropertyChanged(namedProperty.Key, namedProperty.PropertyName, namedProperty.Group);
+                }
+            };
+            return namedProperty;
         }
 
         protected IEnumerable<NamedProperty> GetRawProperties(string group = null)
@@ -242,6 +231,26 @@ namespace ObservableHelpers
             return removedCount != 0;
         }
 
+        protected bool DeletePropertyCore(string key, string propertyName)
+        {
+            VerifyNotDisposed();
+
+            NamedProperty propHolder = null;
+            lock (namedProperties)
+            {
+                if (key == null)
+                {
+                    propHolder = namedProperties.FirstOrDefault(i => i.PropertyName == propertyName);
+                }
+                else
+                {
+                    propHolder = namedProperties.FirstOrDefault(i => i.Key == key);
+                }
+            }
+            if (propHolder == null) return false;
+            return propHolder.Property.SetNull();
+        }
+
         protected bool ExistsCore(string key, string propertyName)
         {
             VerifyNotDisposed();
@@ -266,26 +275,6 @@ namespace ObservableHelpers
                 }
             }
             return false;
-        }
-
-        protected NamedProperty MakeNamedProperty(string key, string propertyName, string group)
-        {
-            VerifyNotDisposed();
-
-            NamedProperty namedProperty = NamedPropertyFactory(key, propertyName, group);
-            namedProperty.Property.SyncOperation.SetContext(this);
-            namedProperty.Property.PropertyChanged += (s, e) =>
-            {
-                if (IsDisposed)
-                {
-                    return;
-                }
-                if (e.PropertyName == nameof(namedProperty.Property.Property))
-                {
-                    OnPropertyChanged(namedProperty.Key, namedProperty.PropertyName, namedProperty.Group);
-                }
-            };
-            return namedProperty;
         }
 
         protected virtual NamedProperty NamedPropertyFactory(string key, string propertyName, string group)
