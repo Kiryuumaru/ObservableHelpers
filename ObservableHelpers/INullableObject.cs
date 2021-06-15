@@ -4,7 +4,7 @@ using System.Text;
 
 namespace ObservableHelpers
 {
-    public interface INullableObject
+    public interface INullableObject : IDisposableObject
     {
         bool SetNull();
         bool IsNull();

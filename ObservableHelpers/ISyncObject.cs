@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace ObservableHelpers
 {
-    public interface ISyncObject
+    public interface ISyncObject : IDisposableObject
     {
         SyncOperation SyncOperation { get; }
     }
