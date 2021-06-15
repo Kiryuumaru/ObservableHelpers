@@ -53,7 +53,10 @@ namespace ObservableHelpers
 
         public override bool SetNull()
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return false;
+            }
 
             var hasChanges = Count != 0;
 
@@ -64,63 +67,91 @@ namespace ObservableHelpers
 
         public override bool IsNull()
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return true;
+            }
 
             return Count == 0;
         }
 
         public void Add(TKey key, TValue value)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return;
+            }
 
             TryAddWithNotification(key, value);
         }
 
         public void Add(KeyValuePair<TKey, TValue> item)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return;
+            }
 
             TryAddWithNotification(item);
         }
 
         public bool ContainsKey(TKey key)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return false;
+            }
 
             return ContainsKeyCore(key);
         }
 
         public bool Contains(KeyValuePair<TKey, TValue> item)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return false;
+            }
 
             return ContainsCore(item);
         }
 
         public bool TryGetValue(TKey key, out TValue value)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                value = default;
+                return false;
+            }
 
             return TryGetValueCore(key, out value);
         }
 
         public bool Remove(TKey key)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return false;
+            }
 
             return TryRemoveWithNotification(key, out _);
         }
 
         public bool Remove(KeyValuePair<TKey, TValue> item)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return false;
+            }
 
             return TryRemoveWithNotification(item.Key, out _);
         }
 
         public void Clear()
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return;
+            }
 
             if (ValidateClear())
             {
@@ -131,21 +162,30 @@ namespace ObservableHelpers
 
         public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return;
+            }
 
             CopyToCore(array, arrayIndex);
         }
 
         protected bool TryAddWithNotification(KeyValuePair<TKey, TValue> item)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return false;
+            }
 
             return TryAddWithNotification(item.Key, item.Value);
         }
 
         protected bool TryAddWithNotification(TKey key, TValue value)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return false;
+            }
 
             if (ValidateSetItem(key, value))
             {
@@ -161,7 +201,11 @@ namespace ObservableHelpers
 
         protected bool TryRemoveWithNotification(TKey key, out TValue value)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                value = default;
+                return false;
+            }
 
             if (ValidateRemoveItem(key))
             {
@@ -178,7 +222,10 @@ namespace ObservableHelpers
 
         protected void UpdateWithNotification(TKey key, TValue value)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return;
+            }
 
             if (ValidateSetItem(key, value))
             {
@@ -189,63 +236,92 @@ namespace ObservableHelpers
 
         protected bool TryGetValueCore(TKey key, out TValue value)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                value = default;
+                return false;
+            }
 
             return dictionary.TryGetValue(key, out value);
         }
 
         protected bool ContainsKeyCore(TKey key)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return false;
+            }
 
             return dictionary.ContainsKey(key);
         }
 
         protected bool ContainsCore(KeyValuePair<TKey, TValue> item)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return false;
+            }
 
             return ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).Contains(item);
         }
 
         protected bool TryAddCore(TKey key, TValue value)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return false;
+            }
 
             return dictionary.TryAdd(key, value);
         }
 
         protected void UpdateCore(TKey key, TValue value)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return;
+            }
 
             dictionary[key] = value;
         }
 
         protected bool TryRemoveCore(TKey key, out TValue value)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                value = default;
+                return false;
+            }
 
             return dictionary.TryRemove(key, out value);
         }
 
         protected void ClearCore()
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return;
+            }
 
             dictionary.Clear();
         }
 
         protected void CopyToCore(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return;
+            }
 
             ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).CopyTo(array, arrayIndex);
         }
 
         protected virtual bool ValidateSetItem(TKey key, TValue value)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return false;
+            }
 
             if (value is ISyncObject sync)
             {
@@ -257,21 +333,30 @@ namespace ObservableHelpers
 
         protected virtual bool ValidateRemoveItem(TKey key)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return false;
+            }
 
             return ContainsKeyCore(key);
         }
 
         protected virtual bool ValidateClear()
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return false;
+            }
 
             return true;
         }
 
         protected virtual void NotifyObserversOfChange()
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return;
+            }
 
             var args = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset);
 
@@ -283,14 +368,20 @@ namespace ObservableHelpers
 
         IEnumerator<KeyValuePair<TKey, TValue>> IEnumerable<KeyValuePair<TKey, TValue>>.GetEnumerator()
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return default;
+            }
 
             return ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return default;
+            }
 
             return ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).GetEnumerator();
         }

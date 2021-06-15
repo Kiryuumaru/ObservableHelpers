@@ -26,11 +26,21 @@ namespace ObservableHelpers
 
         public override bool SetNull()
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return false;
+            }
 
             if (GetObject() is INullableObject model)
             {
-                return model.SetNull();
+                if (model.IsDisposed)
+                {
+                    return false;
+                }
+                else
+                {
+                    return model.SetNull();
+                }
             }
             else
             {
@@ -40,13 +50,23 @@ namespace ObservableHelpers
 
         public override bool IsNull()
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return true;
+            }
 
             var obj = GetObject();
 
             if (obj is INullableObject model)
             {
-                return model.IsNull();
+                if (model.IsDisposed)
+                {
+                    return true;
+                }
+                else
+                {
+                    return model.IsNull();
+                }
             }
             else
             {
@@ -56,14 +76,20 @@ namespace ObservableHelpers
 
         public virtual bool SetValue<T>(T value)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return false;
+            }
 
             return SetObject(value);
         }
 
         public virtual T GetValue<T>(T defaultValue = default)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return defaultValue;
+            }
 
             if (GetObject() is T tObj)
             {
@@ -82,7 +108,10 @@ namespace ObservableHelpers
 
         protected virtual bool SetObject(object obj)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return false;
+            }
 
             if (obj is ISyncObject sync)
             {
@@ -103,7 +132,10 @@ namespace ObservableHelpers
 
         protected virtual object GetObject()
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return default;
+            }
 
             if (objectHolder is ISyncObject sync)
             {

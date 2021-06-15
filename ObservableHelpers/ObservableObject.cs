@@ -35,14 +35,23 @@ namespace ObservableHelpers
 
         public override bool SetNull()
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return false;
+            }
 
             var hasChanges = false;
             lock (namedProperties)
             {
                 foreach (var propHolder in namedProperties)
                 {
-                    if (propHolder.Property.SetNull()) hasChanges = true;
+                    if (!propHolder.Property.IsDisposed)
+                    {
+                        if (propHolder.Property.SetNull())
+                        {
+                            hasChanges = true;
+                        }
+                    }
                 }
             }
             return hasChanges;
@@ -50,7 +59,10 @@ namespace ObservableHelpers
 
         public override bool IsNull()
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return true;
+            }
 
             lock (namedProperties)
             {
@@ -60,7 +72,10 @@ namespace ObservableHelpers
 
         protected void InitializeProperties()
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return;
+            }
 
             try
             {
@@ -77,7 +92,10 @@ namespace ObservableHelpers
             [CallerMemberName] string propertyName = null,
             string group = null)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return false;
+            }
 
             return SetPropertyInternal(value, null, propertyName, group);
         }
@@ -88,7 +106,10 @@ namespace ObservableHelpers
             [CallerMemberName] string propertyName = null,
             string group = null)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return false;
+            }
 
             return SetPropertyInternal(value, key, propertyName, group);
         }
@@ -98,7 +119,10 @@ namespace ObservableHelpers
             [CallerMemberName] string propertyName = null,
             string group = null)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return defaultValue;
+            }
 
             return GetPropertyInternal(defaultValue, null, propertyName, group);
         }
@@ -109,28 +133,40 @@ namespace ObservableHelpers
             [CallerMemberName] string propertyName = null,
             string group = null)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return defaultValue;
+            }
 
             return GetPropertyInternal(defaultValue, key, propertyName, group);
         }
 
         protected bool DeleteProperty(string propertyName)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return false;
+            }
 
             return DeletePropertyCore(null, propertyName);
         }
 
         protected bool DeletePropertyWithKey(string key)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return false;
+            }
 
             return DeletePropertyCore(key, null);
         }
 
         protected NamedProperty MakeNamedProperty(string key, string propertyName, string group)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return null;
+            }
 
             NamedProperty namedProperty = NamedPropertyFactory(key, propertyName, group);
             namedProperty.Property.SyncOperation.SetContext(this);
@@ -150,7 +186,10 @@ namespace ObservableHelpers
 
         protected IEnumerable<NamedProperty> GetRawProperties(string group = null)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return default;
+            }
 
             lock (namedProperties)
             {
@@ -160,7 +199,10 @@ namespace ObservableHelpers
 
         protected void AddCore(NamedProperty namedProperty)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return;
+            }
 
             bool exists = false;
             lock (namedProperties)
@@ -192,7 +234,10 @@ namespace ObservableHelpers
 
         protected NamedProperty GetCore(string key, string propertyName)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return default;
+            }
 
             if (key == null && propertyName == null) throw new Exception("key and propertyName should not be both null");
 
@@ -211,7 +256,10 @@ namespace ObservableHelpers
 
         protected bool RemoveCore(string key, string propertyName)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return false;
+            }
 
             if (key == null && propertyName == null) throw new Exception("key and propertyName should not be both null");
 
@@ -232,7 +280,10 @@ namespace ObservableHelpers
 
         protected bool DeletePropertyCore(string key, string propertyName)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return false;
+            }
 
             NamedProperty propHolder = null;
             lock (namedProperties)
@@ -246,13 +297,26 @@ namespace ObservableHelpers
                     propHolder = namedProperties.FirstOrDefault(i => i.Key == key);
                 }
             }
-            if (propHolder == null) return false;
-            return propHolder.Property.SetNull();
+            if (propHolder == null)
+            {
+                return false;
+            }
+            else if (propHolder.Property.IsDisposed)
+            {
+                return false;
+            }
+            else
+            {
+                return propHolder.Property.SetNull();
+            }
         }
 
         protected bool ExistsCore(string key, string propertyName)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return false;
+            }
 
             if (key == null && propertyName == null) throw new Exception("key and propertyName should not be both null");
 
@@ -278,7 +342,10 @@ namespace ObservableHelpers
 
         protected virtual NamedProperty NamedPropertyFactory(string key, string propertyName, string group)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return null;
+            }
 
             return new NamedProperty()
             {
@@ -291,14 +358,20 @@ namespace ObservableHelpers
 
         protected virtual void OnPropertyChanged(string key, string propertyName, string group)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return;
+            }
 
             OnPropertyChanged(new ObservableObjectChangesEventArgs(key, propertyName, group));
         }
 
         protected virtual void OnPropertyChangedWithKey(string key)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return;
+            }
 
             NamedProperty propHolder = null;
             lock (namedProperties)
@@ -314,7 +387,10 @@ namespace ObservableHelpers
             string propertyName = null,
             string group = null)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return false;
+            }
 
             bool hasChanges = false;
             NamedProperty propHolder = GetCore(key, propertyName);
@@ -337,10 +413,13 @@ namespace ObservableHelpers
 
                 var hasSetChanges = false;
 
-                if (propHolder.Property.SetValue(value))
+                if (!propHolder.Property.IsDisposed)
                 {
-                    hasSetChanges = true;
-                    hasChanges = true;
+                    if (propHolder.Property.SetValue(value))
+                    {
+                        hasSetChanges = true;
+                        hasChanges = true;
+                    }
                 }
 
                 if (!hasSetChanges && hasChanges)
@@ -351,6 +430,10 @@ namespace ObservableHelpers
             else
             {
                 propHolder = MakeNamedProperty(key, propertyName, group);
+                if (propHolder == null)
+                {
+                    return false;
+                }
                 AddCore(propHolder);
                 propHolder.Property.SetValue(value);
                 hasChanges = true;
@@ -365,7 +448,10 @@ namespace ObservableHelpers
             [CallerMemberName] string propertyName = null,
             string group = null)
         {
-            VerifyNotDisposed();
+            if (IsDisposed)
+            {
+                return defaultValue;
+            }
 
             bool hasChanges = false;
             NamedProperty propHolder = GetCore(key, propertyName);
@@ -373,6 +459,10 @@ namespace ObservableHelpers
             if (propHolder == null)
             {
                 propHolder = MakeNamedProperty(key, propertyName, group);
+                if (propHolder == null)
+                {
+                    return defaultValue;
+                }
                 AddCore(propHolder);
                 propHolder.Property.SetValue(defaultValue);
             }
@@ -398,7 +488,14 @@ namespace ObservableHelpers
                 }
             }
 
-            return propHolder.Property.GetValue<T>();
+            if (propHolder.Property.IsDisposed)
+            {
+                return defaultValue;
+            }
+            else
+            {
+                return propHolder.Property.GetValue<T>();
+            }
         }
 
         #endregion
