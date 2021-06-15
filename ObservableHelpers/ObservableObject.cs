@@ -392,51 +392,53 @@ namespace ObservableHelpers
                 return false;
             }
 
-            bool hasChanges = false;
-            NamedProperty propHolder = GetCore(key, propertyName);
-
-            if (propHolder != null)
+            lock (this)
             {
-                propHolder.Property.SyncOperation.SetContext(this);
+                bool hasChanges = false;
+                NamedProperty propHolder = GetCore(key, propertyName);
 
-                if (propHolder.Group != group)
+                if (propHolder != null)
                 {
-                    propHolder.Group = group;
+                    propHolder.Property.SyncOperation.SetContext(this);
+
+                    if (propHolder.Group != group)
+                    {
+                        propHolder.Group = group;
+                        hasChanges = true;
+                    }
+
+                    if (propHolder.PropertyName != propertyName)
+                    {
+                        propHolder.PropertyName = propertyName;
+                        hasChanges = true;
+                    }
+
+                    var hasSetChanges = false;
+
+                    if (propHolder.Property.SetValue(value))
+                    {
+                        hasSetChanges = true;
+                        hasChanges = true;
+                    }
+
+                    if (!hasSetChanges && hasChanges)
+                    {
+                        OnPropertyChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
+                    }
+                }
+                else
+                {
+                    propHolder = MakeNamedProperty(key, propertyName, group);
+                    if (propHolder == null)
+                    {
+                        return false;
+                    }
+                    AddCore(propHolder);
+                    propHolder.Property.SetValue(value);
                     hasChanges = true;
                 }
-
-                if (propHolder.PropertyName != propertyName)
-                {
-                    propHolder.PropertyName = propertyName;
-                    hasChanges = true;
-                }
-
-                var hasSetChanges = false;
-
-                if (propHolder.Property.SetValue(value))
-                {
-                    hasSetChanges = true;
-                    hasChanges = true;
-                }
-
-                if (!hasSetChanges && hasChanges)
-                {
-                    OnPropertyChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
-                }
+                return hasChanges;
             }
-            else
-            {
-                propHolder = MakeNamedProperty(key, propertyName, group);
-                if (propHolder == null)
-                {
-                    return false;
-                }
-                AddCore(propHolder);
-                propHolder.Property.SetValue(value);
-                hasChanges = true;
-            }
-
-            return hasChanges;
         }
 
         private T GetPropertyInternal<T>(
@@ -450,42 +452,45 @@ namespace ObservableHelpers
                 return defaultValue;
             }
 
-            bool hasChanges = false;
-            NamedProperty propHolder = GetCore(key, propertyName);
-
-            if (propHolder == null)
+            lock (this)
             {
-                propHolder = MakeNamedProperty(key, propertyName, group);
+                bool hasChanges = false;
+                NamedProperty propHolder = GetCore(key, propertyName);
+
                 if (propHolder == null)
                 {
-                    return defaultValue;
+                    propHolder = MakeNamedProperty(key, propertyName, group);
+                    if (propHolder == null)
+                    {
+                        return defaultValue;
+                    }
+                    AddCore(propHolder);
+                    propHolder.Property.SetValue(defaultValue);
                 }
-                AddCore(propHolder);
-                propHolder.Property.SetValue(defaultValue);
+                else
+                {
+                    propHolder.Property.SyncOperation.SetContext(this);
+
+                    if (propHolder.Group != group)
+                    {
+                        propHolder.Group = group;
+                        hasChanges = true;
+                    }
+
+                    if (propHolder.PropertyName != propertyName)
+                    {
+                        propHolder.PropertyName = propertyName;
+                        hasChanges = true;
+                    }
+
+                    if (hasChanges)
+                    {
+                        OnPropertyChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
+                    }
+                }
+
+                return propHolder.Property.GetValue(defaultValue);
             }
-            else
-            {
-                propHolder.Property.SyncOperation.SetContext(this);
-
-                if (propHolder.Group != group)
-                {
-                    propHolder.Group = group;
-                    hasChanges = true;
-                }
-
-                if (propHolder.PropertyName != propertyName)
-                {
-                    propHolder.PropertyName = propertyName;
-                    hasChanges = true;
-                }
-
-                if (hasChanges)
-                {
-                    OnPropertyChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
-                }
-            }
-
-            return propHolder.Property.GetValue(defaultValue);
         }
 
         #endregion
