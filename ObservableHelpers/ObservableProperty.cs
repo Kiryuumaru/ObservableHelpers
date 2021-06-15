@@ -14,8 +14,8 @@ namespace ObservableHelpers
 
         public object Property
         {
-            get => GetObjectCore();
-            set => SetObjectCore(value);
+            get => GetObject();
+            set => SetObject(value);
         }
 
         private object objectHolder;
@@ -28,13 +28,13 @@ namespace ObservableHelpers
         {
             VerifyNotDisposed();
 
-            if (GetObjectCore() is INullableObject model)
+            if (GetObject() is INullableObject model)
             {
                 return model.SetNull();
             }
             else
             {
-                return SetObjectCore(null);
+                return SetObject(null);
             }
         }
 
@@ -42,7 +42,7 @@ namespace ObservableHelpers
         {
             VerifyNotDisposed();
 
-            var obj = GetObjectCore();
+            var obj = GetObject();
 
             if (obj is INullableObject model)
             {
@@ -58,14 +58,14 @@ namespace ObservableHelpers
         {
             VerifyNotDisposed();
 
-            return SetObjectCore(value);
+            return SetObject(value);
         }
 
         public virtual T GetValue<T>(T defaultValue = default)
         {
             VerifyNotDisposed();
 
-            if (GetObjectCore() is T tObj)
+            if (GetObject() is T tObj)
             {
                 return tObj;
             }
@@ -80,7 +80,7 @@ namespace ObservableHelpers
             }
         }
 
-        protected virtual bool SetObjectCore(object obj)
+        protected virtual bool SetObject(object obj)
         {
             VerifyNotDisposed();
 
@@ -101,7 +101,7 @@ namespace ObservableHelpers
             }
         }
 
-        protected virtual object GetObjectCore()
+        protected virtual object GetObject()
         {
             VerifyNotDisposed();
 
