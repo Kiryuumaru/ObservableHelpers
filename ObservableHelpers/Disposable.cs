@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Text;
 using System.Threading;
 
@@ -23,21 +25,21 @@ namespace ObservableHelpers
 
 #if DEBUG
         /// <summary>
-        /// Initializes a new instance of the DisposableBase class.
+        /// Initializes a new instance of the Disposable class.
         /// </summary>
-        protected DisposableBase()
+        protected Disposable()
         {
             creationStackTrace = new StackTrace(1, true);
         }
 
         /// <summary>
-        /// Finalizes an instance of the DisposableBase class.
+        /// Finalizes an instance of the Disposable class.
         /// </summary>
         [SuppressMessage("Microsoft.Design", "CA1063", Justification = "The enforced behavior of CA1063 is not thread-safe or full-featured enough for our purposes here.")]
-        ~DisposableBase()
+        ~Disposable()
         {
-            var message = string.Format(CultureInfo.InvariantCulture, "Failed to proactively dispose of object, so it is being finalized: {0}.{1}Object creation stack trace:{1}{2}", ObjectName, Environment.NewLine, creationStackTrace);
-            Debug.Assert(false, message);
+            //var message = string.Format(CultureInfo.InvariantCulture, "Failed to proactively dispose of object, so it is being finalized: {0}.{1}Object creation stack trace:{1}{2}", ObjectName, Environment.NewLine, creationStackTrace);
+            //Debug.Assert(false, message);
             Dispose(false);
         }
 #endif
