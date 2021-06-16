@@ -363,7 +363,7 @@ namespace ObservableHelpers
                 return;
             }
 
-            OnPropertyChanged(new ObservableObjectChangesEventArgs(key, propertyName, group));
+            OnPropertyChanged(new ObjectPropertyChangesEventArgs(key, propertyName, group));
         }
 
         protected virtual void OnPropertyChangedWithKey(string key)
