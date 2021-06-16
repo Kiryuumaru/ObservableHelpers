@@ -45,12 +45,9 @@ namespace ObservableHelpers
             {
                 foreach (var propHolder in namedProperties)
                 {
-                    if (!propHolder.Property.IsDisposed)
+                    if (propHolder.Property.SetNull())
                     {
-                        if (propHolder.Property.SetNull())
-                        {
-                            hasChanges = true;
-                        }
+                        hasChanges = true;
                     }
                 }
             }
@@ -297,18 +294,8 @@ namespace ObservableHelpers
                     propHolder = namedProperties.FirstOrDefault(i => i.Key == key);
                 }
             }
-            if (propHolder == null)
-            {
-                return false;
-            }
-            else if (propHolder.Property.IsDisposed)
-            {
-                return false;
-            }
-            else
-            {
-                return propHolder.Property.SetNull();
-            }
+
+            return propHolder?.Property.SetNull() ?? false;
         }
 
         protected bool ExistsCore(string key, string propertyName)

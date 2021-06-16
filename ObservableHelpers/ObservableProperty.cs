@@ -33,14 +33,7 @@ namespace ObservableHelpers
 
             if (GetObject() is INullableObject model)
             {
-                if (model.IsDisposed)
-                {
-                    return false;
-                }
-                else
-                {
-                    return model.SetNull();
-                }
+                return model.SetNull();
             }
             else
             {
