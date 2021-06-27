@@ -13,17 +13,48 @@ Observable helpers with short-and-easy and UI-safe property implementations. Can
 All observable events are executed on thread that was used to create the object instance.
 To use in UI safe updates, create the object instances at the UI thread or manually configure the ISyncObject.SyncOperation to use UI thread.
 
-### ObservableObject
+### ObservableObject Sample
 ```csharp
-public string Property
+namespace YourNamespace
 {
-    get => GetProperty<string>();
-    set => SetProperty(value);
+    public Dinosaur : ObservableObject
+    {
+        public string Name
+        {
+            get => GetProperty<string>();
+            set => SetProperty(value);
+        }
+        
+        public int Height
+        {
+            get => GetProperty<int>();
+            set => SetProperty(value);
+        }
+    }
 }
-public string PropertyWithKey
+```
+### UI safe
+```csharp
+namespace YourNamespace
 {
-    get => GetPropertyWithKey<string>("property_key");
-    set => SetPropertyWithKey(value, "property_key");
+    public class Program
+    {
+        private Dinosaur dinosaur;
+
+        public void UIThread()
+        {
+            dinosaur = new Dinosaur();
+        }
+
+        public void BackgroundThread()
+        {
+            dinosaur.PropertyChanged += (s, e) =>
+            {
+                // Executed on UI thread
+            }
+            dinosaur.Name = "Megalosaurus";
+        }
+    }
 }
 ```
 
