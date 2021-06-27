@@ -22,7 +22,7 @@ namespace ObservableHelpers
         /// </summary>
         /// <remarks>
         /// <para>This class used the current thread as base context for all operations upon creation.</para>
-        /// <para>Use <see cref="SetContext"/> method to change the current context.</para>
+        /// <para>Use <see cref="SetContext()"/> method to change the current context.</para>
         /// </remarks>
         public SyncOperation()
         {

@@ -383,7 +383,7 @@ namespace ObservableHelpers
         }
 
         /// <summary>
-        /// <para>The core implementation for <see cref="TryAddWithNotification"/></para>
+        /// <para>The core implementation for <see cref="TryAddWithNotification(TKey, TValue)"/></para>
         /// <para>Attempts to add the specified key and value to the <see cref="ObservableDictionary{TKey, TValue}"/>.</para>
         /// </summary>
         /// <param name="key">

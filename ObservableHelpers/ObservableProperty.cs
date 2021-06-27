@@ -217,7 +217,7 @@ namespace ObservableHelpers
         #region Initializers
 
         /// <summary>
-        /// Creates the instance of the <c>ObservableProperty<T></c> class.
+        /// Creates the instance of the <c>ObservableProperty</c> class.
         /// </summary>
         public ObservableProperty()
         {
