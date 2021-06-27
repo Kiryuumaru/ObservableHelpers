@@ -1,6 +1,6 @@
 # Observable Helpers
 
-Observable helpers with short-and-easy with UI-safe property implementations. Can be used for any MVVM software architectural applications.
+Observable helpers with short-and-easy and UI-safe property implementations. Can be used for any MVVM software architectural applications.
 
 **NuGets**
 
