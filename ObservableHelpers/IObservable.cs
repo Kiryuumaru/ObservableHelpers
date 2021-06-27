@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 
 namespace ObservableHelpers
 {
+    /// <summary>
+    /// Contains bundle declarations for observable operations.
+    /// </summary>
     public interface IObservable : IDisposableObject, ISyncObject, INullableObject, INotifyPropertyChanged
     {
 

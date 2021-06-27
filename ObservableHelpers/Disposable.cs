@@ -9,6 +9,9 @@ using System.Threading;
 
 namespace ObservableHelpers
 {
+    /// <summary>
+    /// Contains all methods for performing proper disposable operations.
+    /// </summary>
     public abstract class Disposable : object, IDisposableObject
     {
         private const int DisposalNotStarted = 0;
@@ -44,45 +47,39 @@ namespace ObservableHelpers
         }
 #endif
 
-        /// <summary>
-        /// Occurs when this object is about to be disposed.
-        /// </summary>
-        public event EventHandler Disposing;
-
-        /// <summary>
-        /// Gets a value indicating whether this object is in the process of disposing.
-        /// </summary>
+        /// <inheritdoc/>
         public bool IsDisposing
         {
             get { return Interlocked.CompareExchange(ref disposeStage, DisposalStarted, DisposalStarted) == DisposalStarted; }
         }
 
-        /// <summary>
-        /// Gets a value indicating whether this object has been disposed.
-        /// </summary>
+        /// <inheritdoc/>
         public bool IsDisposed
         {
             get { return Interlocked.CompareExchange(ref disposeStage, DisposalComplete, DisposalComplete) == DisposalComplete; }
         }
 
-        /// <summary>
-        /// Gets a value indicating whether this object has been disposed or is in the process of being disposed.
-        /// </summary>
+        /// <inheritdoc/>
         public bool IsDisposedOrDisposing
         {
             get { return Interlocked.CompareExchange(ref disposeStage, DisposalNotStarted, DisposalNotStarted) != DisposalNotStarted; }
         }
 
         /// <summary>
+        /// Occurs when this object is about to be disposed.
+        /// </summary>
+        public event EventHandler Disposing;
+
+        /// <summary>
         /// Gets the object name, for use in any <see cref="ObjectDisposedException"/> thrown by this object.
         /// </summary>
         /// <remarks>
         /// Subclasses can override this property if they would like more control over the object name appearing in any <see cref="ObjectDisposedException"/>
-        /// thrown by this <c>DisposableBase</c>. This can be particularly useful in debugging and diagnostic scenarios.
+        /// thrown by this <see cref="Disposable"/>. This can be particularly useful in debugging and diagnostic scenarios.
         /// </remarks>
-        /// <returns>
+        /// <value>
         /// The object name, which defaults to the class name.
-        /// </returns>
+        /// </value>
         protected virtual string ObjectName
         {
             get { return GetType().FullName; }

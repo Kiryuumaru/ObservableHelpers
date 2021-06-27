@@ -8,10 +8,16 @@ using System.Threading;
 
 namespace ObservableHelpers
 {
+    /// <summary>
+    /// Provides a thread-safe observable object property for use with data binding.
+    /// </summary>
     public class ObservableProperty : Observable
     {
         #region Properties
 
+        /// <summary>
+        /// Gets or sets the object property
+        /// </summary>
         public object Property
         {
             get => GetObject();
@@ -22,8 +28,21 @@ namespace ObservableHelpers
 
         #endregion
 
+        #region Initializers
+
+        /// <summary>
+        /// Creates new instance of the <see cref="ObservableProperty"/> class.
+        /// </summary>
+        public ObservableProperty()
+        {
+
+        }
+
+        #endregion
+
         #region Methods
 
+        /// <inheritdoc/>
         public override bool SetNull()
         {
             if (IsDisposed)
@@ -41,6 +60,7 @@ namespace ObservableHelpers
             }
         }
 
+        /// <inheritdoc/>
         public override bool IsNull()
         {
             if (IsDisposed)
@@ -60,6 +80,18 @@ namespace ObservableHelpers
             }
         }
 
+        /// <summary>
+        /// Sets the value of the property.
+        /// </summary>
+        /// <typeparam name="T">
+        /// The undelying type of the property value.
+        /// </typeparam>
+        /// <param name="value">
+        /// The value of the property.
+        /// </param>
+        /// <returns>
+        /// <c>true</c> whether the property has changed; otherwise <c>false</c>.
+        /// </returns>
         public virtual bool SetValue<T>(T value)
         {
             if (IsDisposed)
@@ -70,6 +102,18 @@ namespace ObservableHelpers
             return SetObject(value);
         }
 
+        /// <summary>
+        /// Gets the value of the property.
+        /// </summary>
+        /// <typeparam name="T">
+        /// The underlying type of the property.
+        /// </typeparam>
+        /// <param name="defaultValue">
+        /// The default value return if the property is disposed or null.
+        /// </param>
+        /// <returns>
+        /// The value of the property.
+        /// </returns>
         public virtual T GetValue<T>(T defaultValue = default)
         {
             if (IsDisposed)
@@ -92,6 +136,15 @@ namespace ObservableHelpers
             }
         }
 
+        /// <summary>
+        /// Sets the object of the property.
+        /// </summary>
+        /// <param name="obj">
+        /// The value object of the property.
+        /// </param>
+        /// <returns>
+        /// <c>true</c> whether the property has changed; otherwise <c>false</c>.
+        /// </returns>
         protected virtual bool SetObject(object obj)
         {
             if (IsDisposed)
@@ -116,6 +169,12 @@ namespace ObservableHelpers
             }
         }
 
+        /// <summary>
+        /// Gets the value object of the property.
+        /// </summary>
+        /// <returns>
+        /// The value object of the property.
+        /// </returns>
         protected virtual object GetObject()
         {
             if (IsDisposed)
@@ -134,10 +193,19 @@ namespace ObservableHelpers
         #endregion
     }
 
+    /// <summary>
+    /// Provides helpers for <see cref="INotifyPropertyChanged"/> for a single value or property.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The undelying type of the property.
+    /// </typeparam>
     public class ObservableProperty<T> : ObservableProperty
     {
         #region Properties
 
+        /// <summary>
+        /// Gets or sets the value of the property.
+        /// </summary>
         public T Value
         {
             get => GetValue<T>();
@@ -146,8 +214,21 @@ namespace ObservableHelpers
 
         #endregion
 
+        #region Initializers
+
+        /// <summary>
+        /// Creates the instance of the <c>ObservableProperty<T></c> class.
+        /// </summary>
+        public ObservableProperty()
+        {
+
+        }
+
+        #endregion
+
         #region Methods
 
+        /// <inheritdoc/>
         protected override void OnPropertyChanged(string propertyName)
         {
             base.OnPropertyChanged(propertyName);

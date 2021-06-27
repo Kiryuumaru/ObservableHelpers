@@ -1,6 +1,6 @@
 # Observable Helpers
 
-Observable helpers with short-and-easy property implementations. Can be use to any MVVM software architectural applications.
+Observable helpers with short-and-easy with UI safe property implementations. Can be use to any MVVM software architectural applications.
 
 **NuGets**
 
@@ -10,7 +10,8 @@ Observable helpers with short-and-easy property implementations. Can be use to a
 
 ## Get Started
 
-I wanted to keep this library really small and just created it for myself, but I hope others find it useful. Here is what I added in and feel free to request new things in the Issues tab.
+All observable events are executed on thread that was used to create the object instance.
+To use in UI safe updates, create the object instances at the UI thread or manually configure the ISyncObject.SyncOperation to use UI thread.
 
 ### ObservableObject
 ```csharp
@@ -19,10 +20,7 @@ public string Property
     get => GetProperty<string>();
     set => SetProperty(value);
 }
-```
-#### With key
-```csharp
-public string Property
+public string PropertyWithKey
 {
     get => GetPropertyWithKey<string>("property_key");
     set => SetPropertyWithKey(value, "property_key");

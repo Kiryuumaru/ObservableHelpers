@@ -101,7 +101,6 @@ namespace ObservableHelpersTest
             var context4 = new SyncContext();
             var context5 = new SyncContext();
 
-
             context5.SyncOperation.SetContext(context4);
             context3.SyncOperation.SetContext(context2);
             context1.SyncOperation.SetContext(contextMain);

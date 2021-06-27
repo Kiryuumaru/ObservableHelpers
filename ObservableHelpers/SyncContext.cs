@@ -8,16 +8,36 @@ using System.Threading.Tasks;
 
 namespace ObservableHelpers
 {
+    /// <summary>
+    /// Provides operations for <see cref="ObservableHelpers.SyncOperation"/> with proper disposable implementations.
+    /// </summary>
     public class SyncContext : Disposable, ISyncObject
     {
+        /// <inheritdoc/>
         public SyncOperation SyncOperation { get; private set; }
 
+        /// <summary>
+        /// Creates new instance of the <c>SyncContext</c> class.
+        /// </summary>
+        /// <remarks>
+        /// <para>To use safely in UI operations, create the instance in UI thread.</para>
+        /// <para>See <see cref="ObservableHelpers.SyncOperation"/></para>
+        /// </remarks>
         public SyncContext()
         {
             SyncOperation = new SyncOperation();
         }
 
-        protected void ContextPost(Action action)
+        /// <summary>
+        /// Post action to the current context.
+        /// </summary>
+        /// <param name="action">
+        /// The action to be executed at the current context.
+        /// </param>
+        /// <param name="parameters">
+        /// The parameters to be pass at the current context.
+        /// </param>
+        protected void ContextPost(Action action, params object[] parameters)
         {
             if (IsDisposed)
             {
@@ -30,10 +50,19 @@ namespace ObservableHelpers
                     return;
                 }
                 action();
-            });
+            }, parameters);
         }
 
-        protected void ContextSend(Action action)
+        /// <summary>
+        /// Send action to the current context.
+        /// </summary>
+        /// <param name="action">
+        /// The action to be executed at the current context.
+        /// </param>
+        /// <param name="parameters">
+        /// The parameters to be pass at the current context.
+        /// </param>
+        protected void ContextSend(Action action, params object[] parameters)
         {
             if (IsDisposed)
             {
@@ -46,10 +75,22 @@ namespace ObservableHelpers
                     return;
                 }
                 action();
-            });
+            }, parameters);
         }
 
-        protected async Task ContextSendAsync(Action action)
+        /// <summary>
+        /// Send action to the current context asynchronously.
+        /// </summary>
+        /// <param name="action">
+        /// The action to be executed at the current context.
+        /// </param>
+        /// <param name="parameters">
+        /// The parameters to be pass at the current context.
+        /// </param>
+        /// <returns>
+        /// A <see cref="Task"/> that represents a proxy for the task returned by <paramref name="action"/>.
+        /// </returns>
+        protected async Task ContextSendAsync(Action action, params object[] parameters)
         {
             if (IsDisposed)
             {
@@ -62,10 +103,22 @@ namespace ObservableHelpers
                     return;
                 }
                 action();
-            });
+            }, parameters);
         }
 
-        protected async Task ContextSendAsync(Func<Task> func)
+        /// <summary>
+        /// Send action to the current context asynchronously.
+        /// </summary>
+        /// <param name="func">
+        /// The action to be executed at the current context.
+        /// </param>
+        /// <param name="parameters">
+        /// The parameters to be pass at the current context.
+        /// </param>
+        /// <returns>
+        /// A <see cref="Task"/> that represents a proxy for the task returned by <paramref name="func"/>.
+        /// </returns>
+        protected async Task ContextSendAsync(Func<Task> func, params object[] parameters)
         {
             if (IsDisposed)
             {
@@ -78,7 +131,7 @@ namespace ObservableHelpers
                     return;
                 }
                 await func();
-            });
+            }, parameters);
         }
     }
 }
