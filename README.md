@@ -15,6 +15,8 @@ To use in UI safe updates, create the object instances at the UI thread or manua
 
 ### ObservableObject Sample
 ```csharp
+using ObservableHelpers;
+
 namespace YourNamespace
 {
     public Dinosaur : ObservableObject
@@ -35,6 +37,8 @@ namespace YourNamespace
 ```
 ### UI safe
 ```csharp
+using ObservableHelpers;
+
 namespace YourNamespace
 {
     public class Program
