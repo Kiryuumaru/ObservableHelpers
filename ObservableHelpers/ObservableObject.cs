@@ -60,6 +60,18 @@ namespace ObservableHelpers
 
         #endregion
 
+        #region Initializers
+
+        /// <summary>
+        /// Creates new instance of the <see cref="ObservableObject"/> class.
+        /// </summary>
+        public ObservableObject()
+        {
+
+        }
+
+        #endregion
+
         #region Methods
 
         /// <inheritdoc/>
