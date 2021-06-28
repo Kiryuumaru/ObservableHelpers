@@ -92,7 +92,7 @@ namespace ObservableHelpers
         }
 
         /// <summary>
-        /// Post action to the current context.
+        /// Executes <paramref name="action"/> to the current context without blocking the executing thread.
         /// </summary>
         /// <param name="action">
         /// The action to be executed at the current context.
@@ -106,7 +106,7 @@ namespace ObservableHelpers
         }
 
         /// <summary>
-        /// Send action to the current context.
+        /// Executes <paramref name="action"/> to the current context and blocking the executing thread until the action ended.
         /// </summary>
         /// <param name="action">
         /// The action to be executed at the current context.
@@ -120,7 +120,7 @@ namespace ObservableHelpers
         }
 
         /// <summary>
-        /// Send action to the current context asynchronously.
+        /// Executes <paramref name="action"/> to the current context asynchronously.
         /// </summary>
         /// <param name="action">
         /// The action to be executed at the current context.
@@ -140,7 +140,7 @@ namespace ObservableHelpers
         }
 
         /// <summary>
-        /// Send action to the current context asynchronously.
+        /// Executes <paramref name="func"/> to the current context asynchronously.
         /// </summary>
         /// <param name="func">
         /// The action to be executed at the current context.
