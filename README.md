@@ -19,7 +19,7 @@ using ObservableHelpers;
 
 namespace YourNamespace
 {
-    public Dinosaur : ObservableObject
+    public class Dinosaur : ObservableObject
     {
         public string Name
         {
