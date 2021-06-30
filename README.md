@@ -8,10 +8,24 @@ Observable helpers with short-and-easy and UI-safe property implementations. Can
 | ------------------- | :------------------: |
 |ObservableHelpers|[![NuGet](https://buildstats.info/nuget/ObservableHelpers?includePreReleases=true)](https://www.nuget.org/packages/ObservableHelpers/)|
 
+## Installation
+```csharp
+// Install release version
+Install-Package ObservableHelpers
+
+// Install pre-release version
+Install-Package ObservableHelpers -pre
+```
+
+## Supported frameworks
+.NET Standard 2.0 - see https://github.com/dotnet/standard/blob/master/docs/versions.md for compatibility matrix
+
 ## Get Started
 
 All observable events are executed on thread that was used to create the object instance.
 To use in UI safe updates, create the object instances at the UI thread or manually configure the ISyncObject.SyncOperation to use UI thread.
+
+## Usage
 
 ### ObservableObject Sample
 ```csharp
