@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ObservableHelpers.Exceptions;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
@@ -148,7 +149,7 @@ namespace ObservableHelpers
         /// <returns>
         /// <c>true</c> whether the property was set; otherwise <c>false</c>.
         /// </returns>
-        /// <exception cref="ArgumentNullException">
+        /// <exception cref="PropertyKeyAndNameNullException">
         /// Throws when <paramref name="propertyName"/> is not provided.
         /// </exception>
         protected bool SetProperty<T>(
@@ -160,8 +161,6 @@ namespace ObservableHelpers
             {
                 return false;
             }
-
-            if (propertyName == null) throw new ArgumentNullException();
 
             return SetPropertyInternal(value, null, propertyName, group);
         }
@@ -187,7 +186,7 @@ namespace ObservableHelpers
         /// <returns>
         /// <c>true</c> whether the property was set; otherwise <c>false</c>.
         /// </returns>
-        /// <exception cref="ArgumentNullException">
+        /// <exception cref="PropertyKeyAndNameNullException">
         /// Throws when <paramref name="key"/> is not provided.
         /// </exception>
         protected bool SetPropertyWithKey<T>(
@@ -200,8 +199,6 @@ namespace ObservableHelpers
             {
                 return false;
             }
-
-            if (key == null) throw new ArgumentNullException();
 
             return SetPropertyInternal(value, key, propertyName, group);
         }
@@ -224,7 +221,7 @@ namespace ObservableHelpers
         /// <returns>
         /// The found <typeparamref name="T"/> property value.
         /// </returns>
-        /// <exception cref="ArgumentNullException">
+        /// <exception cref="PropertyKeyAndNameNullException">
         /// Throws when <paramref name="propertyName"/> is not provided.
         /// </exception>
         protected T GetProperty<T>(
@@ -236,8 +233,6 @@ namespace ObservableHelpers
             {
                 return defaultValue;
             }
-
-            if (propertyName == null) throw new ArgumentNullException();
 
             return GetPropertyInternal(defaultValue, null, propertyName, group);
         }
@@ -263,7 +258,7 @@ namespace ObservableHelpers
         /// <returns>
         /// The found <typeparamref name="T"/> property value.
         /// </returns>
-        /// <exception cref="ArgumentNullException">
+        /// <exception cref="PropertyKeyAndNameNullException">
         /// Throws when <paramref name="key"/> is not provided.
         /// </exception>
         protected T GetPropertyWithKey<T>(
@@ -276,8 +271,6 @@ namespace ObservableHelpers
             {
                 return defaultValue;
             }
-
-            if (key == null) throw new ArgumentNullException();
 
             return GetPropertyInternal(defaultValue, key, propertyName, group);
         }
@@ -294,7 +287,7 @@ namespace ObservableHelpers
         /// <returns>
         /// <c>true</c> whether the property was removed; otherwise, <c>false</c>.
         /// </returns>
-        /// <exception cref="ArgumentNullException">
+        /// <exception cref="PropertyKeyAndNameNullException">
         /// Throws when <paramref name="propertyName"/> is not provided.
         /// </exception>
         protected bool RemoveProperty(string propertyName)
@@ -303,8 +296,6 @@ namespace ObservableHelpers
             {
                 return false;
             }
-
-            if (propertyName == null) throw new ArgumentNullException();
 
             return RemovePropertyCore(null, propertyName);
         }
@@ -321,7 +312,7 @@ namespace ObservableHelpers
         /// <returns>
         /// <c>true</c> whether the property was removed; otherwise, <c>false</c>.
         /// </returns>
-        /// <exception cref="ArgumentNullException">
+        /// <exception cref="PropertyKeyAndNameNullException">
         /// Throws when <paramref name="key"/> is not provided.
         /// </exception>
         protected bool RemovePropertyWithKey(string key)
@@ -330,8 +321,6 @@ namespace ObservableHelpers
             {
                 return false;
             }
-
-            if (key == null) throw new ArgumentNullException();
 
             return RemovePropertyCore(key, null);
         }
@@ -348,7 +337,7 @@ namespace ObservableHelpers
         /// <returns>
         /// <c>true</c> whether the property was deleted; otherwise, <c>false</c>.
         /// </returns>
-        /// <exception cref="ArgumentNullException">
+        /// <exception cref="PropertyKeyAndNameNullException">
         /// Throws when <paramref name="propertyName"/> is not provided.
         /// </exception>
         protected bool DeleteProperty(string propertyName)
@@ -357,8 +346,6 @@ namespace ObservableHelpers
             {
                 return false;
             }
-
-            if (propertyName == null) throw new ArgumentNullException();
 
             return DeletePropertyCore(null, propertyName);
         }
@@ -375,7 +362,7 @@ namespace ObservableHelpers
         /// <returns>
         /// <c>true</c> whether the property was deleted; otherwise, <c>false</c>.
         /// </returns>
-        /// <exception cref="ArgumentNullException">
+        /// <exception cref="PropertyKeyAndNameNullException">
         /// Throws when <paramref name="key"/> is not provided.
         /// </exception>
         protected bool DeletePropertyWithKey(string key)
@@ -384,8 +371,6 @@ namespace ObservableHelpers
             {
                 return false;
             }
-
-            if (key == null) throw new ArgumentNullException();
 
             return DeletePropertyCore(key, null);
         }
@@ -474,7 +459,7 @@ namespace ObservableHelpers
             }
             if (exists)
             {
-                throw new PropertyAlreadyExistsException("Property already exists");
+                throw new PropertyAlreadyExistsException(namedProperty.Key, namedProperty.PropertyName);
             }
         }
 
@@ -493,7 +478,7 @@ namespace ObservableHelpers
         /// <returns>
         /// The found <see cref="NamedProperty"/> from the property collection.
         /// </returns>
-        /// <exception cref="PropertyKeyAndNameNotProvided">
+        /// <exception cref="PropertyKeyAndNameNullException">
         /// Throws when both <paramref name="key"/> and <paramref name="propertyName"/> are not provided.
         /// </exception>
         protected NamedProperty GetCore(string key, string propertyName)
@@ -503,7 +488,7 @@ namespace ObservableHelpers
                 return default;
             }
 
-            if (key == null && propertyName == null) throw new PropertyKeyAndNameNotProvided("key and propertyName should not be both null");
+            if (key == null && propertyName == null) throw new PropertyKeyAndNameNullException();
 
             lock (namedProperties)
             {
@@ -534,7 +519,7 @@ namespace ObservableHelpers
         /// <returns>
         /// <c>true</c> whether the property was removed; otherwise, <c>false</c>.
         /// </returns>
-        /// <exception cref="PropertyKeyAndNameNotProvided">
+        /// <exception cref="PropertyKeyAndNameNullException">
         /// Throws when both <paramref name="key"/> and <paramref name="propertyName"/> are not provided.
         /// </exception>
         protected bool RemovePropertyCore(string key, string propertyName)
@@ -544,7 +529,7 @@ namespace ObservableHelpers
                 return false;
             }
 
-            if (key == null && propertyName == null) throw new PropertyKeyAndNameNotProvided("key and propertyName should not be both null");
+            if (key == null && propertyName == null) throw new PropertyKeyAndNameNullException();
 
             int removedCount = 0;
             lock (namedProperties)
@@ -577,7 +562,7 @@ namespace ObservableHelpers
         /// <returns>
         /// <c>true</c> whether the property was deleted; otherwise, <c>false</c>.
         /// </returns>
-        /// <exception cref="PropertyKeyAndNameNotProvided">
+        /// <exception cref="PropertyKeyAndNameNullException">
         /// Throws when both <paramref name="key"/> and <paramref name="propertyName"/> are not provided.
         /// </exception>
         protected bool DeletePropertyCore(string key, string propertyName)
@@ -587,7 +572,7 @@ namespace ObservableHelpers
                 return false;
             }
 
-            if (key == null && propertyName == null) throw new PropertyKeyAndNameNotProvided("key and propertyName should not be both null");
+            if (key == null && propertyName == null) throw new PropertyKeyAndNameNullException();
 
             NamedProperty propHolder = null;
             lock (namedProperties)
@@ -620,7 +605,7 @@ namespace ObservableHelpers
         /// <returns>
         /// <c>true</c> whether the property exists; otherwise, <c>false</c>.
         /// </returns>
-        /// <exception cref="PropertyKeyAndNameNotProvided">
+        /// <exception cref="PropertyKeyAndNameNullException">
         /// Throws when both <paramref name="key"/> and <paramref name="propertyName"/> are not provided.
         /// </exception>
         protected bool ExistsCore(string key, string propertyName)
@@ -630,7 +615,7 @@ namespace ObservableHelpers
                 return false;
             }
 
-            if (key == null && propertyName == null) throw new PropertyKeyAndNameNotProvided("key and propertyName should not be both null");
+            if (key == null && propertyName == null) throw new PropertyKeyAndNameNullException();
 
             lock (namedProperties)
             {
