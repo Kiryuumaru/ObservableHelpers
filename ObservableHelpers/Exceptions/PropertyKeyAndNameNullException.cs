@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
+namespace ObservableHelpers.Exceptions
 {
     /// <summary>
     /// Exception represents error that occurs if the property already exists.
