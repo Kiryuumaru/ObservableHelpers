@@ -5,30 +5,6 @@ using System.Text;
 namespace ObservableHelpers
 {
     /// <summary>
-    /// Exception represents error that occurs if the property key and name is not provided.
-    /// </summary>
-    public class PropertyKeyAndNameNotProvided : Exception
-    {
-        /// <inheritdoc/>
-        public PropertyKeyAndNameNotProvided(string message)
-            : base(message)
-        {
-        }
-
-        /// <inheritdoc/>
-        public PropertyKeyAndNameNotProvided(string message, Exception innerException)
-            : base(message, innerException)
-        {
-        }
-
-        /// <inheritdoc/>
-        public PropertyKeyAndNameNotProvided()
-            : base()
-        {
-        }
-    }
-
-    /// <summary>
     /// Exception represents error that occurs if the property already exists.
     /// </summary>
     public class PropertyAlreadyExistsException : Exception
@@ -47,7 +23,13 @@ namespace ObservableHelpers
 
         /// <inheritdoc/>
         public PropertyAlreadyExistsException()
-            : base()
+            : base("Provided property already exists.")
+        {
+        }
+
+        /// <inheritdoc/>
+        public PropertyAlreadyExistsException(string propertyKey, string propertyName)
+            : base("The provided property (key:" + propertyKey + " name:" + propertyName + ") already exists.")
         {
         }
     }
