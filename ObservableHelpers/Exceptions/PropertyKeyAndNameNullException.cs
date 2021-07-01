@@ -7,22 +7,9 @@ namespace ObservableHelpers.Exceptions
     /// <summary>
     /// Exception represents error that occurs if the property already exists.
     /// </summary>
-    public class PropertyKeyAndNameNullException : ArgumentNullException
+    public class PropertyKeyAndNameNullException : ObservableHelpersException
     {
-        /// <inheritdoc/>
-        public PropertyKeyAndNameNullException(string message)
-            : base(message)
-        {
-        }
-
-        /// <inheritdoc/>
-        public PropertyKeyAndNameNullException(string message, Exception innerException)
-            : base(message, innerException)
-        {
-        }
-
-        /// <inheritdoc/>
-        public PropertyKeyAndNameNullException()
+        internal PropertyKeyAndNameNullException()
             : base("Neither property key nor name are provided.")
         {
         }
