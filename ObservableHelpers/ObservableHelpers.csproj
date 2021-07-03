@@ -14,7 +14,7 @@
 
   <PropertyGroup>
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
-    <Version>1.0.86</Version>
+    <Version>1.0.87</Version>
     <PackageReleaseNotes>* Updated code documentation</PackageReleaseNotes>
   </PropertyGroup>
 

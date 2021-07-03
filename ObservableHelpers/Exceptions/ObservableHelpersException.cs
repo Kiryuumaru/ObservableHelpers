@@ -5,7 +5,7 @@ using System.Text;
 namespace ObservableHelpers.Exceptions
 {
     /// <summary>
-    /// Exception represents error that occurs if the property already exists.
+    /// Occurs when there`s an observable helpers error.
     /// </summary>
     public abstract class ObservableHelpersException : Exception
     {
