@@ -147,10 +147,10 @@ namespace ObservableHelpers
         /// The group of the property to set.
         /// </param>
         /// <param name="validate">
-        /// Value validator function for set.
+        /// The value set validator function.
         /// </param>
         /// <param name="onSet">
-        /// Callback after set operation.
+        /// The callback after set operation.
         /// </param>
         /// <returns>
         /// <c>true</c> whether the property was set; otherwise <c>false</c>.
@@ -192,10 +192,10 @@ namespace ObservableHelpers
         /// The group of the property to set.
         /// </param>
         /// <param name="validate">
-        /// Value validator function for set.
+        /// The value set validator function.
         /// </param>
         /// <param name="onSet">
-        /// Callback after set operation.
+        /// The callback after set operation.
         /// </param>
         /// <returns>
         /// <c>true</c> whether the property was set; otherwise <c>false</c>.
@@ -235,10 +235,10 @@ namespace ObservableHelpers
         /// The group of the property value to get.
         /// </param>
         /// <param name="validate">
-        /// Value validator function for set.
+        /// The value set validator function.
         /// </param>
         /// <param name="onSet">
-        /// Callback after set operation.
+        /// The callback after set operation.
         /// </param>
         /// <returns>
         /// The found <typeparamref name="T"/> property value.
@@ -280,10 +280,10 @@ namespace ObservableHelpers
         /// The group of the property value to get.
         /// </param>
         /// <param name="validate">
-        /// Value validator function for set.
+        /// The value set validator function.
         /// </param>
         /// <param name="onSet">
-        /// Callback after set operation.
+        /// The callback after set operation.
         /// </param>
         /// <returns>
         /// The found <typeparamref name="T"/> property value.
