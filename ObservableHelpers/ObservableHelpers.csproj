@@ -14,8 +14,8 @@
 
   <PropertyGroup>
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
-    <Version>1.0.87</Version>
-    <PackageReleaseNotes>* Updated code documentation</PackageReleaseNotes>
+    <Version>1.0.88</Version>
+    <PackageReleaseNotes>* Added ObservableObject property onSet and validator</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

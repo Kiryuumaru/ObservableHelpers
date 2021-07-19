@@ -20,19 +20,7 @@ namespace ObservableHelpers
         /// </summary>
         public string Group { get; }
 
-        /// <summary>
-        /// Creates new instance of the <see cref="ObjectPropertyChangesEventArgs"/> class.
-        /// </summary>
-        /// <param name="key">
-        /// Key of the property that changed.
-        /// </param>
-        /// <param name="propertyName">
-        /// Name of the property that changed.
-        /// </param>
-        /// <param name="group">
-        /// Group of the property that changed.
-        /// </param>
-        public ObjectPropertyChangesEventArgs(
+        internal ObjectPropertyChangesEventArgs(
             string key,
             string propertyName,
             string group)
@@ -40,6 +28,58 @@ namespace ObservableHelpers
         {
             Key = key;
             Group = group;
+        }
+    }
+
+    /// <summary>
+    /// The property set event arguments for <see cref="ObservableObject"/>.
+    /// </summary>
+    public class ObjectPropertySetEventArgs<T> : EventArgs
+    {
+        /// <summary>
+        /// Gets the key of the property that sets.
+        /// </summary>
+        public string Key { get; }
+
+        /// <summary>
+        /// Gets the property name of the property that sets.
+        /// </summary>
+        public string PropertyName { get; }
+
+        /// <summary>
+        /// Gets the group of the property that sets.
+        /// </summary>
+        public string Group { get; }
+
+        /// <summary>
+        /// Gets the old value of the property that sets.
+        /// </summary>
+        public T OldValue { get; }
+
+        /// <summary>
+        /// Gets the new value of the property that sets.
+        /// </summary>
+        public T NewValue { get; }
+
+        /// <summary>
+        /// Gets <c>true</c> if the property sets; otherwise, <c>false</c>.
+        /// </summary>
+        public bool HasChanges { get; }
+
+        internal ObjectPropertySetEventArgs(
+            string key,
+            string propertyName,
+            string group,
+            T oldValue,
+            T newValue,
+            bool hasChanges)
+        {
+            Key = key;
+            PropertyName = propertyName;
+            Group = group;
+            OldValue = oldValue;
+            NewValue = newValue;
+            HasChanges = hasChanges;
         }
     }
 }

@@ -146,6 +146,12 @@ namespace ObservableHelpers
         /// <param name="group">
         /// The group of the property to set.
         /// </param>
+        /// <param name="validate">
+        /// Value validator function for set.
+        /// </param>
+        /// <param name="onSet">
+        /// Callback after set operation.
+        /// </param>
         /// <returns>
         /// <c>true</c> whether the property was set; otherwise <c>false</c>.
         /// </returns>
@@ -155,14 +161,16 @@ namespace ObservableHelpers
         protected bool SetProperty<T>(
             T value,
             [CallerMemberName] string propertyName = null,
-            string group = null)
+            string group = null,
+            Func<(T oldValue, T newValue), bool> validate = null,
+            EventHandler<ObjectPropertySetEventArgs<T>> onSet = null)
         {
             if (IsDisposed)
             {
                 return false;
             }
 
-            return SetPropertyInternal(value, null, propertyName, group);
+            return SetPropertyInternal(value, null, propertyName, group, validate, onSet);
         }
 
         /// <summary>
@@ -183,6 +191,12 @@ namespace ObservableHelpers
         /// <param name="group">
         /// The group of the property to set.
         /// </param>
+        /// <param name="validate">
+        /// Value validator function for set.
+        /// </param>
+        /// <param name="onSet">
+        /// Callback after set operation.
+        /// </param>
         /// <returns>
         /// <c>true</c> whether the property was set; otherwise <c>false</c>.
         /// </returns>
@@ -193,14 +207,16 @@ namespace ObservableHelpers
             T value,
             string key,
             [CallerMemberName] string propertyName = null,
-            string group = null)
+            string group = null,
+            Func<(T oldValue, T newValue), bool> validate = null,
+            EventHandler<ObjectPropertySetEventArgs<T>> onSet = null)
         {
             if (IsDisposed)
             {
                 return false;
             }
 
-            return SetPropertyInternal(value, key, propertyName, group);
+            return SetPropertyInternal(value, key, propertyName, group, validate, onSet);
         }
 
         /// <summary>
@@ -218,6 +234,12 @@ namespace ObservableHelpers
         /// <param name="group">
         /// The group of the property value to get.
         /// </param>
+        /// <param name="validate">
+        /// Value validator function for set.
+        /// </param>
+        /// <param name="onSet">
+        /// Callback after set operation.
+        /// </param>
         /// <returns>
         /// The found <typeparamref name="T"/> property value.
         /// </returns>
@@ -227,14 +249,16 @@ namespace ObservableHelpers
         protected T GetProperty<T>(
             T defaultValue = default,
             [CallerMemberName] string propertyName = null,
-            string group = null)
+            string group = null,
+            Func<(T oldValue, T newValue), bool> validate = null,
+            EventHandler<ObjectPropertySetEventArgs<T>> onSet = null)
         {
             if (IsDisposed)
             {
                 return defaultValue;
             }
 
-            return GetPropertyInternal(defaultValue, null, propertyName, group);
+            return GetPropertyInternal(defaultValue, null, propertyName, group, validate, onSet);
         }
 
         /// <summary>
@@ -255,6 +279,12 @@ namespace ObservableHelpers
         /// <param name="group">
         /// The group of the property value to get.
         /// </param>
+        /// <param name="validate">
+        /// Value validator function for set.
+        /// </param>
+        /// <param name="onSet">
+        /// Callback after set operation.
+        /// </param>
         /// <returns>
         /// The found <typeparamref name="T"/> property value.
         /// </returns>
@@ -265,14 +295,16 @@ namespace ObservableHelpers
             string key,
             T defaultValue = default,
             [CallerMemberName] string propertyName = null,
-            string group = null)
+            string group = null,
+            Func<(T oldValue, T newValue), bool> validate = null,
+            EventHandler<ObjectPropertySetEventArgs<T>> onSet = null)
         {
             if (IsDisposed)
             {
                 return defaultValue;
             }
 
-            return GetPropertyInternal(defaultValue, key, propertyName, group);
+            return GetPropertyInternal(defaultValue, key, propertyName, group, validate, onSet);
         }
 
         /// <summary>
@@ -713,9 +745,11 @@ namespace ObservableHelpers
 
         private bool SetPropertyInternal<T>(
             T value,
-            string key = null,
-            string propertyName = null,
-            string group = null)
+            string key,
+            string propertyName,
+            string group,
+            Func<(T oldValue, T newValue), bool> validate,
+            EventHandler<ObjectPropertySetEventArgs<T>> onSet)
         {
             if (IsDisposed)
             {
@@ -726,57 +760,70 @@ namespace ObservableHelpers
             {
                 bool hasChanges = false;
                 NamedProperty propHolder = GetCore(key, propertyName);
+                T oldValue = default;
 
-                if (propHolder != null)
+                if (propHolder == null)
                 {
-                    propHolder.Property.SyncOperation.SetContext(this);
-
-                    if (propHolder.Group != group)
+                    propHolder = NamedPropertyFactory(key, propertyName, group);
+                    if (propHolder != null)
                     {
-                        propHolder.Group = group;
-                        hasChanges = true;
-                    }
-
-                    if (propHolder.PropertyName != propertyName)
-                    {
-                        propHolder.PropertyName = propertyName;
-                        hasChanges = true;
-                    }
-
-                    var hasSetChanges = false;
-
-                    if (propHolder.Property.SetValue(value))
-                    {
-                        hasSetChanges = true;
-                        hasChanges = true;
-                    }
-
-                    if (!hasSetChanges && hasChanges)
-                    {
-                        OnPropertyChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
+                        if (validate?.Invoke((oldValue, value)) ?? true)
+                        {
+                            WireNamedProperty(propHolder);
+                            AddCore(propHolder);
+                            propHolder.Property.SetValue(value);
+                            hasChanges = true;
+                        }
                     }
                 }
                 else
                 {
-                    propHolder = NamedPropertyFactory(key, propertyName, group);
-                    WireNamedProperty(propHolder);
-                    if (propHolder == null)
+                    propHolder.Property.SyncOperation.SetContext(this);
+
+                    oldValue = propHolder.Property.GetValue<T>();
+
+                    if (validate?.Invoke((oldValue, value)) ?? true)
                     {
-                        return false;
+                        if (propHolder.Group != group)
+                        {
+                            propHolder.Group = group;
+                            hasChanges = true;
+                        }
+
+                        if (propHolder.PropertyName != propertyName)
+                        {
+                            propHolder.PropertyName = propertyName;
+                            hasChanges = true;
+                        }
+
+                        var hasSetChanges = false;
+
+                        if (propHolder.Property.SetValue(value))
+                        {
+                            hasSetChanges = true;
+                            hasChanges = true;
+                        }
+
+                        if (!hasSetChanges && hasChanges)
+                        {
+                            OnPropertyChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
+                        }
                     }
-                    AddCore(propHolder);
-                    propHolder.Property.SetValue(value);
-                    hasChanges = true;
                 }
+
+                onSet?.Invoke(this, new ObjectPropertySetEventArgs<T>(key, propertyName, group, oldValue, hasChanges ? value : oldValue, hasChanges));
+
                 return hasChanges;
             }
         }
 
         private T GetPropertyInternal<T>(
-            T defaultValue = default,
-            string key = null,
-            [CallerMemberName] string propertyName = null,
-            string group = null)
+            T defaultValue,
+            string key,
+            string propertyName,
+            string group,
+            Func<(T oldValue, T newValue), bool> validate,
+            EventHandler<ObjectPropertySetEventArgs<T>> onSet)
         {
             if (IsDisposed)
             {
@@ -787,41 +834,59 @@ namespace ObservableHelpers
             {
                 bool hasChanges = false;
                 NamedProperty propHolder = GetCore(key, propertyName);
+                T oldValue = default;
 
                 if (propHolder == null)
                 {
                     propHolder = NamedPropertyFactory(key, propertyName, group);
-                    WireNamedProperty(propHolder);
-                    if (propHolder == null)
+                    if (propHolder != null)
                     {
-                        return defaultValue;
+                        if (validate?.Invoke((oldValue, defaultValue)) ?? true)
+                        {
+                            WireNamedProperty(propHolder);
+                            AddCore(propHolder);
+                            propHolder.Property.SetValue(defaultValue);
+                            hasChanges = true;
+                        }
                     }
-                    AddCore(propHolder);
-                    propHolder.Property.SetValue(defaultValue);
                 }
                 else
                 {
                     propHolder.Property.SyncOperation.SetContext(this);
 
-                    if (propHolder.Group != group)
-                    {
-                        propHolder.Group = group;
-                        hasChanges = true;
-                    }
+                    oldValue = propHolder.Property.GetValue<T>();
 
-                    if (propHolder.PropertyName != propertyName)
+                    if (validate?.Invoke((oldValue, defaultValue)) ?? true)
                     {
-                        propHolder.PropertyName = propertyName;
-                        hasChanges = true;
-                    }
+                        if (propHolder.Group != group)
+                        {
+                            propHolder.Group = group;
+                            hasChanges = true;
+                        }
 
-                    if (hasChanges)
-                    {
-                        OnPropertyChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
+                        if (propHolder.PropertyName != propertyName)
+                        {
+                            propHolder.PropertyName = propertyName;
+                            hasChanges = true;
+                        }
+
+                        if (hasChanges)
+                        {
+                            OnPropertyChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
+                        }
                     }
                 }
 
-                return propHolder.Property.GetValue(defaultValue);
+                onSet?.Invoke(this, new ObjectPropertySetEventArgs<T>(key, propertyName, group, oldValue, hasChanges ? defaultValue : oldValue, hasChanges));
+
+                if (propHolder == null)
+                {
+                    return defaultValue;
+                }
+                else
+                {
+                    return propHolder.Property.GetValue(defaultValue);
+                }
             }
         }
 
