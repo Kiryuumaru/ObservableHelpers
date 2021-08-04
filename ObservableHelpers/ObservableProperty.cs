@@ -160,7 +160,7 @@ namespace ObservableHelpers
             if (!(objectHolder?.Equals(obj) ?? obj == null))
             {
                 objectHolder = obj;
-                OnPropertyChanged(nameof(Property));
+                OnPropertyChanged(new PropertyChangedEventArgs(nameof(Property)));
                 return true;
             }
             else
@@ -229,12 +229,12 @@ namespace ObservableHelpers
         #region Methods
 
         /// <inheritdoc/>
-        protected override void OnPropertyChanged(string propertyName)
+        protected override void OnPropertyChanged(PropertyChangedEventArgs args)
         {
-            base.OnPropertyChanged(propertyName);
-            if (propertyName == nameof(Property))
+            base.OnPropertyChanged(args);
+            if (args.PropertyName == nameof(Property))
             {
-                base.OnPropertyChanged(nameof(Value));
+                base.OnPropertyChanged(new PropertyChangedEventArgs(nameof(Value)));
             }
         }
 

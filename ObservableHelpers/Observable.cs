@@ -37,16 +37,5 @@ namespace ObservableHelpers
                 PropertyChanged?.Invoke(this, args);
             });
         }
-
-        /// <summary>
-        /// Invokes <see cref="PropertyChanged"/> into current context.
-        /// </summary>
-        /// <param name="propertyName">
-        /// The <see cref="PropertyChangedEventArgs.PropertyName"/> in <see cref="PropertyChangedEventArgs"/> in event argument.
-        /// </param>
-        protected virtual void OnPropertyChanged(string propertyName)
-        {
-            OnPropertyChanged(new PropertyChangedEventArgs(propertyName));
-        }
     }
 }
