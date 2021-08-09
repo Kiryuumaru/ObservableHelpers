@@ -784,15 +784,21 @@ namespace ObservableHelpers
 
                     if (validate?.Invoke((oldValue, value)) ?? true)
                     {
-                        if (propHolder.Group != group)
+                        if (propHolder.Key != key)
                         {
-                            propHolder.Group = group;
+                            propHolder.Key = key;
                             hasChanges = true;
                         }
 
                         if (propHolder.PropertyName != propertyName)
                         {
                             propHolder.PropertyName = propertyName;
+                            hasChanges = true;
+                        }
+
+                        if (propHolder.Group != group)
+                        {
+                            propHolder.Group = group;
                             hasChanges = true;
                         }
 
@@ -858,15 +864,21 @@ namespace ObservableHelpers
 
                     if (validate?.Invoke((oldValue, defaultValue)) ?? true)
                     {
-                        if (propHolder.Group != group)
+                        if (propHolder.Key != key)
                         {
-                            propHolder.Group = group;
+                            propHolder.Key = key;
                             hasChanges = true;
                         }
 
                         if (propHolder.PropertyName != propertyName)
                         {
                             propHolder.PropertyName = propertyName;
+                            hasChanges = true;
+                        }
+
+                        if (propHolder.Group != group)
+                        {
+                            propHolder.Group = group;
                             hasChanges = true;
                         }
 
