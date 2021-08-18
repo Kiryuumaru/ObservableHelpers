@@ -543,7 +543,7 @@ namespace ObservableHelpers
         }
 
         /// <summary>
-        /// Notifies observers of <see cref="CollectionChanged"/> or <see cref="INotifyPropertyChanged.PropertyChanged"/> of an update to the dictionary.
+        /// Notifies observers of <see cref="CollectionChanged"/> or <see cref="INotifyCollectionChanged.CollectionChanged"/> of an update to the dictionary.
         /// </summary>
         protected virtual void NotifyObserversOfChange()
         {
@@ -553,6 +553,10 @@ namespace ObservableHelpers
             }
 
             var args = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset);
+
+            OnPropertyChanged(new PropertyChangedEventArgs(nameof(Keys)));
+            OnPropertyChanged(new PropertyChangedEventArgs(nameof(Values)));
+            OnPropertyChanged(new PropertyChangedEventArgs(nameof(Count)));
 
             ContextPost(delegate
             {
