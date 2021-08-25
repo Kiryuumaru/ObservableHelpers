@@ -1,5 +1,6 @@
 using ObservableHelpers;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -17,6 +18,11 @@ namespace ObservableHelpersTest
         {
             get => GetPropertyWithKey<string>("prop2");
             set => SetPropertyWithKey(value, "prop2");
+        }
+
+        public int PropCount
+        {
+            get => GetRawProperties().ToList().Count;
         }
     }
 
@@ -62,13 +68,23 @@ namespace ObservableHelpersTest
             obj.Prop1 = "test";
             obj.Prop1 = "test1";
             obj.Prop1 = "test1";
+            obj.Prop1 = "test";
+            obj.Prop1 = "test";
+            obj.Prop1 = "test1";
+            obj.Prop1 = "test1";
+            obj.Prop2 = "test";
+            obj.Prop2 = "test";
+            obj.Prop2 = "test1";
+            obj.Prop2 = "test1";
             obj.Prop2 = "test";
             obj.Prop2 = "test";
             obj.Prop2 = "test1";
             obj.Prop2 = "test1";
             await Task.Delay(500);
-            Assert.True(raiseProp1Count == 2 && raiseProp2Count == 2);
-            Assert.True(obj.Prop1 == obj.Prop2);
+            Assert.Equal(4, raiseProp1Count);
+            Assert.Equal(4, raiseProp2Count);
+            Assert.Equal(obj.Prop1, obj.Prop2);
+            Assert.Equal(2, obj.PropCount);
         }
 
         [Fact]

@@ -14,8 +14,8 @@
 
   <PropertyGroup>
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
-    <Version>1.0.92</Version>
-    <PackageReleaseNotes>* Fixed ObservableDictionary not invoking on PropertyChanged event</PackageReleaseNotes>
+    <Version>1.1.0</Version>
+    <PackageReleaseNotes>* Fixed performance for single-threaded platforms</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

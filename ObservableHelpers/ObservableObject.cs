@@ -1,6 +1,7 @@
 ﻿using ObservableHelpers.Exceptions;
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -53,11 +54,91 @@ namespace ObservableHelpers
             public string Group { get; set; }
         }
 
+        private struct NamedPropertyKey
+        {
+            public string Key
+            {
+                get
+                {
+                    return property == null ? key : property.Key;
+                }
+            }
+
+            public string PropertyName
+            {
+                get
+                {
+                    return property == null ? propertyName : property.PropertyName;
+                }
+            }
+
+            private readonly string key;
+            private readonly string propertyName;
+            private NamedProperty property;
+
+            public NamedPropertyKey(string key, string propertyName)
+            {
+                this.key = key;
+                this.propertyName = propertyName;
+                property = null;
+            }
+
+            public NamedPropertyKey(NamedProperty property)
+            {
+                key = null;
+                propertyName = null;
+                this.property = property;
+            }
+
+            internal void Update(NamedProperty property)
+            {
+                this.property = property;
+            }
+        }
+
+        private class NamedPropertyKeyComparer : IEqualityComparer<NamedPropertyKey>
+        {
+            public bool Equals(NamedPropertyKey x, NamedPropertyKey y)
+            {
+                if (x.Key == null && y.Key == null)
+                {
+                    return x.PropertyName == y.PropertyName;
+                }
+                else
+                {
+                    return x.Key == y.Key;
+                }
+            }
+
+            public int GetHashCode(NamedPropertyKey obj)
+            {
+                if (obj.Key == null && obj.PropertyName == null)
+                {
+                    return 0;
+                }
+                if (obj.Key == null)
+                {
+                    return 487910435 + EqualityComparer<string>.Default.GetHashCode(obj.PropertyName);
+                }
+                else if (obj.PropertyName == null)
+                {
+                    return 990326508 + EqualityComparer<string>.Default.GetHashCode(obj.Key);
+                }
+                else
+                {
+                    int hashCode = -722115753;
+                    hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(obj.Key);
+                    hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(obj.PropertyName);
+                    return hashCode;
+                }
+            }
+        }
+
         #endregion
 
         #region Properties
 
-        private readonly List<NamedProperty> namedProperties = new List<NamedProperty>();
+        private readonly ConcurrentDictionary<NamedPropertyKey, NamedProperty> namedProperties = new ConcurrentDictionary<NamedPropertyKey, NamedProperty>(new NamedPropertyKeyComparer());
 
         #endregion
 
@@ -84,14 +165,11 @@ namespace ObservableHelpers
             }
 
             var hasChanges = false;
-            lock (namedProperties)
+            foreach (var propHolder in namedProperties)
             {
-                foreach (var propHolder in namedProperties)
+                if (propHolder.Value.Property.SetNull())
                 {
-                    if (propHolder.Property.SetNull())
-                    {
-                        hasChanges = true;
-                    }
+                    hasChanges = true;
                 }
             }
             return hasChanges;
@@ -105,10 +183,7 @@ namespace ObservableHelpers
                 return true;
             }
 
-            lock (namedProperties)
-            {
-                return namedProperties.All(i => i.Property.IsNull());
-            }
+            return namedProperties.All(i => i.Value.Property.IsNull());
         }
 
         /// <summary>
@@ -445,10 +520,49 @@ namespace ObservableHelpers
                 return default;
             }
 
-            lock (namedProperties)
+            return group == null ? namedProperties.Values.ToList() : namedProperties.Values.Where(i => i.Group == group).ToList();
+        }
+
+        /// <summary>
+        /// The core implementation for getting the <see cref="NamedProperty"/> from the property collection with the provided <paramref name="key"/> and <paramref name="propertyName"/>, or adds a value to the collection by using the specified function if the property does not already exist.
+        /// </summary>
+        /// <remarks>
+        /// Both <paramref name="key"/> and <paramref name="propertyName"/> should not be null. If both are provided, <paramref name="key"/> will be used to find the property.
+        /// </remarks>
+        /// <param name="key">
+        /// The key of the property to get.
+        /// </param>
+        /// <param name="propertyName">
+        /// The name of the property to get.
+        /// </param>
+        /// <param name="valueFactory">
+        /// The function used to generate a property.
+        /// </param>
+        /// <param name="onGet">
+        /// The action if the property already exists.
+        /// </param>
+        /// <returns>
+        /// The found <see cref="NamedProperty"/> from the property collection.
+        /// </returns>
+        protected NamedProperty GetOrAdd(string key, string propertyName, Func<NamedProperty> valueFactory, Action<NamedProperty> onGet = null)
+        {
+            if (IsDisposed)
             {
-                return group == null ? namedProperties.ToList() : namedProperties.Where(i => i.Group == group).ToList();
+                return null;
             }
+            bool isNew = false;
+            var namedProperty = namedProperties.GetOrAdd(new NamedPropertyKey(key, propertyName), namedPropertyKey =>
+            {
+                isNew = true;
+                var value = valueFactory();
+                namedPropertyKey.Update(value);
+                return value;
+            });
+            if (!isNew)
+            {
+                onGet?.Invoke(namedProperty);
+            }
+            return namedProperty;
         }
 
         /// <summary>
@@ -468,26 +582,14 @@ namespace ObservableHelpers
             }
 
             bool exists = false;
-            lock (namedProperties)
+            var key = new NamedPropertyKey(namedProperty);
+            if (namedProperties.ContainsKey(key))
             {
-                if (namedProperty.Key == null)
-                {
-                    if (namedProperties.Any(i => i.PropertyName == namedProperty.PropertyName))
-                    {
-                        exists = true;
-                    }
-                }
-                else
-                {
-                    if (namedProperties.Any(i => i.Key == namedProperty.Key))
-                    {
-                        exists = true;
-                    }
-                }
-                if (!exists)
-                {
-                    namedProperties.Add(namedProperty);
-                }
+                exists = true;
+            }
+            else
+            {
+                namedProperties.TryAdd(key, namedProperty);
             }
             if (exists)
             {
@@ -522,16 +624,13 @@ namespace ObservableHelpers
 
             if (key == null && propertyName == null) throw new PropertyKeyAndNameNullException();
 
-            lock (namedProperties)
+            if (namedProperties.TryGetValue(new NamedPropertyKey(key, propertyName), out NamedProperty namedProperty))
             {
-                if (key == null)
-                {
-                    return namedProperties.FirstOrDefault(i => i.PropertyName == propertyName);
-                }
-                else
-                {
-                    return namedProperties.FirstOrDefault(i => i.Key == key);
-                }
+                return namedProperty;
+            }
+            else
+            {
+                return null;
             }
         }
 
@@ -563,19 +662,7 @@ namespace ObservableHelpers
 
             if (key == null && propertyName == null) throw new PropertyKeyAndNameNullException();
 
-            int removedCount = 0;
-            lock (namedProperties)
-            {
-                if (key == null)
-                {
-                    removedCount = namedProperties.RemoveAll(i => i.PropertyName == propertyName);
-                }
-                else
-                {
-                    removedCount = namedProperties.RemoveAll(i => i.Key == key);
-                }
-            }
-            return removedCount != 0;
+            return namedProperties.TryRemove(new NamedPropertyKey(key, propertyName), out _);
         }
 
         /// <summary>
@@ -606,20 +693,14 @@ namespace ObservableHelpers
 
             if (key == null && propertyName == null) throw new PropertyKeyAndNameNullException();
 
-            NamedProperty propHolder = null;
-            lock (namedProperties)
+            if (namedProperties.TryGetValue(new NamedPropertyKey(key , propertyName), out NamedProperty propHolder))
             {
-                if (key == null)
-                {
-                    propHolder = namedProperties.FirstOrDefault(i => i.PropertyName == propertyName);
-                }
-                else
-                {
-                    propHolder = namedProperties.FirstOrDefault(i => i.Key == key);
-                }
+                return propHolder.Property.SetNull();
             }
-
-            return propHolder?.Property.SetNull() ?? false;
+            else
+            {
+                return false;
+            }
         }
 
         /// <summary>
@@ -649,24 +730,7 @@ namespace ObservableHelpers
 
             if (key == null && propertyName == null) throw new PropertyKeyAndNameNullException();
 
-            lock (namedProperties)
-            {
-                if (key == null)
-                {
-                    if (namedProperties.Any(i => i.PropertyName == propertyName))
-                    {
-                        return true;
-                    }
-                }
-                else
-                {
-                    if (namedProperties.Any(i => i.Key == key))
-                    {
-                        return true;
-                    }
-                }
-            }
-            return false;
+            return namedProperties.ContainsKey(new NamedPropertyKey(key, propertyName));
         }
 
         /// <summary>
@@ -735,12 +799,10 @@ namespace ObservableHelpers
                 return;
             }
 
-            NamedProperty propHolder = null;
-            lock (namedProperties)
+            if (namedProperties.TryGetValue(new NamedPropertyKey(key, null), out NamedProperty propHolder))
             {
-                propHolder = namedProperties.FirstOrDefault(i => i.Key == key);
+                OnPropertyChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
             }
-            if (propHolder != null) OnPropertyChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
         }
 
         private bool SetPropertyInternal<T>(
@@ -756,71 +818,71 @@ namespace ObservableHelpers
                 return false;
             }
 
-            lock (this)
+            bool postSet = false;
+            bool hasChanges = false;
+            T oldValue = default;
+            var namedProperty = GetOrAdd(key, propertyName, delegate
             {
-                bool hasChanges = false;
-                NamedProperty propHolder = GetCore(key, propertyName);
-                T oldValue = default;
-
-                if (propHolder == null)
+                postSet = true;
+                var newNamedProperty = NamedPropertyFactory(key, propertyName, group);
+                if (newNamedProperty != null)
                 {
-                    propHolder = NamedPropertyFactory(key, propertyName, group);
-                    if (propHolder != null)
-                    {
-                        if (validate?.Invoke((oldValue, value)) ?? true)
-                        {
-                            WireNamedProperty(propHolder);
-                            AddCore(propHolder);
-                            propHolder.Property.SetValue(value);
-                            hasChanges = true;
-                        }
-                    }
-                }
-                else
-                {
-                    propHolder.Property.SyncOperation.SetContext(this);
-
-                    oldValue = propHolder.Property.GetValue<T>();
-
                     if (validate?.Invoke((oldValue, value)) ?? true)
                     {
-                        if (propHolder.Key != key)
-                        {
-                            propHolder.Key = key;
-                            hasChanges = true;
-                        }
-
-                        if (propHolder.PropertyName != propertyName)
-                        {
-                            propHolder.PropertyName = propertyName;
-                            hasChanges = true;
-                        }
-
-                        if (propHolder.Group != group)
-                        {
-                            propHolder.Group = group;
-                            hasChanges = true;
-                        }
-
-                        var hasSetChanges = false;
-
-                        if (propHolder.Property.SetValue(value))
-                        {
-                            hasSetChanges = true;
-                            hasChanges = true;
-                        }
-
-                        if (!hasSetChanges && hasChanges)
-                        {
-                            OnPropertyChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
-                        }
+                        WireNamedProperty(newNamedProperty);
+                        hasChanges = true;
                     }
                 }
+                return newNamedProperty;
+            }, existingNamedProperty =>
+            {
+                existingNamedProperty.Property.SyncOperation.SetContext(this);
 
-                onSet?.Invoke(this, new ObjectPropertySetEventArgs<T>(key, propertyName, group, oldValue, hasChanges ? value : oldValue, hasChanges));
+                oldValue = existingNamedProperty.Property.GetValue<T>();
 
-                return hasChanges;
+                if (validate?.Invoke((oldValue, value)) ?? true)
+                {
+                    if (existingNamedProperty.Key != key)
+                    {
+                        existingNamedProperty.Key = key;
+                        hasChanges = true;
+                    }
+
+                    if (existingNamedProperty.PropertyName != propertyName)
+                    {
+                        existingNamedProperty.PropertyName = propertyName;
+                        hasChanges = true;
+                    }
+
+                    if (existingNamedProperty.Group != group)
+                    {
+                        existingNamedProperty.Group = group;
+                        hasChanges = true;
+                    }
+
+                    var hasSetChanges = false;
+
+                    if (existingNamedProperty.Property.SetValue(value))
+                    {
+                        hasSetChanges = true;
+                        hasChanges = true;
+                    }
+
+                    if (!hasSetChanges && hasChanges)
+                    {
+                        OnPropertyChanged(existingNamedProperty.Key, existingNamedProperty.PropertyName, existingNamedProperty.Group);
+                    }
+                }
+            });
+
+            if (postSet)
+            {
+                namedProperty?.Property.SetValue(value);
             }
+
+            onSet?.Invoke(this, new ObjectPropertySetEventArgs<T>(key, propertyName, group, oldValue, hasChanges ? value : oldValue, hasChanges));
+
+            return hasChanges;
         }
 
         private T GetPropertyInternal<T>(
@@ -836,70 +898,66 @@ namespace ObservableHelpers
                 return defaultValue;
             }
 
-            lock (this)
+            bool postSet = false;
+            bool hasChanges = false;
+            T oldValue = default;
+            T returnValue = defaultValue;
+            var namedProperty = GetOrAdd(key, propertyName, delegate
             {
-                bool hasChanges = false;
-                NamedProperty propHolder = GetCore(key, propertyName);
-                T oldValue = default;
-
-                if (propHolder == null)
+                postSet = true;
+                var newNamedProperty = NamedPropertyFactory(key, propertyName, group);
+                if (newNamedProperty != null)
                 {
-                    propHolder = NamedPropertyFactory(key, propertyName, group);
-                    if (propHolder != null)
-                    {
-                        if (validate?.Invoke((oldValue, defaultValue)) ?? true)
-                        {
-                            WireNamedProperty(propHolder);
-                            AddCore(propHolder);
-                            propHolder.Property.SetValue(defaultValue);
-                            hasChanges = true;
-                        }
-                    }
-                }
-                else
-                {
-                    propHolder.Property.SyncOperation.SetContext(this);
-
-                    oldValue = propHolder.Property.GetValue<T>();
-
                     if (validate?.Invoke((oldValue, defaultValue)) ?? true)
                     {
-                        if (propHolder.Key != key)
-                        {
-                            propHolder.Key = key;
-                            hasChanges = true;
-                        }
-
-                        if (propHolder.PropertyName != propertyName)
-                        {
-                            propHolder.PropertyName = propertyName;
-                            hasChanges = true;
-                        }
-
-                        if (propHolder.Group != group)
-                        {
-                            propHolder.Group = group;
-                            hasChanges = true;
-                        }
-
-                        if (hasChanges)
-                        {
-                            OnPropertyChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
-                        }
+                        WireNamedProperty(newNamedProperty);
+                        hasChanges = true;
                     }
                 }
+                return newNamedProperty;
+            }, existingNamedProperty =>
+            {
+                existingNamedProperty.Property.SyncOperation.SetContext(this);
 
-                onSet?.Invoke(this, new ObjectPropertySetEventArgs<T>(key, propertyName, group, oldValue, hasChanges ? defaultValue : oldValue, hasChanges));
+                oldValue = existingNamedProperty.Property.GetValue<T>();
 
-                if (propHolder == null)
+                if (validate?.Invoke((oldValue, defaultValue)) ?? true)
                 {
-                    return defaultValue;
+                    if (existingNamedProperty.Key != key)
+                    {
+                        existingNamedProperty.Key = key;
+                        hasChanges = true;
+                    }
+
+                    if (existingNamedProperty.PropertyName != propertyName)
+                    {
+                        existingNamedProperty.PropertyName = propertyName;
+                        hasChanges = true;
+                    }
+
+                    if (existingNamedProperty.Group != group)
+                    {
+                        existingNamedProperty.Group = group;
+                        hasChanges = true;
+                    }
+
+                    if (hasChanges)
+                    {
+                        OnPropertyChanged(existingNamedProperty.Key, existingNamedProperty.PropertyName, existingNamedProperty.Group);
+                    }
+
+                    returnValue = existingNamedProperty.Property.GetValue(defaultValue);
                 }
-                else
-                {
-                    return propHolder.Property.GetValue(defaultValue);
-                }
+            });
+
+            if (postSet)
+            {
+                namedProperty?.Property.SetValue(defaultValue);
             }
+
+            onSet?.Invoke(this, new ObjectPropertySetEventArgs<T>(key, propertyName, group, oldValue, hasChanges ? defaultValue : oldValue, hasChanges));
+
+            return returnValue;
         }
 
         #endregion
