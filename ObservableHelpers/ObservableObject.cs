@@ -590,10 +590,10 @@ namespace ObservableHelpers
         /// The group of the property to add or update.
         /// </param>
         /// <param name="addValidate">
-        /// The function validation for if add property is executed.
+        /// The function validation if add property is executed.
         /// </param>
         /// <param name="updateValidate">
-        /// The function validation for if update property is executed.
+        /// The function validation if update property is executed.
         /// </param>
         /// <param name="postMake">
         /// The action after the add or update operation.
@@ -602,9 +602,9 @@ namespace ObservableHelpers
             string key,
             string propertyName,
             string group,
-            Func<NamedProperty, bool> addValidate,
-            Func<NamedProperty, bool> updateValidate,
-            Action<(NamedProperty namedProperty, bool isUpdate, bool hasChanges)> postMake)
+            Func<NamedProperty, bool> addValidate = null,
+            Func<NamedProperty, bool> updateValidate = null,
+            Action<(NamedProperty namedProperty, bool isUpdate, bool hasChanges)> postMake = null)
         {
             if (IsDisposed)
             {
