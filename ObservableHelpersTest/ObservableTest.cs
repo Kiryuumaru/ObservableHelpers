@@ -22,7 +22,22 @@ namespace ObservableHelpersTest
 
         public int PropCount
         {
-            get => GetRawProperties().ToList().Count;
+            get => GetRawProperties().Count();
+        }
+
+        public bool IsAllDefault
+        {
+            get => GetRawProperties().All(i => i.IsDefault);
+        }
+
+        public bool IsAllNotDefault
+        {
+            get => GetRawProperties().All(i => !i.IsDefault);
+        }
+
+        public TestObject()
+        {
+            InitializeProperties();
         }
     }
 
@@ -53,6 +68,7 @@ namespace ObservableHelpersTest
             var raiseProp1Count = 0;
             var raiseProp2Count = 0;
             var obj = new TestObject();
+            var obj2 = new TestObject();
             obj.PropertyChanged += (s, e) =>
             {
                 if (e.PropertyName == nameof(obj.Prop1))
@@ -85,6 +101,10 @@ namespace ObservableHelpersTest
             Assert.Equal(4, raiseProp2Count);
             Assert.Equal(obj.Prop1, obj.Prop2);
             Assert.Equal(2, obj.PropCount);
+            Assert.True(obj2.IsAllDefault);
+            obj2.Prop1 = "test1";
+            obj2.Prop2 = "test";
+            Assert.True(obj2.IsAllNotDefault);
         }
 
         [Fact]

@@ -14,8 +14,8 @@
 
   <PropertyGroup>
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
-    <Version>1.1.0</Version>
-    <PackageReleaseNotes>* Fixed performance for single-threaded platforms</PackageReleaseNotes>
+    <Version>1.1.1</Version>
+    <PackageReleaseNotes>* Bug fixes</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

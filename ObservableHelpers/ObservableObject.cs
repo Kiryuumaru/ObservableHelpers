@@ -52,6 +52,18 @@ namespace ObservableHelpers
             /// Gets or sets the group of the <see cref="Property"/>
             /// </summary>
             public string Group { get; set; }
+
+            /// <summary>
+            /// Gets or sets <c>true</c> if the property is from default value; otherwise <c>false</c>.
+            /// </summary>
+            public bool IsDefault { get; set; }
+
+            /// <inheritdoc/>
+            public override string ToString()
+            {
+                return "(" + Key ?? "null" + ", " + PropertyName ?? "null" + ", " + Group ?? "null" + ") = " + Property?.Property?.ToString() ?? "null";
+
+            }
         }
 
         private struct NamedPropertyKey
@@ -245,7 +257,7 @@ namespace ObservableHelpers
                 return false;
             }
 
-            return SetPropertyInternal(value, null, propertyName, group, validate, onSet);
+            return SetProperty(value, null, propertyName, group, validate, onSet);
         }
 
         /// <summary>
@@ -291,7 +303,7 @@ namespace ObservableHelpers
                 return false;
             }
 
-            return SetPropertyInternal(value, key, propertyName, group, validate, onSet);
+            return SetProperty(value, key, propertyName, group, validate, onSet);
         }
 
         /// <summary>
@@ -333,7 +345,7 @@ namespace ObservableHelpers
                 return defaultValue;
             }
 
-            return GetPropertyInternal(defaultValue, null, propertyName, group, validate, onSet);
+            return GetProperty(defaultValue, null, propertyName, group, validate, onSet);
         }
 
         /// <summary>
@@ -379,7 +391,7 @@ namespace ObservableHelpers
                 return defaultValue;
             }
 
-            return GetPropertyInternal(defaultValue, key, propertyName, group, validate, onSet);
+            return GetProperty(defaultValue, key, propertyName, group, validate, onSet);
         }
 
         /// <summary>
@@ -544,7 +556,7 @@ namespace ObservableHelpers
         /// <returns>
         /// The found <see cref="NamedProperty"/> from the property collection.
         /// </returns>
-        protected NamedProperty GetOrAdd(string key, string propertyName, Func<NamedProperty> valueFactory, Action<NamedProperty> onGet = null)
+        protected NamedProperty GetOrAddCore(string key, string propertyName, Func<NamedProperty> valueFactory, Action<NamedProperty> onGet = null)
         {
             if (IsDisposed)
             {
@@ -563,6 +575,85 @@ namespace ObservableHelpers
                 onGet?.Invoke(namedProperty);
             }
             return namedProperty;
+        }
+
+        /// <summary>
+        /// Adds or updates a property to the property collection.
+        /// </summary>
+        /// <param name="key">
+        /// The key of the property to add or update.
+        /// </param>
+        /// <param name="propertyName">
+        /// The name of the property to add or update.
+        /// </param>
+        /// <param name="group">
+        /// The group of the property to add or update.
+        /// </param>
+        /// <param name="addValidate">
+        /// The function validation for if add property is executed.
+        /// </param>
+        /// <param name="updateValidate">
+        /// The function validation for if update property is executed.
+        /// </param>
+        /// <param name="postMake">
+        /// The action after the add or update operation.
+        /// </param>
+        protected void AddOrUpdatePropertyCore(
+            string key,
+            string propertyName,
+            string group,
+            Func<NamedProperty, bool> addValidate,
+            Func<NamedProperty, bool> updateValidate,
+            Action<(NamedProperty namedProperty, bool isUpdate, bool hasChanges)> postMake)
+        {
+            if (IsDisposed)
+            {
+                return;
+            }
+
+            bool hasChanges = false;
+            bool isUpdate = false;
+            var namedProperty = GetOrAddCore(key, propertyName, delegate
+            {
+                var newNamedProperty = NamedPropertyFactory(key, propertyName, group);
+                if (newNamedProperty != null)
+                {
+                    if (addValidate?.Invoke(newNamedProperty) ?? true)
+                    {
+                        WireNamedProperty(newNamedProperty);
+                        hasChanges = true;
+                    }
+                }
+                return newNamedProperty;
+            }, existingNamedProperty =>
+            {
+                isUpdate = true;
+
+                existingNamedProperty.Property.SyncOperation.SetContext(this);
+
+                if (updateValidate?.Invoke(existingNamedProperty) ?? true)
+                {
+                    if (existingNamedProperty.Key != key)
+                    {
+                        existingNamedProperty.Key = key;
+                        hasChanges = true;
+                    }
+
+                    if (existingNamedProperty.PropertyName != propertyName)
+                    {
+                        existingNamedProperty.PropertyName = propertyName;
+                        hasChanges = true;
+                    }
+
+                    if (existingNamedProperty.Group != group)
+                    {
+                        existingNamedProperty.Group = group;
+                        hasChanges = true;
+                    }
+                }
+            });
+
+            postMake?.Invoke((namedProperty, isUpdate, hasChanges));
         }
 
         /// <summary>
@@ -734,7 +825,7 @@ namespace ObservableHelpers
         }
 
         /// <summary>
-        /// Virtual factory used to create all property holders.
+        /// Virtual factory used to create all properties.
         /// </summary>
         /// <param name="key">
         /// The key of the property to create.
@@ -799,13 +890,13 @@ namespace ObservableHelpers
                 return;
             }
 
-            if (namedProperties.TryGetValue(new NamedPropertyKey(key, null), out NamedProperty propHolder))
+            if (namedProperties.TryGetValue(new NamedPropertyKey(key, null), out NamedProperty namedProperty))
             {
-                OnPropertyChanged(propHolder.Key, propHolder.PropertyName, propHolder.Group);
+                OnPropertyChanged(namedProperty.Key, namedProperty.PropertyName, namedProperty.Group);
             }
         }
 
-        private bool SetPropertyInternal<T>(
+        private bool SetProperty<T>(
             T value,
             string key,
             string propertyName,
@@ -818,74 +909,44 @@ namespace ObservableHelpers
                 return false;
             }
 
-            bool postSet = false;
-            bool hasChanges = false;
             T oldValue = default;
-            var namedProperty = GetOrAdd(key, propertyName, delegate
-            {
-                postSet = true;
-                var newNamedProperty = NamedPropertyFactory(key, propertyName, group);
-                if (newNamedProperty != null)
+            bool hasChanges = false;
+            AddOrUpdatePropertyCore(key, propertyName, group,
+                newNamedProperty => validate?.Invoke((oldValue, value)) ?? true,
+                existingNamedProperty => validate?.Invoke((oldValue, value)) ?? true,
+                postMake =>
                 {
-                    if (validate?.Invoke((oldValue, value)) ?? true)
+                    hasChanges = postMake.hasChanges;
+
+                    postMake.namedProperty.IsDefault = false;
+
+                    if (postMake.isUpdate)
                     {
-                        WireNamedProperty(newNamedProperty);
-                        hasChanges = true;
+                        var hasSetChanges = false;
+
+                        if (postMake.namedProperty.Property.SetValue(value))
+                        {
+                            hasSetChanges = true;
+                            hasChanges = true;
+                        }
+
+                        if (!hasSetChanges && hasChanges)
+                        {
+                            OnPropertyChanged(postMake.namedProperty.Key, postMake.namedProperty.PropertyName, postMake.namedProperty.Group);
+                        }
                     }
-                }
-                return newNamedProperty;
-            }, existingNamedProperty =>
-            {
-                existingNamedProperty.Property.SyncOperation.SetContext(this);
-
-                oldValue = existingNamedProperty.Property.GetValue<T>();
-
-                if (validate?.Invoke((oldValue, value)) ?? true)
-                {
-                    if (existingNamedProperty.Key != key)
+                    else if (postMake.namedProperty != null)
                     {
-                        existingNamedProperty.Key = key;
-                        hasChanges = true;
+                        postMake.namedProperty.Property.SetValue(value);
                     }
-
-                    if (existingNamedProperty.PropertyName != propertyName)
-                    {
-                        existingNamedProperty.PropertyName = propertyName;
-                        hasChanges = true;
-                    }
-
-                    if (existingNamedProperty.Group != group)
-                    {
-                        existingNamedProperty.Group = group;
-                        hasChanges = true;
-                    }
-
-                    var hasSetChanges = false;
-
-                    if (existingNamedProperty.Property.SetValue(value))
-                    {
-                        hasSetChanges = true;
-                        hasChanges = true;
-                    }
-
-                    if (!hasSetChanges && hasChanges)
-                    {
-                        OnPropertyChanged(existingNamedProperty.Key, existingNamedProperty.PropertyName, existingNamedProperty.Group);
-                    }
-                }
-            });
-
-            if (postSet)
-            {
-                namedProperty?.Property.SetValue(value);
-            }
+                });
 
             onSet?.Invoke(this, new ObjectPropertySetEventArgs<T>(key, propertyName, group, oldValue, hasChanges ? value : oldValue, hasChanges));
 
             return hasChanges;
         }
 
-        private T GetPropertyInternal<T>(
+        private T GetProperty<T>(
             T defaultValue,
             string key,
             string propertyName,
@@ -898,62 +959,35 @@ namespace ObservableHelpers
                 return defaultValue;
             }
 
-            bool postSet = false;
             bool hasChanges = false;
             T oldValue = default;
             T returnValue = defaultValue;
-            var namedProperty = GetOrAdd(key, propertyName, delegate
-            {
-                postSet = true;
-                var newNamedProperty = NamedPropertyFactory(key, propertyName, group);
-                if (newNamedProperty != null)
+            AddOrUpdatePropertyCore(key, propertyName, group,
+                newNamedProperty => validate?.Invoke((oldValue, defaultValue)) ?? true,
+                existingNamedProperty =>
                 {
-                    if (validate?.Invoke((oldValue, defaultValue)) ?? true)
-                    {
-                        WireNamedProperty(newNamedProperty);
-                        hasChanges = true;
-                    }
-                }
-                return newNamedProperty;
-            }, existingNamedProperty =>
-            {
-                existingNamedProperty.Property.SyncOperation.SetContext(this);
-
-                oldValue = existingNamedProperty.Property.GetValue<T>();
-
-                if (validate?.Invoke((oldValue, defaultValue)) ?? true)
+                    oldValue = existingNamedProperty.Property.GetValue<T>();
+                    return validate?.Invoke((oldValue, defaultValue)) ?? true;
+                },
+                postMake =>
                 {
-                    if (existingNamedProperty.Key != key)
+                    hasChanges = postMake.hasChanges;
+
+                    if (postMake.isUpdate)
                     {
-                        existingNamedProperty.Key = key;
-                        hasChanges = true;
-                    }
+                        if (hasChanges)
+                        {
+                            OnPropertyChanged(postMake.namedProperty.Key, postMake.namedProperty.PropertyName, postMake.namedProperty.Group);
+                        }
 
-                    if (existingNamedProperty.PropertyName != propertyName)
+                        returnValue = postMake.namedProperty.Property.GetValue(defaultValue);
+                    }
+                    else if (postMake.namedProperty != null)
                     {
-                        existingNamedProperty.PropertyName = propertyName;
-                        hasChanges = true;
+                        postMake.namedProperty.IsDefault = true;
+                        postMake.namedProperty.Property.SetValue(defaultValue);
                     }
-
-                    if (existingNamedProperty.Group != group)
-                    {
-                        existingNamedProperty.Group = group;
-                        hasChanges = true;
-                    }
-
-                    if (hasChanges)
-                    {
-                        OnPropertyChanged(existingNamedProperty.Key, existingNamedProperty.PropertyName, existingNamedProperty.Group);
-                    }
-
-                    returnValue = existingNamedProperty.Property.GetValue(defaultValue);
-                }
-            });
-
-            if (postSet)
-            {
-                namedProperty?.Property.SetValue(defaultValue);
-            }
+                });
 
             onSet?.Invoke(this, new ObjectPropertySetEventArgs<T>(key, propertyName, group, oldValue, hasChanges ? defaultValue : oldValue, hasChanges));
 
