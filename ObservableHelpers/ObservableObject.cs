@@ -547,33 +547,49 @@ namespace ObservableHelpers
         /// <param name="propertyName">
         /// The name of the property to get.
         /// </param>
-        /// <param name="valueFactory">
-        /// The function used to generate a property.
+        /// <param name="group">
+        /// The group of the property to get or add.
         /// </param>
-        /// <param name="onGet">
-        /// The action if the property already exists.
+        /// <param name="addValidate">
+        /// The function validation if add property is executed.
+        /// </param>
+        /// <param name="postAction">
+        /// The action after the get or add operation.
         /// </param>
         /// <returns>
         /// The found <see cref="NamedProperty"/> from the property collection.
         /// </returns>
-        protected NamedProperty GetOrAddCore(string key, string propertyName, Func<NamedProperty> valueFactory, Action<NamedProperty> onGet = null)
+        protected NamedProperty GetOrAddCore(
+            string key,
+            string propertyName,
+            string group,
+            Func<NamedProperty, bool> addValidate = null,
+            Action<(NamedProperty namedProperty, bool isAdded)> postAction = null)
         {
             if (IsDisposed)
             {
                 return null;
             }
-            bool isNew = false;
-            var namedProperty = namedProperties.GetOrAdd(new NamedPropertyKey(key, propertyName), namedPropertyKey =>
+
+            bool isAdded = false;
+            var namedPropertyKey = new NamedPropertyKey(key, propertyName);
+            if (!namedProperties.TryGetValue(namedPropertyKey, out NamedProperty namedProperty))
             {
-                isNew = true;
-                var value = valueFactory();
-                namedPropertyKey.Update(value);
-                return value;
-            });
-            if (!isNew)
-            {
-                onGet?.Invoke(namedProperty);
+                namedProperty = NamedPropertyFactory(key, propertyName, group);
+                if (namedProperty != null)
+                {
+                    if (addValidate?.Invoke(namedProperty) ?? true)
+                    {
+                        namedPropertyKey.Update(namedProperty);
+                        namedProperties.TryAdd(namedPropertyKey, namedProperty);
+                        WireNamedProperty(namedProperty);
+                        isAdded = true;
+                    }
+                }
             }
+
+            postAction?.Invoke((namedProperty, isAdded));
+
             return namedProperty;
         }
 
@@ -595,7 +611,7 @@ namespace ObservableHelpers
         /// <param name="updateValidate">
         /// The function validation if update property is executed.
         /// </param>
-        /// <param name="postMake">
+        /// <param name="postAction">
         /// The action after the add or update operation.
         /// </param>
         protected void AddOrUpdatePropertyCore(
@@ -604,7 +620,7 @@ namespace ObservableHelpers
             string group,
             Func<NamedProperty, bool> addValidate = null,
             Func<NamedProperty, bool> updateValidate = null,
-            Action<(NamedProperty namedProperty, bool isUpdate, bool hasChanges)> postMake = null)
+            Action<(NamedProperty namedProperty, bool isUpdate, bool hasChanges)> postAction = null)
         {
             if (IsDisposed)
             {
@@ -613,47 +629,41 @@ namespace ObservableHelpers
 
             bool hasChanges = false;
             bool isUpdate = false;
-            var namedProperty = GetOrAddCore(key, propertyName, delegate
-            {
-                var newNamedProperty = NamedPropertyFactory(key, propertyName, group);
-                if (newNamedProperty != null)
+            var namedProperty = GetOrAddCore(key, propertyName, group,
+                addValidate,
+                subPostAction =>
                 {
-                    if (addValidate?.Invoke(newNamedProperty) ?? true)
+                    hasChanges = subPostAction.isAdded;
+
+                    if (!subPostAction.isAdded && subPostAction.namedProperty != null)
                     {
-                        WireNamedProperty(newNamedProperty);
-                        hasChanges = true;
+                        subPostAction.namedProperty.Property.SyncOperation.SetContext(this);
+                        if (updateValidate?.Invoke(subPostAction.namedProperty) ?? true)
+                        {
+                            if (subPostAction.namedProperty.Key != key)
+                            {
+                                subPostAction.namedProperty.Key = key;
+                                hasChanges = true;
+                            }
+
+                            if (subPostAction.namedProperty.PropertyName != propertyName)
+                            {
+                                subPostAction.namedProperty.PropertyName = propertyName;
+                                hasChanges = true;
+                            }
+
+                            if (subPostAction.namedProperty.Group != group)
+                            {
+                                subPostAction.namedProperty.Group = group;
+                                hasChanges = true;
+                            }
+
+                            isUpdate = true;
+                        }
                     }
-                }
-                return newNamedProperty;
-            }, existingNamedProperty =>
-            {
-                isUpdate = true;
+                });
 
-                existingNamedProperty.Property.SyncOperation.SetContext(this);
-
-                if (updateValidate?.Invoke(existingNamedProperty) ?? true)
-                {
-                    if (existingNamedProperty.Key != key)
-                    {
-                        existingNamedProperty.Key = key;
-                        hasChanges = true;
-                    }
-
-                    if (existingNamedProperty.PropertyName != propertyName)
-                    {
-                        existingNamedProperty.PropertyName = propertyName;
-                        hasChanges = true;
-                    }
-
-                    if (existingNamedProperty.Group != group)
-                    {
-                        existingNamedProperty.Group = group;
-                        hasChanges = true;
-                    }
-                }
-            });
-
-            postMake?.Invoke((namedProperty, isUpdate, hasChanges));
+            postAction?.Invoke((namedProperty, isUpdate, hasChanges));
         }
 
         /// <summary>
