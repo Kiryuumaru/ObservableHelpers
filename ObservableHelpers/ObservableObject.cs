@@ -250,7 +250,7 @@ namespace ObservableHelpers
             [CallerMemberName] string propertyName = null,
             string group = null,
             Func<(T oldValue, T newValue), bool> validate = null,
-            EventHandler<ObjectPropertySetEventArgs<T>> onSet = null)
+            Action<ObjectPropertySetEventArgs<T>> onSet = null)
         {
             if (IsDisposed)
             {
@@ -296,7 +296,7 @@ namespace ObservableHelpers
             [CallerMemberName] string propertyName = null,
             string group = null,
             Func<(T oldValue, T newValue), bool> validate = null,
-            EventHandler<ObjectPropertySetEventArgs<T>> onSet = null)
+            Action<ObjectPropertySetEventArgs<T>> onSet = null)
         {
             if (IsDisposed)
             {
@@ -338,7 +338,7 @@ namespace ObservableHelpers
             [CallerMemberName] string propertyName = null,
             string group = null,
             Func<(T oldValue, T newValue), bool> validate = null,
-            EventHandler<ObjectPropertySetEventArgs<T>> onSet = null)
+            Action<ObjectPropertySetEventArgs<T>> onSet = null)
         {
             if (IsDisposed)
             {
@@ -384,7 +384,7 @@ namespace ObservableHelpers
             [CallerMemberName] string propertyName = null,
             string group = null,
             Func<(T oldValue, T newValue), bool> validate = null,
-            EventHandler<ObjectPropertySetEventArgs<T>> onSet = null)
+            Action<ObjectPropertySetEventArgs<T>> onSet = null)
         {
             if (IsDisposed)
             {
@@ -912,7 +912,7 @@ namespace ObservableHelpers
             string propertyName,
             string group,
             Func<(T oldValue, T newValue), bool> validate,
-            EventHandler<ObjectPropertySetEventArgs<T>> onSet)
+            Action<ObjectPropertySetEventArgs<T>> onSet)
         {
             if (IsDisposed)
             {
@@ -951,7 +951,7 @@ namespace ObservableHelpers
                     }
                 });
 
-            onSet?.Invoke(this, new ObjectPropertySetEventArgs<T>(key, propertyName, group, oldValue, hasChanges ? value : oldValue, hasChanges));
+            onSet?.Invoke(new ObjectPropertySetEventArgs<T>(key, propertyName, group, oldValue, hasChanges ? value : oldValue, hasChanges));
 
             return hasChanges;
         }
@@ -962,7 +962,7 @@ namespace ObservableHelpers
             string propertyName,
             string group,
             Func<(T oldValue, T newValue), bool> validate,
-            EventHandler<ObjectPropertySetEventArgs<T>> onSet)
+            Action<ObjectPropertySetEventArgs<T>> onSet)
         {
             if (IsDisposed)
             {
@@ -999,7 +999,7 @@ namespace ObservableHelpers
                     }
                 });
 
-            onSet?.Invoke(this, new ObjectPropertySetEventArgs<T>(key, propertyName, group, oldValue, hasChanges ? defaultValue : oldValue, hasChanges));
+            onSet?.Invoke(new ObjectPropertySetEventArgs<T>(key, propertyName, group, oldValue, hasChanges ? defaultValue : oldValue, hasChanges));
 
             return returnValue;
         }

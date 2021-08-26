@@ -14,8 +14,8 @@
 
   <PropertyGroup>
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
-    <Version>1.1.4</Version>
-    <PackageReleaseNotes>* Added immediate property notification events</PackageReleaseNotes>
+    <Version>1.1.5</Version>
+    <PackageReleaseNotes>* Bug fixes</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
