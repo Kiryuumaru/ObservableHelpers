@@ -890,7 +890,7 @@ namespace ObservableHelpers
         /// <param name="group">
         /// The group of the property changed.
         /// </param>
-        protected virtual void OnPropertyChanged(string key, string propertyName, string group)
+        protected void OnPropertyChanged(string key, string propertyName, string group)
         {
             if (IsDisposed)
             {
