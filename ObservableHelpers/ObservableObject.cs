@@ -516,10 +516,16 @@ namespace ObservableHelpers
                 }
             });
 
-            namedProperty.Property.ImmediatePropertyChanged += eventProxy;
+            if (namedProperty.Property != null)
+            {
+                namedProperty.Property.ImmediatePropertyChanged += eventProxy;
+            }
             Disposing += (s, e) =>
             {
-                namedProperty.Property.ImmediatePropertyChanged -= eventProxy;
+                if (namedProperty.Property != null)
+                {
+                    namedProperty.Property.ImmediatePropertyChanged -= eventProxy;
+                }
             };
         }
 
