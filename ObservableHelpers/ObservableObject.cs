@@ -503,7 +503,8 @@ namespace ObservableHelpers
         protected void WireNamedProperty(NamedProperty namedProperty)
         {
             namedProperty.Property.SyncOperation.SetContext(this);
-            namedProperty.Property.PropertyChanged += (s, e) =>
+
+            var eventProxy = new PropertyChangedEventHandler((s, e) =>
             {
                 if (IsDisposed)
                 {
@@ -513,6 +514,12 @@ namespace ObservableHelpers
                 {
                     OnPropertyChanged(namedProperty.Key, namedProperty.PropertyName, namedProperty.Group);
                 }
+            });
+
+            namedProperty.Property.ImmediatePropertyChanged += eventProxy;
+            Disposing += (s, e) =>
+            {
+                namedProperty.Property.ImmediatePropertyChanged -= eventProxy;
             };
         }
 
