@@ -22,7 +22,7 @@ namespace ObservableHelpers
         /// </summary>
         /// <remarks>
         /// <para>This class used the current thread as base context for all operations upon creation.</para>
-        /// <para>Use <see cref="SetContext()"/> method to change the current context.</para>
+        /// <para>Use <see cref="SetContext()"/> method to change the current synchronization context.</para>
         /// </remarks>
         public SyncOperation()
         {
@@ -30,7 +30,7 @@ namespace ObservableHelpers
         }
 
         /// <summary>
-        /// Sets the current context to the current thread.
+        /// Sets the current synchronization context to the current thread.
         /// </summary>
         public void SetContext()
         {
@@ -38,7 +38,7 @@ namespace ObservableHelpers
         }
 
         /// <summary>
-        /// Sets the current context to use the custom operations.
+        /// Sets the current synchronization context to use the custom operations.
         /// </summary>
         /// <param name="contextPost">
         /// Operation implementation for post.
@@ -53,7 +53,7 @@ namespace ObservableHelpers
         }
 
         /// <summary>
-        /// Sets the current context to the specified <see cref="SynchronizationContext"/>.
+        /// Sets the current synchronization context to the specified <see cref="SynchronizationContext"/>.
         /// </summary>
         /// <param name="context">
         /// The provided <see cref="SynchronizationContext"/> for context operations.
@@ -66,7 +66,7 @@ namespace ObservableHelpers
         }
 
         /// <summary>
-        /// Sets the current context to use another <see cref="SyncOperation"/> as base context operation.
+        /// Sets the current synchronization context to use another <see cref="SyncOperation"/> as base context operation.
         /// </summary>
         /// <param name="syncOperation">
         /// The <see cref="SyncOperation"/> to be use as base context operation.
@@ -79,7 +79,7 @@ namespace ObservableHelpers
         }
 
         /// <summary>
-        /// Sets the current context to use the <see cref="ISyncObject"/> implementations as base context operation.
+        /// Sets the current synchronization context to use the <see cref="ISyncObject"/> implementations as base context operation.
         /// </summary>
         /// <param name="syncObject">
         /// The <see cref="ISyncObject"/> implementations to be use as base context operation.
@@ -92,13 +92,13 @@ namespace ObservableHelpers
         }
 
         /// <summary>
-        /// Executes <paramref name="action"/> to the current context without blocking the executing thread.
+        /// Executes <paramref name="action"/> to the current synchronization context without blocking the executing thread.
         /// </summary>
         /// <param name="action">
-        /// The action to be executed at the current context.
+        /// The action to be executed at the current synchronization context.
         /// </param>
         /// <param name="parameters">
-        /// The parameters to be pass at the current context.
+        /// The parameters to be pass at the current synchronization context.
         /// </param>
         public void ContextPost(Action action, params object[] parameters)
         {
@@ -106,13 +106,13 @@ namespace ObservableHelpers
         }
 
         /// <summary>
-        /// Executes <paramref name="action"/> to the current context and blocking the executing thread until the action ended.
+        /// Executes <paramref name="action"/> to the current synchronization context and blocking the executing thread until the action ended.
         /// </summary>
         /// <param name="action">
-        /// The action to be executed at the current context.
+        /// The action to be executed at the current synchronization context.
         /// </param>
         /// <param name="parameters">
-        /// The parameters to be pass at the current context.
+        /// The parameters to be pass at the current synchronization context.
         /// </param>
         public void ContextSend(Action action, params object[] parameters)
         {
@@ -120,13 +120,13 @@ namespace ObservableHelpers
         }
 
         /// <summary>
-        /// Executes <paramref name="action"/> to the current context asynchronously.
+        /// Executes <paramref name="action"/> to the current synchronization context asynchronously.
         /// </summary>
         /// <param name="action">
-        /// The action to be executed at the current context.
+        /// The action to be executed at the current synchronization context.
         /// </param>
         /// <param name="parameters">
-        /// The parameters to be pass at the current context.
+        /// The parameters to be pass at the current synchronization context.
         /// </param>
         /// <returns>
         /// A <see cref="Task"/> that represents a proxy for the task returned by <paramref name="action"/>.
@@ -140,13 +140,13 @@ namespace ObservableHelpers
         }
 
         /// <summary>
-        /// Executes <paramref name="func"/> to the current context asynchronously.
+        /// Executes <paramref name="func"/> to the current synchronization context asynchronously.
         /// </summary>
         /// <param name="func">
-        /// The action to be executed at the current context.
+        /// The action to be executed at the current synchronization context.
         /// </param>
         /// <param name="parameters">
-        /// The parameters to be pass at the current context.
+        /// The parameters to be pass at the current synchronization context.
         /// </param>
         /// <returns>
         /// A <see cref="Task"/> that represents a proxy for the task returned by <paramref name="func"/>.

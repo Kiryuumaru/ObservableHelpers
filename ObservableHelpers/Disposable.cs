@@ -18,34 +18,16 @@ namespace ObservableHelpers
         private const int DisposalStarted = 1;
         private const int DisposalComplete = 2;
 
-#if DEBUG
-        // very useful diagnostics when a failure to dispose is detected
-        private readonly StackTrace creationStackTrace;
-#endif
-
         // see the constants defined above for valid values
         private int disposeStage;
-
-#if DEBUG
-        /// <summary>
-        /// Initializes a new instance of the Disposable class.
-        /// </summary>
-        protected Disposable()
-        {
-            creationStackTrace = new StackTrace(1, true);
-        }
 
         /// <summary>
         /// Finalizes an instance of the Disposable class.
         /// </summary>
-        [SuppressMessage("Microsoft.Design", "CA1063", Justification = "The enforced behavior of CA1063 is not thread-safe or full-featured enough for our purposes here.")]
         ~Disposable()
         {
-            //var message = string.Format(CultureInfo.InvariantCulture, "Failed to proactively dispose of object, so it is being finalized: {0}.{1}Object creation stack trace:{1}{2}", ObjectName, Environment.NewLine, creationStackTrace);
-            //Debug.Assert(false, message);
             Dispose(false);
         }
-#endif
 
         /// <inheritdoc/>
         public bool IsDisposing
@@ -88,7 +70,6 @@ namespace ObservableHelpers
         /// <summary>
         /// Disposes of this object, if it hasn't already been disposed.
         /// </summary>
-        [SuppressMessage("Microsoft.Design", "CA1063", Justification = "The enforced behavior of CA1063 is not thread-safe or full-featured enough for our purposes here.")]
         public void Dispose()
         {
             if (Interlocked.CompareExchange(ref disposeStage, DisposalStarted, DisposalNotStarted) != DisposalNotStarted)

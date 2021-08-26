@@ -29,9 +29,14 @@ namespace ObservableHelpers
         private readonly ConcurrentDictionary<TKey, TValue> dictionary = new ConcurrentDictionary<TKey, TValue>();
 
         /// <summary>
-        /// Event raised on the current context when the collection changes.
+        /// Event raised on the current syncronization context when the collection changes.
         /// </summary>
         public event NotifyCollectionChangedEventHandler CollectionChanged;
+
+        /// <summary>
+        /// Event raised on the callers thread instead of the current syncronization context thread when the collection changes.
+        /// </summary>
+        public event NotifyCollectionChangedEventHandler ImmediateCollectionChanged;
 
         /// <inheritdoc/>
         public ICollection<TKey> Keys
@@ -543,7 +548,7 @@ namespace ObservableHelpers
         }
 
         /// <summary>
-        /// Notifies observers of <see cref="CollectionChanged"/> or <see cref="INotifyCollectionChanged.CollectionChanged"/> of an update to the dictionary.
+        /// Notifies observers of <see cref="ImmediateCollectionChanged"/> and <see cref="CollectionChanged"/> of an update to the dictionary.
         /// </summary>
         protected virtual void NotifyObserversOfChange()
         {
@@ -558,6 +563,7 @@ namespace ObservableHelpers
             OnPropertyChanged(new PropertyChangedEventArgs(nameof(Values)));
             OnPropertyChanged(new PropertyChangedEventArgs(nameof(Count)));
 
+            ImmediateCollectionChanged?.Invoke(this, args);
             ContextPost(delegate
             {
                 CollectionChanged?.Invoke(this, args);

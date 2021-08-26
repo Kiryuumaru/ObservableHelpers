@@ -29,13 +29,13 @@ namespace ObservableHelpers
         }
 
         /// <summary>
-        /// Executes <paramref name="action"/> to the current context without blocking the executing thread.
+        /// Executes <paramref name="action"/> to the current synchronization context without blocking the executing thread.
         /// </summary>
         /// <param name="action">
-        /// The action to be executed at the current context.
+        /// The action to be executed at the current synchronization context.
         /// </param>
         /// <param name="parameters">
-        /// The parameters to be pass at the current context.
+        /// The parameters to be pass at the current synchronization context.
         /// </param>
         protected void ContextPost(Action action, params object[] parameters)
         {
@@ -54,13 +54,13 @@ namespace ObservableHelpers
         }
 
         /// <summary>
-        /// Executes <paramref name="action"/> to the current context and blocking the executing thread until the <paramref name="action"/> ended.
+        /// Executes <paramref name="action"/> to the current synchronization context and blocking the executing thread until the <paramref name="action"/> ended.
         /// </summary>
         /// <param name="action">
-        /// The action to be executed at the current context.
+        /// The action to be executed at the current synchronization context.
         /// </param>
         /// <param name="parameters">
-        /// The parameters to be pass at the current context.
+        /// The parameters to be pass at the current synchronization context.
         /// </param>
         protected void ContextSend(Action action, params object[] parameters)
         {
@@ -79,13 +79,13 @@ namespace ObservableHelpers
         }
 
         /// <summary>
-        /// Executes <paramref name="action"/> to the current context asynchronously.
+        /// Executes <paramref name="action"/> to the current synchronization context asynchronously.
         /// </summary>
         /// <param name="action">
-        /// The action to be executed at the current context.
+        /// The action to be executed at the current synchronization context.
         /// </param>
         /// <param name="parameters">
-        /// The parameters to be pass at the current context.
+        /// The parameters to be pass at the current synchronization context.
         /// </param>
         /// <returns>
         /// A <see cref="Task"/> that represents a proxy for the task returned by <paramref name="action"/>.
@@ -107,13 +107,13 @@ namespace ObservableHelpers
         }
 
         /// <summary>
-        /// Executes <paramref name="func"/> to the current context asynchronously.
+        /// Executes <paramref name="func"/> to the current synchronization context asynchronously.
         /// </summary>
         /// <param name="func">
-        /// The action to be executed at the current context.
+        /// The action to be executed at the current synchronization context.
         /// </param>
         /// <param name="parameters">
-        /// The parameters to be pass at the current context.
+        /// The parameters to be pass at the current synchronization context.
         /// </param>
         /// <returns>
         /// A <see cref="Task"/> that represents a proxy for the task returned by <paramref name="func"/>.

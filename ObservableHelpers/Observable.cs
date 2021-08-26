@@ -14,9 +14,12 @@ namespace ObservableHelpers
     public abstract class Observable : SyncContext, IObservable
     {
         /// <summary>
-        /// Event raised on the current context when a property is changed.
+        /// Event raised on the current synchronizatiob context when a property is changed.
         /// </summary>
         public event PropertyChangedEventHandler PropertyChanged;
+
+        /// <inheritdoc/>
+        public event PropertyChangedEventHandler ImmediatePropertyChanged;
 
         /// <inheritdoc/>
         public abstract bool SetNull();
@@ -25,13 +28,14 @@ namespace ObservableHelpers
         public abstract bool IsNull();
 
         /// <summary>
-        /// Invokes <see cref="PropertyChanged"/> into current context.
+        /// Invokes <see cref="PropertyChanged"/> into current synchronization context.
         /// </summary>
         /// <param name="args">
         /// The <see cref="PropertyChangedEventArgs"/> event argument.
         /// </param>
         protected virtual void OnPropertyChanged(PropertyChangedEventArgs args)
         {
+            ImmediatePropertyChanged?.Invoke(this, args);
             ContextPost(delegate
             {
                 PropertyChanged?.Invoke(this, args);
