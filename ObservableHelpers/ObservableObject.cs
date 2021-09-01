@@ -106,43 +106,26 @@ namespace ObservableHelpers
             {
                 this.property = property;
             }
-        }
 
-        private class NamedPropertyKeyComparer : IEqualityComparer<NamedPropertyKey>
-        {
-            public bool Equals(NamedPropertyKey x, NamedPropertyKey y)
+            public override bool Equals(object obj)
             {
-                if (x.Key == null && y.Key == null)
+                if (!(obj is NamedPropertyKey namedPropertyKey))
                 {
-                    return x.PropertyName == y.PropertyName;
+                    return false;
+                }
+                else if (Key == null && namedPropertyKey.Key == null)
+                {
+                    return PropertyName == namedPropertyKey.PropertyName;
                 }
                 else
                 {
-                    return x.Key == y.Key;
+                    return Key == namedPropertyKey.Key;
                 }
             }
 
-            public int GetHashCode(NamedPropertyKey obj)
+            public override int GetHashCode()
             {
-                if (obj.Key == null && obj.PropertyName == null)
-                {
-                    return 0;
-                }
-                if (obj.Key == null)
-                {
-                    return 487910435 + EqualityComparer<string>.Default.GetHashCode(obj.PropertyName);
-                }
-                else if (obj.PropertyName == null)
-                {
-                    return 990326508 + EqualityComparer<string>.Default.GetHashCode(obj.Key);
-                }
-                else
-                {
-                    int hashCode = -722115753;
-                    hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(obj.Key);
-                    hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(obj.PropertyName);
-                    return hashCode;
-                }
+                return 990326508 + (Key == null ? 0 : EqualityComparer<string>.Default.GetHashCode(Key));
             }
         }
 
@@ -150,7 +133,7 @@ namespace ObservableHelpers
 
         #region Properties
 
-        private readonly ConcurrentDictionary<NamedPropertyKey, NamedProperty> namedProperties = new ConcurrentDictionary<NamedPropertyKey, NamedProperty>(new NamedPropertyKeyComparer());
+        private readonly ConcurrentDictionary<NamedPropertyKey, NamedProperty> namedProperties = new ConcurrentDictionary<NamedPropertyKey, NamedProperty>();
 
         #endregion
 
