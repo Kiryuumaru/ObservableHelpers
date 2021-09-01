@@ -208,14 +208,10 @@ namespace ObservableHelpers
                 return;
             }
 
-            try
+            foreach (var property in GetType().GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static))
             {
-                foreach (var property in GetType().GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static))
-                {
-                    property.GetValue(this);
-                }
+                property.GetValue(this);
             }
-            catch { }
         }
 
         /// <summary>
