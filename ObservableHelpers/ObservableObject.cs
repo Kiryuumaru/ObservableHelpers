@@ -649,19 +649,19 @@ namespace ObservableHelpers
                         subPostAction.namedProperty.Property.SyncOperation.SetContext(this);
                         if (updateValidate?.Invoke(subPostAction.namedProperty) ?? true)
                         {
-                            if (subPostAction.namedProperty.Key != key)
+                            if (key != null && subPostAction.namedProperty.Key != key)
                             {
                                 subPostAction.namedProperty.Key = key;
                                 hasChanges = true;
                             }
 
-                            if (subPostAction.namedProperty.PropertyName != propertyName)
+                            if (propertyName != null && subPostAction.namedProperty.PropertyName != propertyName)
                             {
                                 subPostAction.namedProperty.PropertyName = propertyName;
                                 hasChanges = true;
                             }
 
-                            if (subPostAction.namedProperty.Group != group)
+                            if (group != null && subPostAction.namedProperty.Group != group)
                             {
                                 subPostAction.namedProperty.Group = group;
                                 hasChanges = true;
