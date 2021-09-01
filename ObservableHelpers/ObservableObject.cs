@@ -61,7 +61,7 @@ namespace ObservableHelpers
             /// <inheritdoc/>
             public override string ToString()
             {
-                return "(" + Key ?? "null" + ", " + PropertyName ?? "null" + ", " + Group ?? "null" + ") = " + Property?.Property?.ToString() ?? "null";
+                return "(" + (Key ?? "null") + ", " + (PropertyName ?? "null") + ", " + (Group ?? "null") + ") = " + (Property?.Property?.ToString() ?? "null");
 
             }
         }
