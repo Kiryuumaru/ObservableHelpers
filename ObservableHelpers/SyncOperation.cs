@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -21,7 +18,7 @@ namespace ObservableHelpers
         /// Creates new instance of the <c>SyncOperation</c> class.
         /// </summary>
         /// <remarks>
-        /// <para>This class used the current thread as base context for all operations upon creation.</para>
+        /// <para>This will used the current thread as base synchronization context for all context operations.</para>
         /// <para>Use <see cref="SetContext()"/> method to change the current synchronization context.</para>
         /// </remarks>
         public SyncOperation()

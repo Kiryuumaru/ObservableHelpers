@@ -1,17 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading;
+﻿using System.ComponentModel;
 
 namespace ObservableHelpers
 {
     /// <summary>
     /// Provides a thread-safe observable object property for use with data binding.
     /// </summary>
-    public class ObservableProperty : Observable
+    public class ObservableProperty : ObservableSyncContext
     {
         #region Properties
 
@@ -45,19 +39,7 @@ namespace ObservableHelpers
         /// <inheritdoc/>
         public override bool SetNull()
         {
-            if (IsDisposed)
-            {
-                return false;
-            }
-
-            if (GetObject() is INullableObject model)
-            {
-                return model.SetNull();
-            }
-            else
-            {
-                return SetObject(null);
-            }
+            return !IsDisposed && (GetObject() is INullableObject model ? model.SetNull() : SetObject(null));
         }
 
         /// <inheritdoc/>
@@ -68,16 +50,9 @@ namespace ObservableHelpers
                 return true;
             }
 
-            var obj = GetObject();
+            object obj = GetObject();
 
-            if (obj is INullableObject model)
-            {
-                return model.IsNull();
-            }
-            else
-            {
-                return obj == null;
-            }
+            return obj is INullableObject model ? model.IsNull() : obj == null;
         }
 
         /// <summary>
@@ -94,12 +69,7 @@ namespace ObservableHelpers
         /// </returns>
         public virtual bool SetValue<T>(T value)
         {
-            if (IsDisposed)
-            {
-                return false;
-            }
-
-            return SetObject(value);
+            return !IsDisposed && SetObject(value);
         }
 
         /// <summary>

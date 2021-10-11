@@ -3,20 +3,16 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace ObservableHelpers
 {
     /// <summary>
     /// Provides a thread-safe observable object class for use with data binding.
     /// </summary>
-    public class ObservableObject : Observable
+    public class ObservableObject : ObservableSyncContext
     {
         #region Helpers
 
@@ -31,7 +27,7 @@ namespace ObservableHelpers
             public NamedProperty()
             {
 
-            } 
+            }
 
             /// <summary>
             /// Gets or sets the <see cref="ObservableProperty"/> of the object.
@@ -62,27 +58,14 @@ namespace ObservableHelpers
             public override string ToString()
             {
                 return "(" + (Key ?? "null") + ", " + (PropertyName ?? "null") + ", " + (Group ?? "null") + ") = " + (Property?.Property?.ToString() ?? "null");
-
             }
         }
 
         private struct NamedPropertyKey
         {
-            public string Key
-            {
-                get
-                {
-                    return property == null ? key : property.Key;
-                }
-            }
+            public string Key => property == null ? key : property.Key;
 
-            public string PropertyName
-            {
-                get
-                {
-                    return property == null ? propertyName : property.PropertyName;
-                }
-            }
+            public string PropertyName => property == null ? propertyName : property.PropertyName;
 
             private readonly string key;
             private readonly string propertyName;
@@ -109,18 +92,8 @@ namespace ObservableHelpers
 
             public override bool Equals(object obj)
             {
-                if (!(obj is NamedPropertyKey namedPropertyKey))
-                {
-                    return false;
-                }
-                else if (Key == null && namedPropertyKey.Key == null)
-                {
-                    return PropertyName == namedPropertyKey.PropertyName;
-                }
-                else
-                {
-                    return Key == namedPropertyKey.Key;
-                }
+                return obj is NamedPropertyKey namedPropertyKey
+                    && (Key == null && namedPropertyKey.Key == null ? PropertyName == namedPropertyKey.PropertyName : Key == namedPropertyKey.Key);
             }
 
             public override int GetHashCode()
@@ -159,8 +132,8 @@ namespace ObservableHelpers
                 return false;
             }
 
-            var hasChanges = false;
-            foreach (var propHolder in namedProperties)
+            bool hasChanges = false;
+            foreach (KeyValuePair<NamedPropertyKey, NamedProperty> propHolder in namedProperties)
             {
                 if (propHolder.Value.Property.SetNull())
                 {
@@ -173,12 +146,7 @@ namespace ObservableHelpers
         /// <inheritdoc/>
         public override bool IsNull()
         {
-            if (IsDisposed)
-            {
-                return true;
-            }
-
-            return namedProperties.All(i => i.Value.Property.IsNull());
+            return IsDisposed || namedProperties.All(i => i.Value.Property.IsNull());
         }
 
         /// <summary>
@@ -191,9 +159,13 @@ namespace ObservableHelpers
                 return;
             }
 
-            foreach (var property in GetType().GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static))
+            foreach (PropertyInfo property in GetType().GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static))
             {
-                property.GetValue(this);
+                try
+                {
+                    _ = property.GetValue(this);
+                }
+                catch { }
             }
         }
 
@@ -231,12 +203,7 @@ namespace ObservableHelpers
             Func<(T oldValue, T newValue), bool> validate = null,
             Action<ObjectPropertySetEventArgs<T>> onSet = null)
         {
-            if (IsDisposed)
-            {
-                return false;
-            }
-
-            return SetProperty(value, null, propertyName, group, validate, onSet);
+            return !IsDisposed && SetProperty(value, null, propertyName, group, validate, onSet);
         }
 
         /// <summary>
@@ -277,12 +244,7 @@ namespace ObservableHelpers
             Func<(T oldValue, T newValue), bool> validate = null,
             Action<ObjectPropertySetEventArgs<T>> onSet = null)
         {
-            if (IsDisposed)
-            {
-                return false;
-            }
-
-            return SetProperty(value, key, propertyName, group, validate, onSet);
+            return !IsDisposed && SetProperty(value, key, propertyName, group, validate, onSet);
         }
 
         /// <summary>
@@ -319,12 +281,7 @@ namespace ObservableHelpers
             Func<(T oldValue, T newValue), bool> validate = null,
             Action<ObjectPropertySetEventArgs<T>> onSet = null)
         {
-            if (IsDisposed)
-            {
-                return defaultValue;
-            }
-
-            return GetProperty(defaultValue, null, propertyName, group, validate, onSet);
+            return IsDisposed ? defaultValue : GetProperty(defaultValue, null, propertyName, group, validate, onSet);
         }
 
         /// <summary>
@@ -365,12 +322,7 @@ namespace ObservableHelpers
             Func<(T oldValue, T newValue), bool> validate = null,
             Action<ObjectPropertySetEventArgs<T>> onSet = null)
         {
-            if (IsDisposed)
-            {
-                return defaultValue;
-            }
-
-            return GetProperty(defaultValue, key, propertyName, group, validate, onSet);
+            return IsDisposed ? defaultValue : GetProperty(defaultValue, key, propertyName, group, validate, onSet);
         }
 
         /// <summary>
@@ -390,12 +342,7 @@ namespace ObservableHelpers
         /// </exception>
         protected bool RemoveProperty(string propertyName)
         {
-            if (IsDisposed)
-            {
-                return false;
-            }
-
-            return RemovePropertyCore(null, propertyName);
+            return !IsDisposed && RemovePropertyCore(null, propertyName);
         }
 
         /// <summary>
@@ -415,12 +362,7 @@ namespace ObservableHelpers
         /// </exception>
         protected bool RemovePropertyWithKey(string key)
         {
-            if (IsDisposed)
-            {
-                return false;
-            }
-
-            return RemovePropertyCore(key, null);
+            return !IsDisposed && RemovePropertyCore(key, null);
         }
 
         /// <summary>
@@ -440,12 +382,7 @@ namespace ObservableHelpers
         /// </exception>
         protected bool DeleteProperty(string propertyName)
         {
-            if (IsDisposed)
-            {
-                return false;
-            }
-
-            return DeletePropertyCore(null, propertyName);
+            return !IsDisposed && DeletePropertyCore(null, propertyName);
         }
 
         /// <summary>
@@ -465,12 +402,7 @@ namespace ObservableHelpers
         /// </exception>
         protected bool DeletePropertyWithKey(string key)
         {
-            if (IsDisposed)
-            {
-                return false;
-            }
-
-            return DeletePropertyCore(key, null);
+            return !IsDisposed && DeletePropertyCore(key, null);
         }
 
         /// <summary>
@@ -483,7 +415,7 @@ namespace ObservableHelpers
         {
             namedProperty.Property.SyncOperation.SetContext(this);
 
-            var eventProxy = new PropertyChangedEventHandler((s, e) =>
+            PropertyChangedEventHandler eventProxy = new PropertyChangedEventHandler((s, e) =>
             {
                 if (IsDisposed)
                 {
@@ -519,12 +451,9 @@ namespace ObservableHelpers
         /// </returns>
         protected IEnumerable<NamedProperty> GetRawProperties(string group = null)
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
-            return group == null ? namedProperties.Values.ToList() : namedProperties.Values.Where(i => i.Group == group).ToList();
+            return IsDisposed
+                ? default
+                : (IEnumerable<NamedProperty>)(group == null ? namedProperties.Values.ToList() : namedProperties.Values.Where(i => i.Group == group).ToList());
         }
 
         /// <summary>
@@ -564,7 +493,7 @@ namespace ObservableHelpers
             }
 
             bool isAdded = false;
-            var namedPropertyKey = new NamedPropertyKey(key, propertyName);
+            NamedPropertyKey namedPropertyKey = new NamedPropertyKey(key, propertyName);
             if (!namedProperties.TryGetValue(namedPropertyKey, out NamedProperty namedProperty))
             {
                 namedProperty = NamedPropertyFactory(key, propertyName, group);
@@ -573,7 +502,7 @@ namespace ObservableHelpers
                     if (addValidate?.Invoke(namedProperty) ?? true)
                     {
                         namedPropertyKey.Update(namedProperty);
-                        namedProperties.TryAdd(namedPropertyKey, namedProperty);
+                        _ = namedProperties.TryAdd(namedPropertyKey, namedProperty);
                         WireNamedProperty(namedProperty);
                         isAdded = true;
                     }
@@ -621,7 +550,7 @@ namespace ObservableHelpers
 
             bool hasChanges = false;
             bool isUpdate = false;
-            var namedProperty = GetOrAddCore(key, propertyName, group,
+            NamedProperty namedProperty = GetOrAddCore(key, propertyName, group,
                 addValidate,
                 subPostAction =>
                 {
@@ -675,14 +604,14 @@ namespace ObservableHelpers
             }
 
             bool exists = false;
-            var key = new NamedPropertyKey(namedProperty);
+            NamedPropertyKey key = new NamedPropertyKey(namedProperty);
             if (namedProperties.ContainsKey(key))
             {
                 exists = true;
             }
             else
             {
-                namedProperties.TryAdd(key, namedProperty);
+                _ = namedProperties.TryAdd(key, namedProperty);
             }
             if (exists)
             {
@@ -710,21 +639,11 @@ namespace ObservableHelpers
         /// </exception>
         protected NamedProperty GetCore(string key, string propertyName)
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
-            if (key == null && propertyName == null) throw new PropertyKeyAndNameNullException();
-
-            if (namedProperties.TryGetValue(new NamedPropertyKey(key, propertyName), out NamedProperty namedProperty))
-            {
-                return namedProperty;
-            }
-            else
-            {
-                return null;
-            }
+            return IsDisposed
+                ? default
+                : key == null && propertyName == null
+                ? throw new PropertyKeyAndNameNullException()
+                : namedProperties.TryGetValue(new NamedPropertyKey(key, propertyName), out NamedProperty namedProperty) ? namedProperty : null;
         }
 
         /// <summary>
@@ -748,14 +667,10 @@ namespace ObservableHelpers
         /// </exception>
         protected bool RemovePropertyCore(string key, string propertyName)
         {
-            if (IsDisposed)
-            {
-                return false;
-            }
-
-            if (key == null && propertyName == null) throw new PropertyKeyAndNameNullException();
-
-            return namedProperties.TryRemove(new NamedPropertyKey(key, propertyName), out _);
+            return !IsDisposed
+&& (key == null && propertyName == null
+                ? throw new PropertyKeyAndNameNullException()
+                : namedProperties.TryRemove(new NamedPropertyKey(key, propertyName), out _));
         }
 
         /// <summary>
@@ -779,21 +694,11 @@ namespace ObservableHelpers
         /// </exception>
         protected bool DeletePropertyCore(string key, string propertyName)
         {
-            if (IsDisposed)
-            {
-                return false;
-            }
-
-            if (key == null && propertyName == null) throw new PropertyKeyAndNameNullException();
-
-            if (namedProperties.TryGetValue(new NamedPropertyKey(key , propertyName), out NamedProperty propHolder))
-            {
-                return propHolder.Property.SetNull();
-            }
-            else
-            {
-                return false;
-            }
+            return !IsDisposed
+                && (key == null && propertyName == null
+                ? throw new PropertyKeyAndNameNullException()
+                : namedProperties.TryGetValue(new NamedPropertyKey(key, propertyName), out NamedProperty propHolder)
+                && propHolder.Property.SetNull());
         }
 
         /// <summary>
@@ -816,14 +721,10 @@ namespace ObservableHelpers
         /// </exception>
         protected bool ExistsCore(string key, string propertyName)
         {
-            if (IsDisposed)
-            {
-                return false;
-            }
-
-            if (key == null && propertyName == null) throw new PropertyKeyAndNameNullException();
-
-            return namedProperties.ContainsKey(new NamedPropertyKey(key, propertyName));
+            return !IsDisposed
+                && (key == null && propertyName == null
+                ? throw new PropertyKeyAndNameNullException()
+                : namedProperties.ContainsKey(new NamedPropertyKey(key, propertyName)));
         }
 
         /// <summary>
@@ -843,18 +744,15 @@ namespace ObservableHelpers
         /// </returns>
         protected virtual NamedProperty NamedPropertyFactory(string key, string propertyName, string group)
         {
-            if (IsDisposed)
-            {
-                return null;
-            }
-
-            return new NamedProperty()
-            {
-                Property = new ObservableProperty(),
-                Key = key,
-                PropertyName = propertyName,
-                Group = group
-            };
+            return IsDisposed
+                ? null
+                : new NamedProperty()
+                {
+                    Property = new ObservableProperty(),
+                    Key = key,
+                    PropertyName = propertyName,
+                    Group = group
+                };
         }
 
         /// <summary>
@@ -898,6 +796,29 @@ namespace ObservableHelpers
             }
         }
 
+        /// <summary>
+        /// Invokes <see cref="INotifyPropertyChanged.PropertyChanged"/> into the current context if the provided <paramref name="name"/> is found in this object.
+        /// </summary>
+        /// <param name="name">
+        /// The name of the property changed.
+        /// </param>
+        protected virtual void OnPropertyChangedWithName(string name)
+        {
+            if (IsDisposed)
+            {
+                return;
+            }
+
+            if (namedProperties.TryGetValue(new NamedPropertyKey(null, name), out NamedProperty namedProperty))
+            {
+                OnPropertyChanged(namedProperty.Key, namedProperty.PropertyName, namedProperty.Group);
+            }
+            else
+            {
+                OnPropertyChanged(new PropertyChangedEventArgs(name));
+            }
+        }
+
         private bool SetProperty<T>(
             T value,
             string key,
@@ -915,7 +836,11 @@ namespace ObservableHelpers
             bool hasChanges = false;
             AddOrUpdatePropertyCore(key, propertyName, group,
                 newNamedProperty => validate?.Invoke((oldValue, value)) ?? true,
-                existingNamedProperty => validate?.Invoke((oldValue, value)) ?? true,
+                existingNamedProperty =>
+                {
+                    oldValue = existingNamedProperty.Property.GetValue<T>();
+                    return validate?.Invoke((oldValue, value)) ?? true;
+                },
                 postMake =>
                 {
                     hasChanges = postMake.hasChanges;
@@ -924,7 +849,7 @@ namespace ObservableHelpers
 
                     if (postMake.isUpdate)
                     {
-                        var hasSetChanges = false;
+                        bool hasSetChanges = false;
 
                         if (postMake.namedProperty.Property.SetValue(value))
                         {
@@ -939,7 +864,7 @@ namespace ObservableHelpers
                     }
                     else if (postMake.namedProperty != null)
                     {
-                        postMake.namedProperty.Property.SetValue(value);
+                        _ = postMake.namedProperty.Property.SetValue(value);
                     }
                 });
 
@@ -987,7 +912,7 @@ namespace ObservableHelpers
                     else if (postMake.namedProperty != null)
                     {
                         postMake.namedProperty.IsDefault = true;
-                        postMake.namedProperty.Property.SetValue(defaultValue);
+                        _ = postMake.namedProperty.Property.SetValue(defaultValue);
                     }
                 });
 

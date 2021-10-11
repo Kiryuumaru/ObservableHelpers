@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31019.35
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31717.71
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ObservableHelpers", "ObservableHelpers\ObservableHelpers.csproj", "{91326CBC-3965-4F96-A335-26C3A380A5E5}"
 EndProject
@@ -12,6 +12,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ObservableHelpersTest", "ObservableHelpersTest\ObservableHelpersTest.csproj", "{9EA4AED5-593E-421F-B3B7-07D718FF7920}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Playground", "Playground\Playground.csproj", "{28054E44-CEAA-4BEA-B463-904423EA5419}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{9EA4AED5-593E-421F-B3B7-07D718FF7920}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9EA4AED5-593E-421F-B3B7-07D718FF7920}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9EA4AED5-593E-421F-B3B7-07D718FF7920}.Release|Any CPU.Build.0 = Release|Any CPU
+		{28054E44-CEAA-4BEA-B463-904423EA5419}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{28054E44-CEAA-4BEA-B463-904423EA5419}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{28054E44-CEAA-4BEA-B463-904423EA5419}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{28054E44-CEAA-4BEA-B463-904423EA5419}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

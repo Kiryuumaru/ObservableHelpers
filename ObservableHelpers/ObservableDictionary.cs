@@ -4,10 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Linq;
 
 namespace ObservableHelpers
 {
@@ -20,53 +17,26 @@ namespace ObservableHelpers
     /// <typeparam name="TValue">
     /// Specifies the type of the values in this collection.
     /// </typeparam>
-    public class ObservableDictionary<TKey, TValue> : Observable,
-        ICollection<KeyValuePair<TKey, TValue>>, IDictionary<TKey, TValue>,
-        INotifyCollectionChanged
+    public class ObservableDictionary<TKey, TValue> :
+        ObservableDictionaryFilter<TKey, TValue>,
+        IDictionary<TKey, TValue>
     {
         #region Properties
 
-        private readonly ConcurrentDictionary<TKey, TValue> dictionary = new ConcurrentDictionary<TKey, TValue>();
-
-        /// <summary>
-        /// Event raised on the current syncronization context when the collection changes.
-        /// </summary>
-        public event NotifyCollectionChangedEventHandler CollectionChanged;
-
-        /// <summary>
-        /// Event raised on the callers thread instead of the current syncronization context thread when the collection changes.
-        /// </summary>
-        public event NotifyCollectionChangedEventHandler ImmediateCollectionChanged;
+        /// <inheritdoc/>
+        ICollection<TKey> IDictionary<TKey, TValue>.Keys => CoreDictionary.Keys;
 
         /// <inheritdoc/>
-        public ICollection<TKey> Keys
-        {
-            get => dictionary.Keys;
-        }
+        ICollection<TValue> IDictionary<TKey, TValue>.Values => CoreDictionary.Values;
 
         /// <inheritdoc/>
-        public ICollection<TValue> Values
-        {
-            get => dictionary.Values;
-        }
+        public bool IsReadOnly => ((ICollection<KeyValuePair<TKey, TValue>>)CoreDictionary).IsReadOnly;
 
         /// <inheritdoc/>
-        public int Count
+        public new TValue this[TKey key]
         {
-            get => ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).Count;
-        }
-
-        /// <inheritdoc/>
-        public bool IsReadOnly
-        {
-            get => ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).IsReadOnly;
-        }
-
-        /// <inheritdoc/>
-        public TValue this[TKey key]
-        {
-            get => dictionary[key];
-            set => UpdateWithNotification(key, value);
+            get => CoreDictionary[key];
+            set => AddOrUpdate(key, value);
         }
 
         #endregion
@@ -74,11 +44,66 @@ namespace ObservableHelpers
         #region Initializers
 
         /// <summary>
-        /// Creates new instance of the <see cref="ObservableDictionary{TKey, TValue}"/> class.
+        /// Creates new instance of the <see cref="ObservableDictionary{TKey, TValue}"/> class that is empty.
         /// </summary>
         public ObservableDictionary()
+            : base()
         {
 
+        }
+
+        /// <summary>
+        /// Creates new instance of the <see cref="ObservableDictionary{TKey, TValue}"/> class that contains elements copied from the specified <paramref name="items"/>.
+        /// </summary>
+        public ObservableDictionary(IEnumerable<KeyValuePair<TKey, TValue>> items)
+            : base(items)
+        {
+
+        }
+
+        /// <summary>
+        /// Creates new instance of the <see cref="ObservableDictionary{TKey, TValue}"/> class that is empty, and uses the specified <paramref name="comparer"/>.
+        /// </summary>
+        public ObservableDictionary(IEqualityComparer<TKey> comparer)
+            : base(comparer)
+        {
+
+        }
+
+        /// <summary>
+        /// Creates new instance of the <see cref="ObservableDictionary{TKey, TValue}"/> class that contains elements copied from the specified <paramref name="items"/>, and uses the specified <paramref name="comparer"/>.
+        /// </summary>
+        public ObservableDictionary(IEnumerable<KeyValuePair<TKey, TValue>> items, IEqualityComparer<TKey> comparer)
+            : base(items, comparer)
+        {
+
+        }
+
+        /// <summary>
+        /// Creates new instance of the <see cref="ObservableDictionary{TKey, TValue}"/> class that is empty, has the specified <paramref name="concurrencyLevel"/> and <paramref name="capacity"/>, and uses the default comparer for the key type.
+        /// </summary>
+        public ObservableDictionary(int concurrencyLevel, int capacity)
+            : base(concurrencyLevel, capacity)
+        {
+        
+        }
+
+        /// <summary>
+        /// Creates new instance of the <see cref="ObservableDictionary{TKey, TValue}"/> class that is empty, has the specified <paramref name="concurrencyLevel"/> and <paramref name="capacity"/>, and uses the specified <paramref name="comparer"/>.
+        /// </summary>
+        public ObservableDictionary(int concurrencyLevel, int capacity, IEqualityComparer<TKey> comparer)
+            : base(concurrencyLevel, capacity, comparer)
+        {
+        
+        }
+
+        /// <summary>
+        /// Creates new instance of the <see cref="ObservableDictionary{TKey, TValue}"/> class that contains elements copied from the specified <paramref name="items"/>, has the specified <paramref name="concurrencyLevel"/>, and uses the specified <paramref name="comparer"/>.
+        /// </summary>
+        public ObservableDictionary(int concurrencyLevel, IEnumerable<KeyValuePair<TKey, TValue>> items, IEqualityComparer<TKey> comparer)
+            : base(concurrencyLevel, items, comparer)
+        {
+        
         }
 
         #endregion
@@ -93,70 +118,213 @@ namespace ObservableHelpers
                 return false;
             }
 
-            var hasChanges = Count != 0;
+            bool hasChanges = Count != 0;
 
             Clear();
 
             return hasChanges;
         }
 
-        /// <inheritdoc/>
-        public override bool IsNull()
-        {
-            if (IsDisposed)
-            {
-                return true;
-            }
-
-            return Count == 0;
-        }
-
-        /// <inheritdoc/>
-        public void Add(TKey key, TValue value)
-        {
-            if (IsDisposed)
-            {
-                return;
-            }
-
-            TryAddWithNotification(key, value);
-        }
-
-        /// <inheritdoc/>
+        /// <summary>
+        /// Add the specified key and value to the <see cref="ObservableDictionary{TKey, TValue}"/>.
+        /// </summary>
+        /// <param name="item">
+        /// The element to add.
+        /// </param>
+        /// <returns>
+        /// true if the key/value pair was added to the <see cref="ObservableDictionary{TKey, TValue}"/> successfully; otherwise false if the key already exists.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// key is null.
+        /// </exception>
+        /// <exception cref="OverflowException">
+        /// The dictionary already contains the maximum number of elements (System.Int32.MaxValue).
+        /// </exception>
         public void Add(KeyValuePair<TKey, TValue> item)
         {
-            if (IsDisposed)
-            {
-                return;
-            }
-
-            TryAddWithNotification(item);
+            _ = TryAdd(item);
         }
 
-        /// <inheritdoc/>
-        public bool ContainsKey(TKey key)
+        /// <summary>
+        /// Attempts to add the specified key and value to the <see cref="ObservableDictionary{TKey, TValue}"/>.
+        /// </summary>
+        /// <param name="item">
+        /// The element to add.
+        /// </param>
+        /// <returns>
+        /// true if the key/value pair was added to the <see cref="ObservableDictionary{TKey, TValue}"/> successfully; otherwise false if the key already exists.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// key is null.
+        /// </exception>
+        /// <exception cref="OverflowException">
+        /// The dictionary already contains the maximum number of elements (System.Int32.MaxValue).
+        /// </exception>
+        public bool TryAdd(KeyValuePair<TKey, TValue> item)
+        {
+            return TryAdd(item.Key, item.Value);
+        }
+
+        /// <summary>
+        /// Add the specified key and value to the <see cref="ObservableDictionary{TKey, TValue}"/>.
+        /// </summary>
+        /// <param name="key">
+        /// The key of the element to add.
+        /// </param>
+        /// <param name="value">
+        /// The value of the element to add. The value can be null for reference types.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// key is null.
+        /// </exception>
+        /// <exception cref="OverflowException">
+        /// The dictionary already contains the maximum number of elements (System.Int32.MaxValue).
+        /// </exception>
+        public void Add(TKey key, TValue value)
+        {
+            _ = TryAdd(key, value);
+        }
+
+        /// <summary>
+        /// Attempts to add the specified key and value to the <see cref="ObservableDictionary{TKey, TValue}"/>.
+        /// </summary>
+        /// <param name="key">
+        /// The key of the element to add.
+        /// </param>
+        /// <param name="value">
+        /// The value of the element to add. The value can be null for reference types.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// key is null.
+        /// </exception>
+        /// <exception cref="OverflowException">
+        /// The dictionary already contains the maximum number of elements (System.Int32.MaxValue).
+        /// </exception>
+        public bool TryAdd(TKey key, TValue value)
         {
             if (IsDisposed)
             {
                 return false;
             }
 
-            return ContainsKeyCore(key);
-        }
-
-        /// <inheritdoc/>
-        public bool Contains(KeyValuePair<TKey, TValue> item)
-        {
-            if (IsDisposed)
+            bool result = false;
+            if (!CoreDictionary.ContainsKey(key))
             {
-                return false;
+                PreAddItem(key, value);
+                result = CoreDictionary.TryAdd(key, value);
+                if (result)
+                {
+                    int index = Array.IndexOf(CoreDictionary.Keys.ToArray(), key);
+                    OnCollectionChanged(NotifyCollectionChangedAction.Add, value, index);
+                }
             }
-
-            return ContainsCore(item);
+            return result;
         }
 
-        /// <inheritdoc/>
-        public bool TryGetValue(TKey key, out TValue value)
+        /// <summary>
+        /// Remove the value that has the specified key from the <see cref="ObservableDictionary{TKey, TValue}"/>.
+        /// </summary>
+        /// <param name="item">
+        /// The element to remove.
+        /// </param>
+        /// <returns>
+        /// true if the object was removed successfully; otherwise, false.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// key is null.
+        /// </exception>
+        public bool Remove(KeyValuePair<TKey, TValue> item)
+        {
+            return TryRemove(item);
+        }
+
+        /// <summary>
+        /// Attempts to remove and return the value that has the specified key from the <see cref="ObservableDictionary{TKey, TValue}"/>.
+        /// </summary>
+        /// <param name="item">
+        /// The element to remove.
+        /// </param>
+        /// <returns>
+        /// true if the object was removed successfully; otherwise, false.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// key is null.
+        /// </exception>
+        public bool TryRemove(KeyValuePair<TKey, TValue> item)
+        {
+            return TryRemove(item, out _);
+        }
+
+        /// <summary>
+        /// Attempts to remove and return the value that has the specified key from the <see cref="ObservableDictionary{TKey, TValue}"/>.
+        /// </summary>
+        /// <param name="item">
+        /// The element to remove.
+        /// </param>
+        /// <param name="value">
+        /// When this method returns, contains the object removed from the <see cref="ObservableDictionary{TKey, TValue}"/> or the default value of the TValue type if key does not exist.
+        /// </param>
+        /// <returns>
+        /// true if the object was removed successfully; otherwise, false.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// key is null.
+        /// </exception>
+        public bool TryRemove(KeyValuePair<TKey, TValue> item, out TValue value)
+        {
+            return TryRemove(item.Key, out value);
+        }
+
+        /// <summary>
+        /// Attempts to remove and return the value that has the specified key from the <see cref="ObservableDictionary{TKey, TValue}"/>.
+        /// </summary>
+        /// <param name="key">
+        /// The key of the element to remove.
+        /// </param>
+        /// <returns>
+        /// true if the object was removed successfully; otherwise, false.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// key is null.
+        /// </exception>
+        public bool Remove(TKey key)
+        {
+            return TryRemove(key);
+        }
+
+        /// <summary>
+        /// Attempts to remove and return the value that has the specified key from the <see cref="ObservableDictionary{TKey, TValue}"/>.
+        /// </summary>
+        /// <param name="key">
+        /// The key of the element to remove.
+        /// </param>
+        /// <returns>
+        /// true if the object was removed successfully; otherwise, false.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// key is null.
+        /// </exception>
+        public bool TryRemove(TKey key)
+        {
+            return TryRemove(key, out _);
+        }
+
+        /// <summary>
+        /// Attempts to remove and return the value that has the specified key from the <see cref="ObservableDictionary{TKey, TValue}"/>.
+        /// </summary>
+        /// <param name="key">
+        /// The key of the element to remove.
+        /// </param>
+        /// <param name="value">
+        /// When this method returns, contains the object removed from the <see cref="ObservableDictionary{TKey, TValue}"/> or the default value of the TValue type if key does not exist.
+        /// </param>
+        /// <returns>
+        /// true if the object was removed successfully; otherwise, false.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// key is null.
+        /// </exception>
+        public bool TryRemove(TKey key, out TValue value)
         {
             if (IsDisposed)
             {
@@ -164,29 +332,322 @@ namespace ObservableHelpers
                 return false;
             }
 
-            return TryGetValueCore(key, out value);
+            bool result = false;
+            if (CoreDictionary.ContainsKey(key))
+            {
+                PreRemoveItem(key);
+                int index = Array.IndexOf(CoreDictionary.Keys.ToArray(), key);
+                result = CoreDictionary.TryRemove(key, out value);
+                if (result)
+                {
+                    OnCollectionChanged(NotifyCollectionChangedAction.Remove, value, index);
+                }
+            }
+            else
+            {
+                value = default;
+            }
+            return result;
         }
 
-        /// <inheritdoc/>
-        public bool Remove(TKey key)
+        /// <summary>
+        /// Compares the existing value for the specified key with a specified value, and if they are equal, updates the key with a third value and notify observers.
+        /// </summary>
+        /// <param name="key">
+        /// The key whose value is compared with comparisonValue and possibly replaced.
+        /// </param>
+        /// <param name="newValue">
+        /// The value that replaces the value of the element that has the specified key if the comparison results in equality.
+        /// </param>
+        /// <returns>
+        /// true if the value with key was equal to comparisonValue and was replaced with newValue; otherwise, false.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// key is null.
+        /// </exception>
+        /// <exception cref="KeyNotFoundException">
+        /// The property is retrieved and key does not exist in the collection.
+        /// </exception>
+        public void Update(TKey key, TValue newValue)
+        {
+            if (IsDisposed)
+            {
+                return;
+            }
+
+            if (CoreDictionary.TryGetValue(key, out TValue oldValue))
+            {
+                PreUpdateItem(key, oldValue, newValue);
+                CoreDictionary[key] = newValue;
+                int index = Array.IndexOf(CoreDictionary.Keys.ToArray(), key);
+                OnCollectionChanged(NotifyCollectionChangedAction.Replace, oldValue, newValue, index);
+            }
+            else
+            {
+                throw new KeyNotFoundException();
+            }
+        }
+
+        /// <summary>
+        /// Compares the existing value for the specified key with a specified value, and if they are equal, updates the key with a third value and notify observers.
+        /// </summary>
+        /// <param name="key">
+        /// The key whose value is compared with comparisonValue and possibly replaced.
+        /// </param>
+        /// <param name="newValue">
+        /// The value that replaces the value of the element that has the specified key if the comparison results in equality.
+        /// </param>
+        /// <param name="comparisonValue">
+        /// The value that is compared to the value of the element that has the specified key.
+        /// </param>
+        /// <returns>
+        /// true if the value with key was equal to comparisonValue and was replaced with newValue; otherwise, false.
+        /// </returns>
+        public void Update(TKey key, TValue newValue, TValue comparisonValue)
+        {
+            _ = TryUpdate(key, newValue, comparisonValue);
+        }
+
+        /// <summary>
+        /// Compares the existing value for the specified key with a specified value, and if they are equal, updates the key with a third value and notify observers.
+        /// </summary>
+        /// <param name="key">
+        /// The key whose value is compared with comparisonValue and possibly replaced.
+        /// </param>
+        /// <param name="newValue">
+        /// The value that replaces the value of the element that has the specified key if the comparison results in equality.
+        /// </param>
+        /// <param name="comparisonValue">
+        /// The value that is compared to the value of the element that has the specified key.
+        /// </param>
+        /// <returns>
+        /// true if the value with key was equal to comparisonValue and was replaced with newValue; otherwise, false.
+        /// </returns>
+        public bool TryUpdate(TKey key, TValue newValue, TValue comparisonValue)
         {
             if (IsDisposed)
             {
                 return false;
             }
 
-            return TryRemoveWithNotification(key, out _);
-        }
-
-        /// <inheritdoc/>
-        public bool Remove(KeyValuePair<TKey, TValue> item)
-        {
-            if (IsDisposed)
+            if (CoreDictionary.TryGetValue(key, out TValue oldValue))
+            {
+                PreUpdateItem(key, oldValue, newValue);
+                if (CoreDictionary.TryUpdate(key, newValue, comparisonValue))
+                {
+                    int index = Array.IndexOf(CoreDictionary.Keys.ToArray(), key);
+                    OnCollectionChanged(NotifyCollectionChangedAction.Replace, oldValue, newValue, index);
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            else
             {
                 return false;
             }
+        }
 
-            return TryRemoveWithNotification(item.Key, out _);
+        /// <summary>
+        /// Adds a key/value pair to the <see cref="ObservableDictionary{TKey, TValue}"/> if the key does not already exist.
+        /// </summary>
+        /// <param name="key">
+        /// The key of the element to add.
+        /// </param>
+        /// <param name="value">
+        /// The value to be added, if the key does not already exist.
+        /// </param>
+        /// <returns>
+        /// The value for the key. This will be either the existing value for the key if the key is already in the dictionary, or the new value if the key was not in the dictionary.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// key is null.
+        /// </exception>
+        /// <exception cref="OverflowException">
+        /// The dictionary already contains the maximum number of elements (System.Int32.MaxValue).
+        /// </exception>
+        public TValue GetOrAdd(TKey key, TValue value)
+        {
+            return GetOrAdd(key, _ => value);
+        }
+
+        /// <summary>
+        /// Adds a key/value pair to the <see cref="ObservableDictionary{TKey, TValue}"/> by using the specified function if the key does not already exist, or returns the existing value if the key exists.
+        /// </summary>
+        /// <param name="key">
+        /// The key of the element to add.
+        /// </param>
+        /// <param name="valueFactory">
+        /// The function used to generate a value for the key.
+        /// </param>
+        /// <returns>
+        /// The value for the key. This will be either the existing value for the key if the key is already in the dictionary, or the new value if the key was not in the dictionary.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// key or valueFactory is null.
+        /// </exception>
+        /// <exception cref="OverflowException">
+        /// The dictionary already contains the maximum number of elements (System.Int32.MaxValue).
+        /// </exception>
+        public TValue GetOrAdd(TKey key, Func<TKey, TValue> valueFactory)
+        {
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+            if (valueFactory == null)
+            {
+                throw new ArgumentNullException(nameof(valueFactory));
+            }
+            if (IsDisposed)
+            {
+                return default;
+            }
+
+            TValue ret = CoreDictionary.GetOrAdd(key, delegate
+            {
+                TValue value = valueFactory.Invoke(key);
+                PreAddItem(key, value);
+                int index = Array.IndexOf(CoreDictionary.Keys.ToArray(), key);
+                OnCollectionChanged(NotifyCollectionChangedAction.Add, value, index);
+                return value;
+            });
+            return ret;
+        }
+
+        /// <summary>
+        /// Adds or updates a key/value pair to the <see cref="ObservableDictionary{TKey, TValue}"/> if the key does not already exist, or updates a key/value pair in the <see cref="ObservableDictionary{TKey, TValue}"/> by using the specified function if the key already exists.
+        /// </summary>
+        /// <param name="key">
+        /// The key to be added or whose value should be updated.
+        /// </param>
+        /// <param name="value">
+        /// The value to be added or updated.
+        /// </param>
+        /// <returns>
+        /// The new value for the key. This will be either be addValue (if the key was absent) or the result of updateValueFactory (if the key was present).
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// key or updateValueFactory is null.
+        /// </exception>
+        /// <exception cref="OverflowException">
+        /// The dictionary already contains the maximum number of elements <see cref="int"/>.
+        /// </exception>
+        public TValue AddOrUpdate(TKey key, TValue value)
+        {
+            return AddOrUpdate(key, _ => value, delegate { return value; });
+        }
+
+        /// <summary>
+        /// Adds a key/value pair to the <see cref="ObservableDictionary{TKey, TValue}"/> if the key does not already exist, or updates a key/value pair in the <see cref="ObservableDictionary{TKey, TValue}"/> by using the specified function if the key already exists.
+        /// </summary>
+        /// <param name="key">
+        /// The key to be added or whose value should be updated.
+        /// </param>
+        /// <param name="addValue">
+        /// The value to be added for an absent key.
+        /// </param>
+        /// <param name="updateValue">
+        /// A new value for an existing key based on the key's existing value.
+        /// </param>
+        /// <returns>
+        /// The new value for the key. This will be either be addValue (if the key was absent) or the result of updateValueFactory (if the key was present).
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// key or updateValueFactory is null.
+        /// </exception>
+        /// <exception cref="OverflowException">
+        /// The dictionary already contains the maximum number of elements <see cref="int"/>.
+        /// </exception>
+        public TValue AddOrUpdate(TKey key, TValue addValue, TValue updateValue)
+        {
+            return AddOrUpdate(key, _ => addValue, delegate { return updateValue; });
+        }
+
+        /// <summary>
+        /// Adds a key/value pair to the <see cref="ObservableDictionary{TKey, TValue}"/> if the key does not already exist, or updates a key/value pair in the <see cref="ObservableDictionary{TKey, TValue}"/> by using the specified function if the key already exists.
+        /// </summary>
+        /// <param name="key">
+        /// The key to be added or whose value should be updated.
+        /// </param>
+        /// <param name="addValue">
+        /// The value to be added for an absent key.
+        /// </param>
+        /// <param name="updateValueFactory">
+        /// The function used to generate a new value for an existing key based on the key's existing value.
+        /// </param>
+        /// <returns>
+        /// The new value for the key. This will be either be addValue (if the key was absent) or the result of updateValueFactory (if the key was present).
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// key or updateValueFactory is null.
+        /// </exception>
+        /// <exception cref="OverflowException">
+        /// The dictionary already contains the maximum number of elements <see cref="int"/>.
+        /// </exception>
+        public TValue AddOrUpdate(TKey key, TValue addValue, Func<TKey, TValue, TValue> updateValueFactory)
+        {
+            return AddOrUpdate(key, _ => addValue, updateValueFactory);
+        }
+
+        /// <summary>
+        /// Uses the specified functions to add a key/value pair to the <see cref="ObservableDictionary{TKey, TValue}"/> if the key does not already exist, or to update a key/value pair in the <see cref="ObservableDictionary{TKey, TValue}"/> if the key already exists.
+        /// </summary>
+        /// <param name="key">
+        /// The key to be added or whose value should be updated.
+        /// </param>
+        /// <param name="addValueFactory">
+        /// The function used to generate a value for an absent key.
+        /// </param>
+        /// <param name="updateValueFactory">
+        /// The function used to generate a new value for an existing key based on the key's existing value
+        /// </param>
+        /// <returns>
+        /// The new value for the key. This will be either be the result of addValueFactory (if the key was absent) or the result of updateValueFactory (if the key was present).
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// key, addValueFactory, or updateValueFactory is null.
+        /// </exception>
+        /// <exception cref="OverflowException">
+        /// The dictionary already contains the maximum number of elements <see cref="int"/>.
+        /// </exception>
+        public TValue AddOrUpdate(TKey key, Func<TKey, TValue> addValueFactory, Func<TKey, TValue, TValue> updateValueFactory)
+        {
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+            if (addValueFactory == null)
+            {
+                throw new ArgumentNullException(nameof(addValueFactory));
+            }
+            if (updateValueFactory == null)
+            {
+                throw new ArgumentNullException(nameof(updateValueFactory));
+            }
+            if (IsDisposed)
+            {
+                return default;
+            }
+
+            TValue ret = CoreDictionary.AddOrUpdate(key, delegate
+            {
+                TValue value = addValueFactory.Invoke(key);
+                PreAddItem(key, value);
+                int index = Array.IndexOf(CoreDictionary.Keys.ToArray(), key);
+                OnCollectionChanged(NotifyCollectionChangedAction.Add, value, index);
+                return value;
+            }, (_, oldValue) =>
+            {
+                TValue value = updateValueFactory.Invoke(key, oldValue);
+                PreUpdateItem(key, oldValue, value);
+                int index = Array.IndexOf(CoreDictionary.Keys.ToArray(), key);
+                OnCollectionChanged(NotifyCollectionChangedAction.Replace, oldValue, value, index);
+                return value;
+            });
+            return ret;
         }
 
         /// <inheritdoc/>
@@ -197,399 +658,75 @@ namespace ObservableHelpers
                 return;
             }
 
-            if (ValidateClear())
-            {
-                ClearCore();
-                NotifyObserversOfChange();
-            }
+            PreClear();
+            CoreDictionary.Clear();
+            OnCollectionReset();
         }
 
-        /// <inheritdoc/>
-        public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
+        /// <summary>
+        /// Executed before adding or updating.
+        /// </summary>
+        /// <param name="key">
+        /// The key of the value to be added.
+        /// </param>
+        /// <param name="value">
+        /// The value to be added.
+        /// </param>
+        protected virtual void PreAddItem(TKey key, TValue value)
         {
             if (IsDisposed)
             {
                 return;
-            }
-
-            CopyToCore(array, arrayIndex);
-        }
-
-        /// <summary>
-        /// Attempts to add an item to the dictionary, notifying observers of any changes.
-        /// </summary>
-        /// <param name="item">
-        /// The item to be added.
-        /// </param>
-        /// <returns>
-        /// <c>true</c> whether the item was added; otherwise, <c>false</c>.
-        /// </returns>
-        protected bool TryAddWithNotification(KeyValuePair<TKey, TValue> item)
-        {
-            if (IsDisposed)
-            {
-                return false;
-            }
-
-            return TryAddWithNotification(item.Key, item.Value);
-        }
-
-        /// <summary>
-        /// Attempts to add an item to the dictionary, notifying observers of any changes.
-        /// </summary>
-        /// <param name="key">
-        /// The key of the item to be added.
-        /// </param>
-        /// <param name="value">
-        /// The value of the item to be added.
-        /// </param>
-        /// <returns>
-        /// <c>true</c> whether the item was added; otherwise, <c>false</c>.
-        /// </returns>
-        protected bool TryAddWithNotification(TKey key, TValue value)
-        {
-            if (IsDisposed)
-            {
-                return false;
-            }
-
-            if (ValidateSetItem(key, value))
-            {
-                bool result = TryAddCore(key, value);
-                if (result) NotifyObserversOfChange();
-                return result;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Attempts to remove an item from the dictionary, notifying observers of any changes.
-        /// </summary>
-        /// <param name="key">
-        /// The key of the item to be removed.
-        /// </param>
-        /// <param name="value">
-        /// The value of the item removed.
-        /// </param>
-        /// <returns>
-        /// <c>true</c> whether the item was removed; otherwise, <c>false</c>.
-        /// </returns>
-        protected bool TryRemoveWithNotification(TKey key, out TValue value)
-        {
-            if (IsDisposed)
-            {
-                value = default;
-                return false;
-            }
-
-            if (ValidateRemoveItem(key))
-            {
-                bool result = TryRemoveCore(key, out value);
-                if (result) NotifyObserversOfChange();
-                return result;
-            }
-            else
-            {
-                value = default;
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Attempts to add or update an item in the dictionary, notifying observers of any changes.
-        /// </summary>
-        /// <param name="key">
-        /// The key of the item to be updated.
-        /// </param>
-        /// <param name="value">
-        /// The new value to set for the item.
-        /// </param>
-        /// <returns>
-        /// <c>true</c> whether the item was updated; otherwise, <c>false</c>.
-        /// </returns>
-        protected void UpdateWithNotification(TKey key, TValue value)
-        {
-            if (IsDisposed)
-            {
-                return;
-            }
-
-            if (ValidateSetItem(key, value))
-            {
-                UpdateCore(key, value);
-                NotifyObserversOfChange();
-            }
-        }
-
-        /// <summary>
-        /// <para>The core implementation for <see cref="TryGetValue"/>.</para>
-        /// <para>Attempts to get the value associated with the specified key from the <see cref="ObservableDictionary{TKey, TValue}"/>.</para>
-        /// </summary>
-        /// <param name="key">
-        /// The key of the item to get.
-        /// </param>
-        /// <param name="value">
-        /// When this method returns, contains the object from the <see cref="ObservableDictionary{TKey, TValue}"/> that has the specified key, or the default value of the type if the operation failed.
-        /// </param>
-        /// <returns>
-        /// <c>true</c> if the key was found in the <see cref="ObservableDictionary{TKey, TValue}"/>; otherwise, <c>false</c>.
-        /// </returns>
-        protected bool TryGetValueCore(TKey key, out TValue value)
-        {
-            if (IsDisposed)
-            {
-                value = default;
-                return false;
-            }
-
-            return dictionary.TryGetValue(key, out value);
-        }
-
-        /// <summary>
-        /// <para>The core implementation for <see cref="ContainsKey"/>.</para>
-        /// <para>Determines whether the <see cref="ObservableDictionary{TKey, TValue}"/> contains the specified key.</para>
-        /// </summary>
-        /// <param name="key">
-        /// The key to locate in the <see cref="ObservableDictionary{TKey, TValue}"/>.
-        /// </param>
-        /// <returns>
-        /// </returns>
-        protected bool ContainsKeyCore(TKey key)
-        {
-            if (IsDisposed)
-            {
-                return false;
-            }
-
-            return dictionary.ContainsKey(key);
-        }
-
-        /// <summary>
-        /// <para>The core implementation for <see cref="Contains"/></para>
-        /// <para>Determines whether the <see cref="ObservableDictionary{TKey, TValue}"/> contains a specific value.</para>
-        /// </summary>
-        /// <param name="item">
-        /// The object to locate in the <see cref="ObservableDictionary{TKey, TValue}"/>.
-        /// </param>
-        /// <returns>
-        /// <c>true</c> if the item is found in the <see cref="ObservableDictionary{TKey, TValue}"/>; otherwise, <c>false</c>.
-        /// </returns>
-        protected bool ContainsCore(KeyValuePair<TKey, TValue> item)
-        {
-            if (IsDisposed)
-            {
-                return false;
-            }
-
-            return ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).Contains(item);
-        }
-
-        /// <summary>
-        /// <para>The core implementation for <see cref="TryAddWithNotification(TKey, TValue)"/></para>
-        /// <para>Attempts to add the specified key and value to the <see cref="ObservableDictionary{TKey, TValue}"/>.</para>
-        /// </summary>
-        /// <param name="key">
-        /// The key of the element to add.
-        /// </param>
-        /// <param name="value">
-        /// The value of the element to add. The value can be null for reference types.
-        /// </param>
-        /// <returns>
-        /// </returns>
-        protected bool TryAddCore(TKey key, TValue value)
-        {
-            if (IsDisposed)
-            {
-                return false;
-            }
-
-            return dictionary.TryAdd(key, value);
-        }
-
-        /// <summary>
-        /// <para>The core implementation for <see cref="UpdateWithNotification"/></para>
-        /// <para>Updates the specified key and value to the <see cref="ObservableDictionary{TKey, TValue}"/>.</para>
-        /// </summary>
-        /// <param name="key">
-        /// </param>
-        /// <param name="value">
-        /// </param>
-        protected void UpdateCore(TKey key, TValue value)
-        {
-            if (IsDisposed)
-            {
-                return;
-            }
-
-            dictionary[key] = value;
-        }
-
-        /// <summary>
-        /// <para>The core implementation for <see cref="TryRemoveWithNotification"/></para>
-        /// <para>Attempts to remove and return the value that has the specified key from the <see cref="ObservableDictionary{TKey, TValue}"/>.</para>
-        /// </summary>
-        /// <param name="key">
-        /// The key of the element to remove and return.
-        /// </param>
-        /// <param name="value">
-        /// When this method returns, contains the object removed from the <see cref="ObservableDictionary{TKey, TValue}"/>, or the default value of the TValue type if key does not exist.
-        /// </param>
-        /// <returns>
-        /// <c>true</c> if the object was removed; otherwise, <c>false</c>.
-        /// </returns>
-        protected bool TryRemoveCore(TKey key, out TValue value)
-        {
-            if (IsDisposed)
-            {
-                value = default;
-                return false;
-            }
-
-            return dictionary.TryRemove(key, out value);
-        }
-
-        /// <summary>
-        /// <para>The core implementation for <see cref="Clear"/></para>
-        /// <para>Removes all keys and values from the <see cref="ObservableDictionary{TKey, TValue}"/>.</para>
-        /// </summary>
-        protected void ClearCore()
-        {
-            if (IsDisposed)
-            {
-                return;
-            }
-
-            dictionary.Clear();
-        }
-
-        /// <summary>
-        /// <para>The core implementation for <see cref="CopyTo"/></para>
-        /// <para>Copies the elements of the <see cref="ObservableDictionary{TKey, TValue}"/> to an <see cref="Array"/>, starting at a particular <see cref="Array"/> index.</para>
-        /// </summary>
-        /// <param name="array">
-        /// The one-dimensional <see cref="Array"/> that is the destination of the elements copied from <see cref="ObservableDictionary{TKey, TValue}"/>. The <see cref="Array"/> must have zero-based indexing.
-        /// </param>
-        /// <param name="arrayIndex">
-        /// The zero-based index in array at which copying begins.
-        /// </param>
-        protected void CopyToCore(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
-        {
-            if (IsDisposed)
-            {
-                return;
-            }
-
-            ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).CopyTo(array, arrayIndex);
-        }
-
-        /// <summary>
-        /// Validates <paramref name="value"/> to be add or update before adding or updating.
-        /// </summary>
-        /// <param name="key">
-        /// The key of the value to be validated.
-        /// </param>
-        /// <param name="value">
-        /// The value to be validated.
-        /// </param>
-        /// <returns>
-        /// <c>true</c> if value is valid to add or update; otherwise, <c>false</c>.
-        /// </returns>
-        protected virtual bool ValidateSetItem(TKey key, TValue value)
-        {
-            if (IsDisposed)
-            {
-                return false;
             }
 
             if (value is ISyncObject sync)
             {
                 sync.SyncOperation.SetContext(this);
             }
-
-            return true;
         }
 
         /// <summary>
-        /// Validates <paramref name="key"/> to be remove before removing.
+        /// Executed before adding or updating.
         /// </summary>
         /// <param name="key">
-        /// The key of the value to be validated.
+        /// The key of the value to be added.
         /// </param>
-        /// <returns>
-        /// <c>true</c> if value is valid to remove; otherwise, <c>false</c>.
-        /// </returns>
-        protected virtual bool ValidateRemoveItem(TKey key)
-        {
-            if (IsDisposed)
-            {
-                return false;
-            }
-
-            return ContainsKeyCore(key);
-        }
-
-        /// <summary>
-        /// Validates clear before clearing.
-        /// </summary>
-        /// <returns>
-        /// <c>true</c> if value is valid to clear; otherwise, <c>false</c>.
-        /// </returns>
-        protected virtual bool ValidateClear()
-        {
-            if (IsDisposed)
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Notifies observers of <see cref="ImmediateCollectionChanged"/> and <see cref="CollectionChanged"/> of an update to the dictionary.
-        /// </summary>
-        protected virtual void NotifyObserversOfChange()
+        /// <param name="oldValue">
+        /// The old value to be updated.
+        /// </param>
+        /// <param name="newValue">
+        /// The new value to be updated.
+        /// </param>
+        protected virtual void PreUpdateItem(TKey key, TValue oldValue, TValue newValue)
         {
             if (IsDisposed)
             {
                 return;
             }
 
-            var args = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset);
-
-            OnPropertyChanged(new PropertyChangedEventArgs(nameof(Keys)));
-            OnPropertyChanged(new PropertyChangedEventArgs(nameof(Values)));
-            OnPropertyChanged(new PropertyChangedEventArgs(nameof(Count)));
-
-            ImmediateCollectionChanged?.Invoke(this, args);
-            ContextPost(delegate
+            if (newValue is ISyncObject sync)
             {
-                CollectionChanged?.Invoke(this, args);
-            });
+                sync.SyncOperation.SetContext(this);
+            }
         }
 
-        /// <inheritdoc/>
-        IEnumerator<KeyValuePair<TKey, TValue>> IEnumerable<KeyValuePair<TKey, TValue>>.GetEnumerator()
+        /// <summary>
+        /// Executed before removing.
+        /// </summary>
+        /// <param name="key">
+        /// The key of the value to be removed.
+        /// </param>
+        protected virtual void PreRemoveItem(TKey key)
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
 
-            return ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).GetEnumerator();
         }
 
-        /// <inheritdoc/>
-        IEnumerator IEnumerable.GetEnumerator()
+        /// <summary>
+        /// Executed before clearing.
+        /// </summary>
+        protected virtual void PreClear()
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
 
-            return ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).GetEnumerator();
         }
 
         #endregion

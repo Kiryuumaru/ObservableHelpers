@@ -1,25 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.ComponentModel;
 
 namespace ObservableHelpers
 {
     /// <summary>
     /// Contains all implementations for performing observable operations.
     /// </summary>
-    public abstract class Observable : SyncContext, IObservable
+    public abstract class ObservableSyncContext : SyncContext, IObservable
     {
         /// <summary>
         /// Event raised on the current synchronizatiob context when a property is changed.
         /// </summary>
-        public event PropertyChangedEventHandler PropertyChanged;
+        public virtual event PropertyChangedEventHandler PropertyChanged;
 
         /// <inheritdoc/>
-        public event PropertyChangedEventHandler ImmediatePropertyChanged;
+        public virtual event PropertyChangedEventHandler ImmediatePropertyChanged;
 
         /// <inheritdoc/>
         public abstract bool SetNull();

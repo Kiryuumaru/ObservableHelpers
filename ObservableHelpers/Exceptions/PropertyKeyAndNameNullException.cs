@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace ObservableHelpers.Exceptions
+﻿namespace ObservableHelpers.Exceptions
 {
     /// <summary>
     /// Occurs when neither property key nor name are provided.

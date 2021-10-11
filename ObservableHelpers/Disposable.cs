@@ -1,10 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Text;
 using System.Threading;
 
 namespace ObservableHelpers
@@ -14,43 +8,16 @@ namespace ObservableHelpers
     /// </summary>
     public abstract class Disposable : object, IDisposableObject
     {
-        private const int DisposalNotStarted = 0;
-        private const int DisposalStarted = 1;
-        private const int DisposalComplete = 2;
-
-        // see the constants defined above for valid values
-        private int disposeStage;
-
-        /// <summary>
-        /// Finalizes an instance of the Disposable class.
-        /// </summary>
-        ~Disposable()
-        {
-            Dispose(false);
-        }
+        #region Properties
 
         /// <inheritdoc/>
-        public bool IsDisposing
-        {
-            get { return Interlocked.CompareExchange(ref disposeStage, DisposalStarted, DisposalStarted) == DisposalStarted; }
-        }
+        public bool IsDisposing => Interlocked.CompareExchange(ref disposeStage, DisposalStarted, DisposalStarted) == DisposalStarted;
 
         /// <inheritdoc/>
-        public bool IsDisposed
-        {
-            get { return Interlocked.CompareExchange(ref disposeStage, DisposalComplete, DisposalComplete) == DisposalComplete; }
-        }
+        public bool IsDisposed => Interlocked.CompareExchange(ref disposeStage, DisposalComplete, DisposalComplete) == DisposalComplete;
 
         /// <inheritdoc/>
-        public bool IsDisposedOrDisposing
-        {
-            get { return Interlocked.CompareExchange(ref disposeStage, DisposalNotStarted, DisposalNotStarted) != DisposalNotStarted; }
-        }
-
-        /// <summary>
-        /// Occurs when this object is about to be disposed.
-        /// </summary>
-        public event EventHandler Disposing;
+        public bool IsDisposedOrDisposing => Interlocked.CompareExchange(ref disposeStage, DisposalNotStarted, DisposalNotStarted) != DisposalNotStarted;
 
         /// <summary>
         /// Gets the object name, for use in any <see cref="ObjectDisposedException"/> thrown by this object.
@@ -62,10 +29,45 @@ namespace ObservableHelpers
         /// <value>
         /// The object name, which defaults to the class name.
         /// </value>
-        protected virtual string ObjectName
+        protected virtual string ObjectName => GetType().FullName;
+
+        private const int DisposalNotStarted = 0;
+        private const int DisposalStarted = 1;
+        private const int DisposalComplete = 2;
+
+        // see the constants defined above for valid values
+        private int disposeStage;
+
+        #endregion
+
+        #region Events
+
+        /// <inheritdoc/>
+        public event EventHandler Disposing;
+
+        #endregion
+
+        #region Initializers
+
+        /// <summary>
+        /// Creates an instance of <see cref="Disposable"/> class.
+        /// </summary>
+        public Disposable()
         {
-            get { return GetType().FullName; }
+
         }
+
+        /// <summary>
+        /// Finalizes an instance of the Disposable class.
+        /// </summary>
+        ~Disposable()
+        {
+            Dispose(false);
+        }
+
+        #endregion
+
+        #region Methods
 
         /// <summary>
         /// Disposes of this object, if it hasn't already been disposed.
@@ -144,7 +146,9 @@ namespace ObservableHelpers
         protected void MarkAsDisposed()
         {
             GC.SuppressFinalize(this);
-            Interlocked.Exchange(ref disposeStage, DisposalComplete);
+            _ = Interlocked.Exchange(ref disposeStage, DisposalComplete);
         }
+
+        #endregion
     }
 }

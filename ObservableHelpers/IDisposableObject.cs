@@ -1,10 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace ObservableHelpers
 {
@@ -27,5 +21,10 @@ namespace ObservableHelpers
         /// Gets a value indicating whether this object has been disposed or is in the process of being disposed.
         /// </summary>
         bool IsDisposedOrDisposing { get; }
+
+        /// <summary>
+        /// Occurs when this object is about to be disposed.
+        /// </summary>
+        event EventHandler Disposing;
     }
 }

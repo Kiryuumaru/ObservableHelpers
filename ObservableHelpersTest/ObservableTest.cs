@@ -108,6 +108,21 @@ namespace ObservableHelpersTest
         }
 
         [Fact]
+        public async void ObservableCollectionTest()
+        {
+            var raiseCount = 0;
+            var collection = new ObservableCollection<string>();
+            collection.CollectionChanged += (s, e) =>
+            {
+                raiseCount++;
+            };
+            collection.Add("test");
+            collection.Add("test");
+            await Task.Delay(500);
+            Assert.True(raiseCount == 2 && collection.Count == 2);
+        }
+
+        [Fact]
         public async void ObservableDictionaryTest()
         {
             var raiseCount = 0;
