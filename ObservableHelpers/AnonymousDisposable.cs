@@ -7,7 +7,8 @@ namespace ObservableHelpers
     /// <summary>
     /// Provides disposable action with <see cref="IDisposable"/> implementation.
     /// </summary>
-    public class AnonymousDisposable : Disposable
+    public class AnonymousDisposable :
+        Disposable
     {
         private readonly Action dispose;
 

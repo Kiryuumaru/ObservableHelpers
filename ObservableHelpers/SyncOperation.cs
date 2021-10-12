@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ObservableHelpers.Abstraction;
+using System;
 using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;

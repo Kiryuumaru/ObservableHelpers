@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ObservableHelpers.Abstraction;
+using System;
 using System.Threading;
 
 namespace ObservableHelpers
@@ -6,7 +7,9 @@ namespace ObservableHelpers
     /// <summary>
     /// Contains all methods for performing proper disposable operations.
     /// </summary>
-    public abstract class Disposable : object, IDisposableObject
+    public abstract class Disposable :
+        object,
+        IDisposableObject
     {
         #region Properties
 

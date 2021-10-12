@@ -6,7 +6,8 @@ namespace ObservableHelpers
     /// <summary>
     /// The <see cref="PropertyChangedEventArgs"/> derived implementations for <see cref="INotifyPropertyChanged.PropertyChanged"/> events
     /// </summary>
-    public class ObjectPropertyChangesEventArgs : PropertyChangedEventArgs
+    public class ObjectPropertyChangesEventArgs :
+        PropertyChangedEventArgs
     {
         /// <summary>
         /// Gets the key of the property that changed.

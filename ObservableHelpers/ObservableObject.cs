@@ -12,7 +12,8 @@ namespace ObservableHelpers
     /// <summary>
     /// Provides a thread-safe observable object class for use with data binding.
     /// </summary>
-    public class ObservableObject : ObservableSyncContext
+    public class ObservableObject :
+        ObservableSyncContext
     {
         #region Helpers
 

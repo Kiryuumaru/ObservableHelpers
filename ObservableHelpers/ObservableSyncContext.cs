@@ -1,11 +1,14 @@
-﻿using System.ComponentModel;
+﻿using ObservableHelpers.Abstraction;
+using System.ComponentModel;
 
 namespace ObservableHelpers
 {
     /// <summary>
     /// Contains all implementations for performing observable operations.
     /// </summary>
-    public abstract class ObservableSyncContext : SyncContext, IObservable
+    public abstract class ObservableSyncContext :
+        SyncContext,
+        IObservable
     {
         /// <summary>
         /// Event raised on the current synchronizatiob context when a property is changed.
@@ -20,6 +23,17 @@ namespace ObservableHelpers
 
         /// <inheritdoc/>
         public abstract bool IsNull();
+
+        /// <summary>
+        /// Raises <see cref="OnPropertyChanged(PropertyChangedEventArgs)"/> with the specified <paramref name="propertyName"/>.
+        /// </summary>
+        /// <param name="propertyName">
+        /// The name of the changed property.
+        /// </param>
+        protected void OnPropertyChanged(string propertyName)
+        {
+            OnPropertyChanged(new PropertyChangedEventArgs(propertyName));
+        }
 
         /// <summary>
         /// Invokes <see cref="PropertyChanged"/> into current synchronization context.

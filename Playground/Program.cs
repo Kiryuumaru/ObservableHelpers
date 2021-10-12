@@ -19,3 +19,5 @@ for (int i = 0; i < 1000000; i++) list2.Add(123);
 Console.WriteLine("list baseline = " + sw.Elapsed);
 
 sw.Stop();
+
+ObservableCollection1<int> s = new ObservableCollection1<int>();

@@ -1,9 +1,10 @@
-﻿namespace ObservableHelpers
+﻿namespace ObservableHelpers.Abstraction
 {
     /// <summary>
     /// Contains declarations for implicit nullable object.
     /// </summary>
-    public interface INullableObject : IDisposableObject
+    public interface INullableObject :
+        IDisposableObject
     {
         /// <summary>
         /// Sets this object to null.

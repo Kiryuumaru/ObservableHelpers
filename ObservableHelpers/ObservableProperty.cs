@@ -1,11 +1,13 @@
-﻿using System.ComponentModel;
+﻿using ObservableHelpers.Abstraction;
+using System.ComponentModel;
 
 namespace ObservableHelpers
 {
     /// <summary>
     /// Provides a thread-safe observable object property for use with data binding.
     /// </summary>
-    public class ObservableProperty : ObservableSyncContext
+    public class ObservableProperty :
+        ObservableSyncContext
     {
         #region Properties
 
@@ -169,7 +171,8 @@ namespace ObservableHelpers
     /// <typeparam name="T">
     /// The undelying type of the property.
     /// </typeparam>
-    public class ObservableProperty<T> : ObservableProperty
+    public class ObservableProperty<T> :
+        ObservableProperty
     {
         #region Properties
 

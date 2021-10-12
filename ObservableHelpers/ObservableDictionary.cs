@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ObservableHelpers.Abstraction;
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;

@@ -1,9 +1,10 @@
-﻿namespace ObservableHelpers
+﻿namespace ObservableHelpers.Abstraction
 {
     /// <summary>
     /// Contains declaration for <see cref="ObservableHelpers.SyncOperation"/>.
     /// </summary>
-    public interface ISyncObject : IDisposableObject
+    public interface ISyncObject :
+        IDisposableObject
     {
         /// <summary>
         /// Gets the <see cref="ObservableHelpers.SyncOperation"/> used by this object.

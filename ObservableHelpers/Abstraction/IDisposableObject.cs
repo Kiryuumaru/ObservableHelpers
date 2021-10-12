@@ -1,11 +1,12 @@
 ﻿using System;
 
-namespace ObservableHelpers
+namespace ObservableHelpers.Abstraction
 {
     /// <summary>
     /// Contains proper declarations for disposable operations.
     /// </summary>
-    public interface IDisposableObject : IDisposable
+    public interface IDisposableObject :
+        IDisposable
     {
         /// <summary>
         /// Gets a value indicating whether this object is in the process of disposing.

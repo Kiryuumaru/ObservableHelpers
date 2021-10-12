@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ObservableHelpers.Abstraction;
+using System;
 using System.Threading.Tasks;
 
 namespace ObservableHelpers
@@ -6,7 +7,9 @@ namespace ObservableHelpers
     /// <summary>
     /// Provides operations for <see cref="ObservableHelpers.SyncOperation"/> with proper disposable implementations.
     /// </summary>
-    public class SyncContext : Disposable, ISyncObject
+    public class SyncContext :
+        Disposable,
+        ISyncObject
     {
         /// <inheritdoc/>
         public SyncOperation SyncOperation { get; private set; }
