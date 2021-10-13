@@ -410,7 +410,7 @@ namespace ObservableHelpers
         }
 
         /// <summary>
-        /// Compares the existing value for the specified key with a specified value, and if they are equal, updates the key with a third value and notify observers.
+        /// Compares the existing value for the specified key with a specified <paramref name="comparisonValue"/>, and if they are equal, updates the key with <paramref name="newValue"/> and notify observers.
         /// </summary>
         /// <param name="key">
         /// The key whose value is compared with comparisonValue and possibly replaced.

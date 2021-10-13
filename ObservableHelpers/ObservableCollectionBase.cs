@@ -34,26 +34,19 @@ namespace ObservableHelpers
         {
             get
             {
-                try
+                if (IsDisposed)
                 {
-                    RWLock.EnterUpgradeableReadLock();
-                    return Items.Count;
+                    return default;
                 }
-                catch
-                {
-                    throw;
-                }
-                finally
-                {
-                    RWLock.ExitUpgradeableReadLock();
-                }
+
+                return LockRead(() => Items.Count);
             }
         }
 
         /// <summary>
         /// Gets a value indicating whether the <see cref="ObservableCollectionBase{T, TCollectionWrapper}"/> is read-only.
         /// </summary>
-        public bool IsReadOnly { get; private set; }
+        public bool IsReadOnly { get; protected set; }
 
         /// <summary>
         /// Gets an object that can be used to synchronize access to the <see cref="ObservableCollectionBase{T, TCollectionWrapper}"/>.
@@ -62,6 +55,11 @@ namespace ObservableHelpers
         {
             get
             {
+                if (IsDisposed)
+                {
+                    return default;
+                }
+
                 if (syncRoot == null)
                 {
                     Interlocked.CompareExchange(ref syncRoot, new object(), null);
@@ -73,13 +71,13 @@ namespace ObservableHelpers
         /// <summary>
         /// Gets a <see cref="ICollection{T}"/> wrapper around the <see cref="ObservableCollectionBase{T, TCollectionWrapper}"/>.
         /// </summary>
-        protected TCollectionWrapper Items { get; private set; }
-
-        private protected readonly ReaderWriterLockSlim RWLock = new ReaderWriterLockSlim();
+        protected virtual TCollectionWrapper Items { get; set; }
 
         // This must agree with Binding.IndexerName. It is declared separately
         // here so as to avoid a dependency on PresentationFramework.dll.
         private protected const string IndexerName = "Item[]";
+
+        private readonly ReaderWriterLockSlim rwLock = new ReaderWriterLockSlim();
 
         private object syncRoot;
 
@@ -106,41 +104,43 @@ namespace ObservableHelpers
         #region Members
 
         /// <summary>
-        /// Creates an observable filter that shadows the changes notifications from the parent observable.
+        /// Adds an item to the <see cref="ObservableCollectionBase{T, TCollectionWrapper}"/>.
         /// </summary>
-        /// <param name="predicate">
-        /// The predicate filter for child observable.
+        /// <param name="item">
+        /// The item to add to the <see cref="ObservableCollectionBase{T, TCollectionWrapper}"/>.
         /// </param>
-        /// <returns>
-        /// The created child filter read-only observable.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="predicate"/> is a null reference.
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableCollectionBase{T, TCollectionWrapper}"/> is read-only.
         /// </exception>
-        public ObservableCollectionFilter ObservableFilter(Predicate<T> predicate)
+        public void Add(T item)
         {
-            if (predicate == null)
+            if (IsDisposed)
             {
-                throw new ArgumentNullException(nameof(predicate));
+                return;
+            }
+            if (IsReadOnly)
+            {
+                throw ReadOnlyException(nameof(Add));
             }
 
-            RWLock.EnterUpgradeableReadLock();
-            ObservableCollectionFilter filter = new ObservableCollectionFilter(Items.Where(i => predicate.Invoke(i)));
-            filter.SyncOperation.SetContext(this);
-            void Filter_ImmediateCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+            AddItem(item);
+        }
+
+        /// <summary>
+        /// Removes all elements from the <see cref="ObservableCollectionBase{T, TCollectionWrapper}"/>.
+        /// </summary>
+        public void Clear()
+        {
+            if (IsDisposed)
             {
-                filter.RWLock.EnterWriteLock();
-                filter.Items = Items.Where(i => predicate.Invoke(i)).ToList();
-                filter.OnCollectionReset();
-                filter.RWLock.ExitWriteLock();
+                return;
             }
-            RWLock.ExitUpgradeableReadLock();
-            ImmediateCollectionChanged += Filter_ImmediateCollectionChanged;
-            filter.Disposing += (s, e) =>
+            if (IsReadOnly)
             {
-                ImmediateCollectionChanged -= Filter_ImmediateCollectionChanged;
-            };
-            return filter;
+                throw ReadOnlyException(nameof(Clear));
+            }
+
+            ClearItems();
         }
 
         /// <summary>
@@ -154,19 +154,12 @@ namespace ObservableHelpers
         /// </returns>
         public bool Contains(T item)
         {
-            try
+            if (IsDisposed)
             {
-                RWLock.EnterUpgradeableReadLock();
-                return Items.Contains(item);
+                return default;
             }
-            catch
-            {
-                throw;
-            }
-            finally
-            {
-                RWLock.ExitUpgradeableReadLock();
-            }
+
+            return LockRead(() => Items.Contains(item));
         }
 
         /// <summary>
@@ -189,33 +182,28 @@ namespace ObservableHelpers
         /// </exception>
         public void CopyTo(T[] array, int arrayIndex)
         {
-            try
+            if (IsDisposed)
             {
-                if (array == null)
-                {
-                    throw new ArgumentNullException(nameof(array));
-                }
-                if (arrayIndex < 0 || Count < arrayIndex + array.Length)
+                return;
+            }
+            if (array == null)
+            {
+                throw new ArgumentNullException(nameof(array));
+            }
+
+            LockRead(() =>
+            {
+                if (arrayIndex < 0 || Items.Count < arrayIndex + array.Length)
                 {
                     throw new ArgumentOutOfRangeException(nameof(array));
                 }
-
-                RWLock.EnterUpgradeableReadLock();
 
                 int i = 0;
                 foreach (T item in Items)
                 {
                     array.SetValue(item, arrayIndex + i++);
                 }
-            }
-            catch
-            {
-                throw;
-            }
-            finally
-            {
-                RWLock.ExitUpgradeableReadLock();
-            }
+            });
         }
 
         /// <summary>
@@ -238,37 +226,32 @@ namespace ObservableHelpers
         /// </exception>
         public void CopyTo(Array array, int arrayIndex)
         {
-            try
+            if (IsDisposed)
             {
-                if (array == null)
-                {
-                    throw new ArgumentNullException(nameof(array));
-                }
-                if (array.Rank != 1)
-                {
-                    throw new ArgumentException("Array is multi dimension.", nameof(array));
-                }
-                if (arrayIndex < 0 || Count < arrayIndex + array.Length)
+                return;
+            }
+            if (array == null)
+            {
+                throw new ArgumentNullException(nameof(array));
+            }
+            if (array.Rank != 1)
+            {
+                throw new ArgumentException("Array is multi dimension.", nameof(array));
+            }
+
+            LockRead(() =>
+            {
+                if (arrayIndex < 0 || Items.Count < arrayIndex + array.Length)
                 {
                     throw new ArgumentOutOfRangeException(nameof(array));
                 }
-
-                RWLock.EnterUpgradeableReadLock();
 
                 int i = 0;
                 foreach (T item in Items)
                 {
                     array.SetValue(item, arrayIndex + i++);
                 }
-            }
-            catch
-            {
-                throw;
-            }
-            finally
-            {
-                RWLock.ExitUpgradeableReadLock();
-            }
+            });
         }
 
         /// <summary>
@@ -279,55 +262,59 @@ namespace ObservableHelpers
         /// </returns>
         public IEnumerator<T> GetEnumerator()
         {
-            try
+            if (IsDisposed)
             {
-                RWLock.EnterUpgradeableReadLock();
-                return Items.GetEnumerator();
+                return default;
             }
-            catch
-            {
-                throw;
-            }
-            finally
-            {
-                RWLock.ExitUpgradeableReadLock();
-            }
+
+            return LockRead(() => Items.GetEnumerator());
         }
 
         /// <summary>
-        /// Adds an item to the <see cref="ObservableCollectionBase{T, TCollectionWrapper}"/>.
+        /// Creates an observable filter that shadows the changes notifications from the parent observable.
         /// </summary>
-        /// <param name="item">
-        /// The item to add to the <see cref="ObservableCollectionBase{T, TCollectionWrapper}"/>.
+        /// <param name="predicate">
+        /// The predicate filter for child observable.
         /// </param>
-        /// <exception cref="NotSupportedException">
-        /// The <see cref="ObservableCollectionBase{T, TCollectionWrapper}"/> is read-only.
+        /// <returns>
+        /// The created child filter read-only observable.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="predicate"/> is a null reference.
         /// </exception>
-        protected virtual void AddBase(T item)
+        public ObservableCollectionFilter ObservableFilter(Predicate<T> predicate)
         {
-            if (IsReadOnly)
+            if (IsDisposed)
             {
-                throw ReadOnlyException(nameof(AddBase));
+                return default;
+            }
+            if (predicate == null)
+            {
+                throw new ArgumentNullException(nameof(predicate));
             }
 
-            try
+            ObservableCollectionFilter filter = LockRead(() =>
             {
-                RWLock.EnterWriteLock();
+                filter = new ObservableCollectionFilter(Items.Where(i => predicate.Invoke(i)));
+                filter.SyncOperation.SetContext(this);
+                return filter;
+            });
 
-                Items.Add(item);
+            void Filter_ImmediateCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+            {
+                filter.LockWrite(() =>
+                {
+                    filter.Items = Items.Where(i => predicate.Invoke(i)).ToList();
+                    filter.OnCollectionReset();
+                });
+            }
 
-                OnPropertyChanged(nameof(Count));
-                OnPropertyChanged(IndexerName);
-                OnCollectionReset();
-            }
-            catch
+            ImmediateCollectionChanged += Filter_ImmediateCollectionChanged;
+            filter.Disposing += (s, e) =>
             {
-                throw;
-            }
-            finally
-            {
-                RWLock.ExitWriteLock();
-            }
+                ImmediateCollectionChanged -= Filter_ImmediateCollectionChanged;
+            };
+            return filter;
         }
 
         /// <summary>
@@ -342,54 +329,145 @@ namespace ObservableHelpers
         /// <exception cref="NotSupportedException">
         /// The <see cref="ObservableCollectionBase{T, TCollectionWrapper}"/> is read-only.
         /// </exception>
-        protected virtual bool RemoveBase(T item)
+        public bool Remove(T item)
         {
-            if (IsReadOnly)
+            if (IsDisposed)
             {
-                throw ReadOnlyException(nameof(RemoveBase));
+                return default;
             }
 
-            bool removed;
-            try
+            if (IsReadOnly)
             {
-                RWLock.EnterWriteLock();
+                throw ReadOnlyException(nameof(Remove));
+            }
 
-                removed = Items.Remove(item);
+            return RemoveItem(item);
+        }
+
+        /// <summary>
+        /// Adds an item to the <see cref="ObservableCollectionBase{T, TCollectionWrapper}"/>.
+        /// </summary>
+        /// <param name="item">
+        /// The item to add to the <see cref="ObservableCollectionBase{T, TCollectionWrapper}"/>.
+        /// </param>
+        protected virtual void AddItem(T item)
+        {
+            if (IsDisposed)
+            {
+                return;
+            }
+
+            LockWrite(() =>
+            {
+                Items.Add(item);
 
                 OnPropertyChanged(nameof(Count));
                 OnPropertyChanged(IndexerName);
-                OnCollectionReset();
-            }
-            catch
+                OnCollectionAdd(item, Items.Count - 1);
+            });
+        }
+
+        /// <summary>
+        /// Removes the first occurrence of a specific object from the <see cref="ObservableCollectionBase{T, TCollectionWrapper}"/>.
+        /// </summary>
+        /// <param name="item">
+        /// The object to remove from the <see cref="ObservableCollectionBase{T, TCollectionWrapper}"/>.
+        /// </param>
+        /// <returns>
+        /// <c>true</c> if item was successfully removed from the <see cref="ObservableCollectionBase{T, TCollectionWrapper}"/>; otherwise, <c>false</c>. This method also returns false if item is not found in the <see cref="ObservableCollectionBase{T, TCollectionWrapper}"/>.
+        /// </returns>
+        protected virtual bool RemoveItem(T item)
+        {
+            if (IsDisposed)
             {
-                throw;
+                return default;
             }
-            finally
+
+            return LockWrite(() =>
             {
-                RWLock.ExitWriteLock();
-            }
-            return removed;
+                int index = 0;
+                foreach (T i in Items)
+                {
+                    if (EqualityComparer<T>.Default.Equals(i, item))
+                    {
+                        break;
+                    }
+                    index++;
+                }
+
+                if (index == -1)
+                {
+                    return false;
+                }
+
+                if (Items.Remove(item))
+                {
+                    OnPropertyChanged(nameof(Count));
+                    OnPropertyChanged(IndexerName);
+                    OnCollectionRemove(item, index);
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            });
         }
 
         /// <summary>
         /// Removes all elements from the <see cref="ObservableCollectionBase{T, TCollectionWrapper}"/>.
         /// </summary>
-        protected virtual void ClearBase()
+        protected virtual void ClearItems()
         {
-            if (IsReadOnly)
+            if (IsDisposed)
             {
-                throw ReadOnlyException(nameof(ClearBase));
+                return;
             }
 
-            try
+            LockWrite(() =>
             {
-                RWLock.EnterWriteLock();
-
                 Items.Clear();
 
                 OnPropertyChanged(nameof(Count));
                 OnPropertyChanged(IndexerName);
                 OnCollectionReset();
+            });
+        }
+
+        private protected void LockRead(Action block)
+        {
+            if (IsDisposed)
+            {
+                return;
+            }
+            if (block == null)
+            {
+                throw new ArgumentNullException(nameof(block));
+            }
+
+            LockRead(() =>
+            {
+                block();
+                return 0;
+            });
+        }
+
+        private protected TReturn LockRead<TReturn>(Func<TReturn> block)
+        {
+            if (IsDisposed)
+            {
+                return default;
+            }
+
+            if (block == null)
+            {
+                throw new ArgumentNullException(nameof(block));
+            }
+
+            try
+            {
+                rwLock.EnterUpgradeableReadLock();
+                return block();
             }
             catch
             {
@@ -397,7 +475,52 @@ namespace ObservableHelpers
             }
             finally
             {
-                RWLock.ExitWriteLock();
+                rwLock.ExitUpgradeableReadLock();
+            }
+        }
+
+        private protected void LockWrite(Action block)
+        {
+            if (IsDisposed)
+            {
+                return;
+            }
+            if (block == null)
+            {
+                throw new ArgumentNullException(nameof(block));
+            }
+
+            LockWrite(() =>
+            {
+                block();
+                return 0;
+            });
+        }
+
+        private protected TReturn LockWrite<TReturn>(Func<TReturn> block)
+        {
+            if (IsDisposed)
+            {
+                return default;
+            }
+
+            if (block == null)
+            {
+                throw new ArgumentNullException(nameof(block));
+            }
+
+            try
+            {
+                rwLock.EnterWriteLock();
+                return block();
+            }
+            catch
+            {
+                throw;
+            }
+            finally
+            {
+                rwLock.ExitWriteLock();
             }
         }
 
@@ -418,14 +541,24 @@ namespace ObservableHelpers
         /// <inheritdoc/>
         public override bool IsNull()
         {
+            if (IsDisposed)
+            {
+                return default;
+            }
+
             return Count == 0;
         }
 
         /// <inheritdoc/>
         public override bool SetNull()
         {
+            if (IsDisposed)
+            {
+                return default;
+            }
+
             bool isNull = Count == 0;
-            ClearBase();
+            Clear();
             return !isNull;
         }
 
@@ -443,15 +576,15 @@ namespace ObservableHelpers
 
         bool ICollection<T>.IsReadOnly => IsReadOnly;
 
-        void ICollection<T>.Add(T item) => AddBase(item);
+        void ICollection<T>.Add(T item) => Add(item);
 
-        void ICollection<T>.Clear() => ClearBase();
+        void ICollection<T>.Clear() => Clear();
 
         bool ICollection<T>.Contains(T item) => Contains(item);
 
         void ICollection<T>.CopyTo(T[] array, int arrayIndex) => CopyTo(array, arrayIndex);
 
-        bool ICollection<T>.Remove(T item) => RemoveBase(item);
+        bool ICollection<T>.Remove(T item) => Remove(item);
 
         #endregion
 

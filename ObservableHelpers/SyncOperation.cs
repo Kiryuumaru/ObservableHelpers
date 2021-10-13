@@ -12,8 +12,14 @@ namespace ObservableHelpers
     /// </summary>
     public class SyncOperation
     {
+        #region Properties
+
         private Action<(Action callback, object[] parameters)> contextPost;
         private Action<(Action callback, object[] parameters)> contextSend;
+
+        #endregion
+
+        #region Initializers
 
         /// <summary>
         /// Creates new instance of the <c>SyncOperation</c> class.
@@ -26,6 +32,10 @@ namespace ObservableHelpers
         {
             SetContext();
         }
+
+        #endregion
+
+        #region Methods
 
         /// <summary>
         /// Sets the current synchronization context to the current thread.
@@ -156,5 +166,7 @@ namespace ObservableHelpers
                 contextSend((async () => await func(), parameters));
             });
         }
+
+        #endregion
     }
 }

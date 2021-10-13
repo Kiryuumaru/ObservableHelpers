@@ -1,4 +1,6 @@
-﻿namespace ObservableHelpers.Abstraction
+﻿using System;
+
+namespace ObservableHelpers.Abstraction
 {
     /// <summary>
     /// Contains declarations for implicit nullable object.

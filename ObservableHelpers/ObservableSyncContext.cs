@@ -10,6 +10,8 @@ namespace ObservableHelpers
         SyncContext,
         IObservable
     {
+        #region Events
+
         /// <summary>
         /// Event raised on the current synchronizatiob context when a property is changed.
         /// </summary>
@@ -18,11 +20,19 @@ namespace ObservableHelpers
         /// <inheritdoc/>
         public virtual event PropertyChangedEventHandler ImmediatePropertyChanged;
 
+        #endregion
+
+        #region Abstract Methods
+
         /// <inheritdoc/>
         public abstract bool SetNull();
 
         /// <inheritdoc/>
         public abstract bool IsNull();
+
+        #endregion
+
+        #region Methods
 
         /// <summary>
         /// Raises <see cref="OnPropertyChanged(PropertyChangedEventArgs)"/> with the specified <paramref name="propertyName"/>.
@@ -43,11 +53,17 @@ namespace ObservableHelpers
         /// </param>
         protected virtual void OnPropertyChanged(PropertyChangedEventArgs args)
         {
+            if (IsDisposed)
+            {
+                return;
+            }
             ImmediatePropertyChanged?.Invoke(this, args);
             ContextPost(delegate
             {
                 PropertyChanged?.Invoke(this, args);
             });
         }
+
+        #endregion
     }
 }

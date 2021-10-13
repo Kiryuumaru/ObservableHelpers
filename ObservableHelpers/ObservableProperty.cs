@@ -1,4 +1,5 @@
 ﻿using ObservableHelpers.Abstraction;
+using System;
 using System.ComponentModel;
 
 namespace ObservableHelpers
@@ -41,7 +42,19 @@ namespace ObservableHelpers
         /// <inheritdoc/>
         public override bool SetNull()
         {
-            return !IsDisposed && (GetObject() is INullableObject model ? model.SetNull() : SetObject(null));
+            if (IsDisposed)
+            {
+                return default;
+            }
+
+            if (GetObject() is INullableObject model)
+            {
+                return model.SetNull();
+            }
+            else
+            {
+                return SetObject(null);
+            }
         }
 
         /// <inheritdoc/>
@@ -49,12 +62,19 @@ namespace ObservableHelpers
         {
             if (IsDisposed)
             {
-                return true;
+                return default;
             }
 
             object obj = GetObject();
 
-            return obj is INullableObject model ? model.IsNull() : obj == null;
+            if (obj is INullableObject model)
+            {
+                return model.IsNull();
+            }
+            else
+            {
+                return obj == null;
+            }
         }
 
         /// <summary>
@@ -71,7 +91,12 @@ namespace ObservableHelpers
         /// </returns>
         public virtual bool SetValue<T>(T value)
         {
-            return !IsDisposed && SetObject(value);
+            if (IsDisposed)
+            {
+                return default;
+            }
+
+            return SetObject(value);
         }
 
         /// <summary>
@@ -90,7 +115,7 @@ namespace ObservableHelpers
         {
             if (IsDisposed)
             {
-                return defaultValue;
+                return default;
             }
 
             if (GetObject() is T tObj)
@@ -121,7 +146,7 @@ namespace ObservableHelpers
         {
             if (IsDisposed)
             {
-                return false;
+                return default;
             }
 
             if (obj is ISyncObject sync)

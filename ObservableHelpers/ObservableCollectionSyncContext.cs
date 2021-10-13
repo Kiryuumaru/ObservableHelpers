@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -12,6 +13,8 @@ namespace ObservableHelpers
         ObservableSyncContext,
         INotifyCollectionChanged
     {
+        #region Events
+
         /// <summary>
         /// Event raised on the current syncronization context when the collection changes.
         /// </summary>
@@ -21,6 +24,10 @@ namespace ObservableHelpers
         /// Event raised on the callers thread instead of the current syncronization context thread when the collection changes.
         /// </summary>
         public virtual event NotifyCollectionChangedEventHandler ImmediateCollectionChanged;
+
+        #endregion
+
+        #region Methods
 
         /// <summary>
         /// Raises <see cref="OnCollectionChanged(NotifyCollectionChangedEventArgs)"/> event with <see cref="NotifyCollectionChangedAction.Add"/> action to any listeners.
@@ -57,11 +64,25 @@ namespace ObservableHelpers
         /// The item that is affected by the change.
         /// </param>
         /// <param name="index">
-        ///  The index where the change occurred.
+        /// The index where the change occurred.
         /// </param>
         protected void OnCollectionRemove(object item, int index)
         {
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, item, index));
+        }
+
+        /// <summary>
+        /// Raises <see cref="OnCollectionChanged(NotifyCollectionChangedEventArgs)"/> event with <see cref="NotifyCollectionChangedAction.Remove"/> action to any listeners.
+        /// </summary>
+        /// <param name="items">
+        /// The items that is affected by the change.
+        /// </param>
+        /// <param name="index">
+        /// The index where the change occurred.
+        /// </param>
+        protected void OnCollectionRemove(IList items, int index)
+        {
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, items, index));
         }
 
         /// <summary>
@@ -71,7 +92,7 @@ namespace ObservableHelpers
         /// The new item that is replacing the original item.
         /// </param>
         /// <param name="newItem">
-        ///  The original item that is replaced.
+        /// The original item that is replaced.
         /// </param>
         /// <param name="index">
         /// The index of the item being replaced.
@@ -82,20 +103,54 @@ namespace ObservableHelpers
         }
 
         /// <summary>
+        /// Raises <see cref="OnCollectionChanged(NotifyCollectionChangedEventArgs)"/> event with <see cref="NotifyCollectionChangedAction.Replace"/> action to any listeners.
+        /// </summary>
+        /// <param name="oldItems">
+        /// The new items that is replacing the original item.
+        /// </param>
+        /// <param name="newItems">
+        /// The original items that is replaced.
+        /// </param>
+        /// <param name="index">
+        /// The index of the item being replaced.
+        /// </param>
+        protected void OnCollectionReplace(IList oldItems, IList newItems, int index)
+        {
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, newItems, oldItems, index));
+        }
+
+        /// <summary>
         /// Raises <see cref="OnCollectionChanged(NotifyCollectionChangedEventArgs)"/> event with <see cref="NotifyCollectionChangedAction.Move"/> action to any listeners.
         /// </summary>
         /// <param name="item">
         /// The item affected by the change.
         /// </param>
-        /// <param name="index">
+        /// <param name="newIndex">
         /// The new index for the changed item.
         /// </param>
         /// <param name="oldIndex">
         /// The old index for the changed item.
         /// </param>
-        protected void OnCollectionMove(object item, int index, int oldIndex)
+        protected void OnCollectionMove(object item, int newIndex, int oldIndex)
         {
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move, item, index, oldIndex));
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move, item, newIndex, oldIndex));
+        }
+
+        /// <summary>
+        /// Raises <see cref="OnCollectionChanged(NotifyCollectionChangedEventArgs)"/> event with <see cref="NotifyCollectionChangedAction.Move"/> action to any listeners.
+        /// </summary>
+        /// <param name="items">
+        /// The items affected by the change.
+        /// </param>
+        /// <param name="newIndex">
+        /// The new index for the changed item.
+        /// </param>
+        /// <param name="oldIndex">
+        /// The old index for the changed item.
+        /// </param>
+        protected void OnCollectionMove(IList items, int newIndex, int oldIndex)
+        {
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move, items, newIndex, oldIndex));
         }
 
         /// <summary>
@@ -114,11 +169,17 @@ namespace ObservableHelpers
         /// </param>
         protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
+            if (IsDisposed)
+            {
+                return;
+            }
             ImmediateCollectionChanged?.Invoke(this, e);
             ContextPost(delegate
             {
                 CollectionChanged?.Invoke(this, e);
             });
         }
+
+        #endregion
     }
 }

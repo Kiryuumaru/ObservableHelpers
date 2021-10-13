@@ -42,22 +42,26 @@ namespace ObservableHelpers
         {
             get
             {
-                try
+                if (IsDisposed)
                 {
-                    RWLock.EnterUpgradeableReadLock();
+                    return default;
+                }
+
+                return LockRead(() =>
+                {
+                    if (index < 0 || index >= Items.Count)
+                    {
+                        throw new ArgumentOutOfRangeException(nameof(index));
+                    }
                     return Items[index];
-                }
-                catch
-                {
-                    throw;
-                }
-                finally
-                {
-                    RWLock.ExitUpgradeableReadLock();
-                }
+                });
             }
             set
             {
+                if (IsDisposed)
+                {
+                    return;
+                }
                 if (IsReadOnly)
                 {
                     throw ReadOnlyException(nameof(IndexerName));
@@ -124,11 +128,10 @@ namespace ObservableHelpers
         /// </exception>
         public void AddRange(IEnumerable<T> items)
         {
-            if (IsReadOnly)
+            if (IsDisposed)
             {
-                throw ReadOnlyException(nameof(AddRange));
+                return;
             }
-
             if (items == null)
             {
                 throw new ArgumentNullException(nameof(items));
@@ -148,6 +151,10 @@ namespace ObservableHelpers
         /// </exception>
         public void AddRange(params T[] items)
         {
+            if (IsDisposed)
+            {
+                return;
+            }
             if (IsReadOnly)
             {
                 throw ReadOnlyException(nameof(AddRange));
@@ -158,20 +165,11 @@ namespace ObservableHelpers
                 return;
             }
 
-            try
+            LockRead(() =>
             {
-                RWLock.EnterUpgradeableReadLock();
                 int index = Items.Count;
                 InsertItem(index, items);
-            }
-            catch
-            {
-                throw;
-            }
-            finally
-            {
-                RWLock.ExitUpgradeableReadLock();
-            }
+            });
         }
 
         /// <summary>
@@ -185,19 +183,12 @@ namespace ObservableHelpers
         /// </returns>
         public int IndexOf(T value)
         {
-            try
+            if (IsDisposed)
             {
-                RWLock.EnterUpgradeableReadLock();
-                return Items.IndexOf(value);
+                return default;
             }
-            catch
-            {
-                throw;
-            }
-            finally
-            {
-                RWLock.ExitUpgradeableReadLock();
-            }
+
+            return LockRead(() => Items.IndexOf(value));
         }
 
         /// <summary>
@@ -217,6 +208,10 @@ namespace ObservableHelpers
         /// </exception>
         public void Insert(int index, T item)
         {
+            if (IsDisposed)
+            {
+                return;
+            }
             if (IsReadOnly)
             {
                 throw ReadOnlyException(nameof(Insert));
@@ -242,6 +237,10 @@ namespace ObservableHelpers
         /// </exception>
         public void InsertRange(int index, IEnumerable<T> items)
         {
+            if (IsDisposed)
+            {
+                return;
+            }
             if (items == null)
             {
                 throw new ArgumentNullException(nameof(items));
@@ -267,6 +266,10 @@ namespace ObservableHelpers
         /// </exception>
         public void InsertRange(int index, params T[] items)
         {
+            if (IsDisposed)
+            {
+                return;
+            }
             if (IsReadOnly)
             {
                 throw ReadOnlyException(nameof(InsertRange));
@@ -291,6 +294,10 @@ namespace ObservableHelpers
         /// </exception>
         public void Move(int oldIndex, int newIndex)
         {
+            if (IsDisposed)
+            {
+                return;
+            }
             if (IsReadOnly)
             {
                 throw ReadOnlyException(nameof(Move));
@@ -313,6 +320,10 @@ namespace ObservableHelpers
         /// </exception>
         public void RemoveAt(int index)
         {
+            if (IsDisposed)
+            {
+                return;
+            }
             if (IsReadOnly)
             {
                 throw ReadOnlyException(nameof(RemoveAt));
@@ -335,10 +346,13 @@ namespace ObservableHelpers
         /// </exception>
         protected virtual void InsertItem(int index, params T[] items)
         {
-            try
+            if (IsDisposed)
             {
-                RWLock.EnterWriteLock();
+                return;
+            }
 
+            LockWrite(() =>
+            {
                 if (index < 0 || index > Items.Count)
                 {
                     throw new ArgumentOutOfRangeException(nameof(index));
@@ -352,15 +366,7 @@ namespace ObservableHelpers
                 OnPropertyChanged(nameof(Count));
                 OnPropertyChanged(IndexerName);
                 OnCollectionAdd(items, index);
-            }
-            catch
-            {
-                throw;
-            }
-            finally
-            {
-                RWLock.ExitWriteLock();
-            }
+            });
         }
 
         /// <summary>
@@ -376,10 +382,13 @@ namespace ObservableHelpers
         /// </exception>
         protected virtual void MoveItem(int oldIndex, int newIndex)
         {
-            try
+            if (IsDisposed)
             {
-                RWLock.EnterWriteLock();
+                return;
+            }
 
+            LockWrite(() =>
+            {
                 if (oldIndex < 0 || oldIndex >= Items.Count)
                 {
                     throw new ArgumentOutOfRangeException(nameof(oldIndex));
@@ -397,15 +406,7 @@ namespace ObservableHelpers
 
                 OnPropertyChanged(IndexerName);
                 OnCollectionMove(movedItem, newIndex, oldIndex);
-            }
-            catch
-            {
-                throw;
-            }
-            finally
-            {
-                RWLock.ExitWriteLock();
-            }
+            });
         }
 
         /// <summary>
@@ -419,10 +420,13 @@ namespace ObservableHelpers
         /// </exception>
         protected virtual void RemoveItem(int index)
         {
-            try
+            if (IsDisposed)
             {
-                RWLock.EnterWriteLock();
+                return;
+            }
 
+            LockWrite(() =>
+            {
                 if (index < 0 || index >= Items.Count)
                 {
                     throw new ArgumentOutOfRangeException(nameof(index));
@@ -435,15 +439,7 @@ namespace ObservableHelpers
                 OnPropertyChanged(nameof(Count));
                 OnPropertyChanged(IndexerName);
                 OnCollectionRemove(removedItem, index);
-            }
-            catch
-            {
-                throw;
-            }
-            finally
-            {
-                RWLock.ExitWriteLock();
-            }
+            });
         }
 
         /// <summary>
@@ -460,10 +456,13 @@ namespace ObservableHelpers
         /// </exception>
         protected virtual void SetItem(int index, T item)
         {
-            try
+            if (IsDisposed)
             {
-                RWLock.EnterWriteLock();
+                return;
+            }
 
+            LockWrite(() =>
+            {
                 if (index < 0 || index >= Items.Count)
                 {
                     throw new ArgumentOutOfRangeException(nameof(index));
@@ -475,91 +474,31 @@ namespace ObservableHelpers
 
                 OnPropertyChanged(IndexerName);
                 OnCollectionReplace(originalItem, item, index);
-            }
-            catch
-            {
-                throw;
-            }
-            finally
-            {
-                RWLock.ExitWriteLock();
-            }
+            });
         }
 
         #endregion
 
-        #region ObservableCollectionBase<T, TCollectionWrapper> Members
+        #region ObservableCollectionBase<T, TCollectionWrapper>
 
-        /// <summary>
-        /// Adds an item to the <see cref="ObservableCollection{T}"/>.
-        /// </summary>
-        /// <param name="item">
-        /// The item to add to the <see cref="ObservableCollection{T}"/>.
-        /// </param>
-        /// <exception cref="NotSupportedException">
-        /// The <see cref="ObservableCollection{T}"/> is read-only.
-        /// </exception>
-        public void Add(T item)
+        /// <inheritdoc/>
+        protected override bool RemoveItem(T item)
         {
-            if (IsReadOnly)
+            if (IsDisposed)
             {
-                throw ReadOnlyException(nameof(Add));
+                return default;
             }
 
-            try
+            return LockRead(() =>
             {
-                RWLock.EnterUpgradeableReadLock();
-                int index = Items.Count;
-                InsertItem(index, item);
-            }
-            catch
-            {
-                throw;
-            }
-            finally
-            {
-                RWLock.ExitUpgradeableReadLock();
-            }
-        }
-
-        /// <summary>
-        /// Removes the first occurrence of a specific object from the <see cref="ObservableCollection{T}"/>.
-        /// </summary>
-        /// <param name="item">
-        /// The object to remove from the <see cref="ObservableCollection{T}"/>.
-        /// </param>
-        /// <returns>
-        /// <c>true</c> if item was successfully removed from the <see cref="ObservableCollection{T}"/>; otherwise, <c>false</c>. This method also returns false if item is not found in the <see cref="ObservableCollection{T}"/>.
-        /// </returns>
-        /// <exception cref="NotSupportedException">
-        /// The <see cref="ObservableCollection{T}"/> is read-only.
-        /// </exception>
-        public bool Remove(T item)
-        {
-            if (IsReadOnly)
-            {
-                throw ReadOnlyException(nameof(Remove));
-            }
-
-            try
-            {
-                RWLock.EnterUpgradeableReadLock();
                 int index = Items.IndexOf(item);
                 if (index < 0)
                 {
                     return false;
                 }
                 RemoveItem(index);
-            }
-            catch
-            {
-                throw;
-            }
-            finally
-            {
-                RWLock.ExitUpgradeableReadLock();
-            }
-            return true;
+                return true;
+            });
         }
 
         #endregion
@@ -593,6 +532,11 @@ namespace ObservableHelpers
             get => this[index];
             set
             {
+                if (IsDisposed)
+                {
+                    return;
+                }
+
                 if (value is null)
                 {
                     if (default(T) == null)
@@ -621,6 +565,11 @@ namespace ObservableHelpers
 
         int IList.Add(object value)
         {
+            if (IsDisposed)
+            {
+                return default;
+            }
+
             int oldCount = Count;
             if (value is null)
             {
@@ -649,6 +598,11 @@ namespace ObservableHelpers
 
         bool IList.Contains(object value)
         {
+            if (IsDisposed)
+            {
+                return default;
+            }
+
             if (value is null)
             {
                 if (default(T) == null)
@@ -672,6 +626,11 @@ namespace ObservableHelpers
 
         int IList.IndexOf(object value)
         {
+            if (IsDisposed)
+            {
+                return default;
+            }
+
             if (value is null)
             {
                 if (default(T) == null)
@@ -695,6 +654,11 @@ namespace ObservableHelpers
 
         void IList.Insert(int index, object value)
         {
+            if (IsDisposed)
+            {
+                return;
+            }
+
             if (value is null)
             {
                 if (default(T) == null)
@@ -718,6 +682,11 @@ namespace ObservableHelpers
 
         void IList.Remove(object value)
         {
+            if (IsDisposed)
+            {
+                return;
+            }
+
             if (value is null)
             {
                 if (default(T) == null)

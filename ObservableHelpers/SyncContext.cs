@@ -11,8 +11,14 @@ namespace ObservableHelpers
         Disposable,
         ISyncObject
     {
+        #region Properties
+
         /// <inheritdoc/>
         public SyncOperation SyncOperation { get; private set; }
+
+        #endregion
+
+        #region Initializers
 
         /// <summary>
         /// Creates new instance of the <c>SyncContext</c> class.
@@ -25,6 +31,10 @@ namespace ObservableHelpers
         {
             SyncOperation = new SyncOperation();
         }
+
+        #endregion
+
+        #region Methods
 
         /// <summary>
         /// Executes <paramref name="action"/> to the current synchronization context without blocking the executing thread.
@@ -131,5 +141,7 @@ namespace ObservableHelpers
                 await func();
             }, parameters);
         }
+
+        #endregion
     }
 }
