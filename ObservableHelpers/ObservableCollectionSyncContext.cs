@@ -1,4 +1,6 @@
-﻿using System.Collections.Specialized;
+﻿using System.Collections;
+using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
 
 namespace ObservableHelpers
@@ -27,11 +29,25 @@ namespace ObservableHelpers
         /// The item that is affected by the change.
         /// </param>
         /// <param name="index">
-        ///  The index where the change occurred.
+        /// The index where the change occurred.
         /// </param>
         protected void OnCollectionAdd(object item, int index)
         {
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, item, index));
+        }
+
+        /// <summary>
+        /// Raises <see cref="OnCollectionChanged(NotifyCollectionChangedEventArgs)"/> event with <see cref="NotifyCollectionChangedAction.Add"/> action to any listeners.
+        /// </summary>
+        /// <param name="items">
+        /// The items that is affected by the change.
+        /// </param>
+        /// <param name="index">
+        /// The index where the change occurred.
+        /// </param>
+        protected void OnCollectionAdd(IList items, int index)
+        {
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, items, index));
         }
 
         /// <summary>
