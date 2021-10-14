@@ -688,10 +688,6 @@ namespace ObservableHelpers
                 rwLock.EnterUpgradeableReadLock();
                 return block();
             }
-            catch
-            {
-                throw;
-            }
             finally
             {
                 rwLock.ExitUpgradeableReadLock();
@@ -747,10 +743,6 @@ namespace ObservableHelpers
             {
                 rwLock.EnterWriteLock();
                 return block();
-            }
-            catch
-            {
-                throw;
             }
             finally
             {

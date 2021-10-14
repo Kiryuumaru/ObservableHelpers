@@ -230,7 +230,7 @@ namespace ObservableHelpers
             {
                 TValue value = valueFactory.Invoke(key);
                 int index = Count;
-                LockWrite(() => InsertItem(index, new KeyValuePair<TKey, TValue>(key, value)));
+                InsertItem(index, new KeyValuePair<TKey, TValue>(key, value));
             });
         }
 
@@ -385,18 +385,20 @@ namespace ObservableHelpers
             return LockRead(() =>
             {
                 TValue value = default;
-                KeyValuePair<TKey, TValue> item = new KeyValuePair<TKey, TValue>(key, value);
+                KeyValuePair<TKey, TValue> item;
                 if (dictionary.TryGetValue(key, out TValue oldValue))
                 {
                     value = updateValueFactory.Invoke((key, oldValue));
-                    int index = Items.IndexOf(item);
-                    LockWrite(() => SetItem(index, item));
+                    item = new KeyValuePair<TKey, TValue>(key, value);
+                    int index = Items.FindIndex(i => EqualityComparer<TKey>.Default.Equals(i.Key, key));
+                    SetItem(index, item);
                 }
                 else
                 {
                     value = addValueFactory.Invoke(key);
+                    item = new KeyValuePair<TKey, TValue>(key, value);
                     int index = Count;
-                    LockWrite(() => InsertItem(index, item));
+                    InsertItem(index, item);
                 }
                 return value;
             });
@@ -494,7 +496,7 @@ namespace ObservableHelpers
                 {
                     value = valueFactory.Invoke(key);
                     int index = Count;
-                    LockWrite(() => InsertItem(index, new KeyValuePair<TKey, TValue>(key, value)));
+                    InsertItem(index, new KeyValuePair<TKey, TValue>(key, value));
                 }
                 return value;
             });
@@ -597,7 +599,7 @@ namespace ObservableHelpers
                 {
                     TValue value = valueFactory.Invoke(key);
                     int index = Count;
-                    LockWrite(() => InsertItem(index, new KeyValuePair<TKey, TValue>(key, value)));
+                    InsertItem(index, new KeyValuePair<TKey, TValue>(key, value));
                     return true;
                 }
                 return false;
@@ -752,7 +754,7 @@ namespace ObservableHelpers
             }
             if (IsReadOnly)
             {
-                throw ReadOnlyException(nameof(AddOrUpdate));
+                throw ReadOnlyException(nameof(TryRemove));
             }
 
             TValue v = default;
@@ -760,8 +762,8 @@ namespace ObservableHelpers
             {
                 if (dictionary.TryGetValue(key, out v))
                 {
-                    int index = Items.IndexOf(new KeyValuePair<TKey, TValue>(key, v));
-                    return LockWrite(() => RemoveItem(index));
+                    int index = Items.FindIndex(i => EqualityComparer<TKey>.Default.Equals(i.Key, key));
+                    return RemoveItem(index);
                 }
                 return false;
             });
@@ -934,7 +936,7 @@ namespace ObservableHelpers
             }
             if (IsReadOnly)
             {
-                throw ReadOnlyException(nameof(AddOrUpdate));
+                throw ReadOnlyException(nameof(TryUpdate));
             }
 
             return LockRead(() =>
@@ -944,8 +946,8 @@ namespace ObservableHelpers
                     TValue newValue = newValueFactory.Invoke(key);
                     if (validation.Invoke((key, newValue, oldValue)))
                     {
-                        int index = Items.IndexOf(new KeyValuePair<TKey, TValue>(key, oldValue));
-                        LockWrite(() => SetItem(index, new KeyValuePair<TKey, TValue>(key, newValue)));
+                        int index = Items.FindIndex(i => EqualityComparer<TKey>.Default.Equals(i.Key, key));
+                        SetItem(index, new KeyValuePair<TKey, TValue>(key, newValue));
                         return true;
                     }
                 }
