@@ -8,10 +8,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Swordfish.NET.CollectionsV3" Version="3.3.8" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\ObservableHelpers\ObservableHelpers.csproj" />
   </ItemGroup>
 

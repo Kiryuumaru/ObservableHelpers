@@ -149,7 +149,7 @@ namespace ObservableHelpers
         #region Members
 
         /// <summary>
-        /// Adds an item to the <see cref="ObservableCollectionBase{T}"/>.
+        /// Adds an item to the <see cref="ObservableCollectionBase{T}"/> and notify the observers for changes.
         /// </summary>
         /// <param name="item">
         /// The item to add to the <see cref="ObservableCollectionBase{T}"/>.
@@ -176,7 +176,7 @@ namespace ObservableHelpers
         }
 
         /// <summary>
-        /// Adds an item range to the <see cref="ObservableCollectionBase{T}"/>.
+        /// Adds an item range to the <see cref="ObservableCollectionBase{T}"/> and notify the observers for changes.
         /// </summary>
         /// <param name="items">
         /// The items to add to the <see cref="ObservableCollectionBase{T}"/>.
@@ -202,7 +202,7 @@ namespace ObservableHelpers
         }
 
         /// <summary>
-        /// Adds an item range to the <see cref="ObservableCollectionBase{T}"/>.
+        /// Adds an item range to the <see cref="ObservableCollectionBase{T}"/> and notify the observers for changes.
         /// </summary>
         /// <param name="items">
         /// The items to add to the <see cref="ObservableCollectionBase{T}"/>.
@@ -237,7 +237,7 @@ namespace ObservableHelpers
         }
 
         /// <summary>
-        /// Removes all elements from the <see cref="ObservableCollectionBase{T}"/>.
+        /// Removes all elements from the <see cref="ObservableCollectionBase{T}"/> and notify the observers for changes.
         /// </summary>
         /// <exception cref="NotSupportedException">
         /// The <see cref="ObservableCollectionBase{T}"/> is read-only.
@@ -403,7 +403,7 @@ namespace ObservableHelpers
         }
 
         /// <summary>
-        /// Inserts an item to the <see cref="ObservableCollectionBase{T}"/> at the specified index.
+        /// Inserts an item to the <see cref="ObservableCollectionBase{T}"/> at the specified index and notify the observers for changes.
         /// </summary>
         /// <param name="index">
         /// The zero-based index at which item should be inserted.
@@ -432,7 +432,7 @@ namespace ObservableHelpers
         }
 
         /// <summary>
-        /// Inserts an item range to the <see cref="ObservableCollectionBase{T}"/> at the specified index.
+        /// Inserts an item range to the <see cref="ObservableCollectionBase{T}"/> at the specified index and notify the observers for changes.
         /// </summary>
         /// <param name="index">
         /// The zero-based index at which item should be inserted.
@@ -461,7 +461,7 @@ namespace ObservableHelpers
         }
 
         /// <summary>
-        /// Inserts an item range to the <see cref="ObservableCollectionBase{T}"/> at the specified index.
+        /// Inserts an item range to the <see cref="ObservableCollectionBase{T}"/> at the specified index and notify the observers for changes.
         /// </summary>
         /// <param name="index">
         /// The zero-based index at which item should be inserted.
@@ -501,7 +501,7 @@ namespace ObservableHelpers
         }
 
         /// <summary>
-        /// Move item at oldIndex to newIndex.
+        /// Moves an element at the specified <paramref name="oldIndex"/> to the specified <paramref name="newIndex"/> of the <see cref="ObservableCollectionBase{T}"/> and notify the observers.
         /// </summary>
         /// <exception cref="ArgumentOutOfRangeException">
         /// Either or both <paramref name="oldIndex"/> or <paramref name="newIndex"/> are less than zero. -or- is greater than <see cref="ObservableCollectionBase{T}.Count"/>.
