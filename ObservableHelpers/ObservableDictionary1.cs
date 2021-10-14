@@ -20,7 +20,7 @@ namespace ObservableHelpers
     /// Specifies the type of the values in this collection.
     /// </typeparam>
     public class ObservableDictionary1<TKey, TValue> :
-        ObservableCollectionBase<KeyValuePair<TKey, TValue>, IDictionary<TKey, TValue>>,
+        ObservableCollectionBase<KeyValuePair<TKey, TValue>>,
         IReadOnlyDictionary<TKey, TValue>,
         IDictionary<TKey, TValue>,
         IDictionary
@@ -57,7 +57,7 @@ namespace ObservableHelpers
                     throw new ArgumentNullException(nameof(key));
                 }
 
-                return LockRead(() => Items[key]);
+                return LockRead(() => dictionary[key]);
             }
             set
             {
@@ -88,6 +88,8 @@ namespace ObservableHelpers
         /// </summary>
         public DictionaryValues Values { get; }
 
+        private readonly Dictionary<TKey, TValue> dictionary;
+
         #endregion
 
         #region Initializers
@@ -96,9 +98,9 @@ namespace ObservableHelpers
         /// Creates new instance of the <see cref="ObservableDictionary1{TKey, TValue}"/> class that is empty.
         /// </summary>
         public ObservableDictionary1()
-            : base(() => new Dictionary<TKey, TValue>())
+            : base(() => new List<KeyValuePair<TKey, TValue>>())
         {
-
+            dictionary = new Dictionary<TKey, TValue>();
         }
 
         /// <summary>
@@ -108,8 +110,9 @@ namespace ObservableHelpers
         /// The initial items of the dictionary.
         /// </param>
         public ObservableDictionary1(IEnumerable<KeyValuePair<TKey, TValue>> items)
-            : base(() => new Dictionary<TKey, TValue>())
+            : base(() => new List<KeyValuePair<TKey, TValue>>())
         {
+            dictionary = new Dictionary<TKey, TValue>();
             Populate(items);
             Keys = new DictionaryKeys(this);
             Values = new DictionaryValues(this);
@@ -122,8 +125,9 @@ namespace ObservableHelpers
         /// The default item comparer of the dictionary.
         /// </param>
         public ObservableDictionary1(IEqualityComparer<TKey> comparer)
-            : base(() => new Dictionary<TKey, TValue>(comparer))
+            : base(() => new List<KeyValuePair<TKey, TValue>>())
         {
+            dictionary = new Dictionary<TKey, TValue>(comparer);
             Keys = new DictionaryKeys(this);
             Values = new DictionaryValues(this);
         }
@@ -138,8 +142,9 @@ namespace ObservableHelpers
         /// The default item comparer of the dictionary.
         /// </param>
         public ObservableDictionary1(IEnumerable<KeyValuePair<TKey, TValue>> items, IEqualityComparer<TKey> comparer)
-            : base(() => new Dictionary<TKey, TValue>(comparer))
+            : base(() => new List<KeyValuePair<TKey, TValue>>())
         {
+            dictionary = new Dictionary<TKey, TValue>(comparer);
             Populate(items);
             Keys = new DictionaryKeys(this);
             Values = new DictionaryValues(this);
@@ -147,9 +152,10 @@ namespace ObservableHelpers
 
         private void Populate(IEnumerable<KeyValuePair<TKey, TValue>> items)
         {
+            int index = 0;
             foreach (KeyValuePair<TKey, TValue> pair in items)
             {
-                Items.Add(pair);
+                InternalInsertItem(index++, pair, out _);
             }
         }
 
@@ -172,6 +178,9 @@ namespace ObservableHelpers
         /// <exception cref="ArgumentNullException">
         /// <paramref name="key"/> is a null reference.
         /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableDictionary1{TKey, TValue}"/> is read-only.
+        /// </exception>
         public void Add(TKey key, TValue value)
         {
             Add(key, _ => value);
@@ -189,12 +198,40 @@ namespace ObservableHelpers
         /// <returns>
         /// <c>true</c> if the key/value pair was added to the <see cref="ObservableDictionary1{TKey, TValue}"/> successfully; otherwise <c>false</c> if the specified <paramref name="key"/> already exists.
         /// </returns>
+        /// <exception cref="ArgumentException">
+        /// An element with the same key already exists in the <see cref="ObservableDictionary1{TKey, TValue}"/>.
+        /// </exception>
         /// <exception cref="ArgumentNullException">
-        /// <paramref name="key"/> is a null reference.
+        /// Either <paramref name="key"/> or <paramref name="valueFactory"/> is a null reference.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableDictionary1{TKey, TValue}"/> is read-only.
         /// </exception>
         public void Add(TKey key, Func<TKey, TValue> valueFactory)
         {
-            throw new NotImplementedException();
+            if (IsDisposed)
+            {
+                return;
+            }
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+            if (valueFactory == null)
+            {
+                throw new ArgumentNullException(nameof(valueFactory));
+            }
+            if (IsReadOnly)
+            {
+                throw ReadOnlyException(nameof(Add));
+            }
+
+            LockRead(() =>
+            {
+                TValue value = valueFactory.Invoke(key);
+                int index = Count;
+                LockWrite(() => InsertItem(index, new KeyValuePair<TKey, TValue>(key, value)));
+            });
         }
 
         /// <summary>
@@ -211,6 +248,12 @@ namespace ObservableHelpers
         /// </returns>
         /// <exception cref="ArgumentNullException">
         /// <paramref name="key"/> is a null reference.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableCollectionBase{T}"/> is read-only.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableDictionary1{TKey, TValue}"/> is read-only.
         /// </exception>
         public TValue AddOrUpdate(TKey key, TValue value)
         {
@@ -235,6 +278,9 @@ namespace ObservableHelpers
         /// <exception cref="ArgumentNullException">
         /// <paramref name="key"/> is a null reference.
         /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableDictionary1{TKey, TValue}"/> is read-only.
+        /// </exception>
         public TValue AddOrUpdate(TKey key, TValue addValue, TValue updateValue)
         {
             return AddOrUpdate(key, _ => addValue, _ => updateValue);
@@ -257,6 +303,9 @@ namespace ObservableHelpers
         /// </returns>
         /// <exception cref="ArgumentNullException">
         /// Either <paramref name="key"/> or <paramref name="updateValueFactory"/> is a null reference.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableDictionary1{TKey, TValue}"/> is read-only.
         /// </exception>
         public TValue AddOrUpdate(TKey key, TValue addValue, Func<(TKey key, TValue oldValue), TValue> updateValueFactory)
         {
@@ -281,6 +330,9 @@ namespace ObservableHelpers
         /// <exception cref="ArgumentNullException">
         /// Either <paramref name="key"/> or <paramref name="addValueFactory"/> is a null reference.
         /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableDictionary1{TKey, TValue}"/> is read-only.
+        /// </exception>
         public TValue AddOrUpdate(TKey key, Func<TKey, TValue> addValueFactory, TValue updateValue)
         {
             return AddOrUpdate(key, addValueFactory, _ => updateValue);
@@ -304,9 +356,50 @@ namespace ObservableHelpers
         /// <exception cref="ArgumentNullException">
         /// Either <paramref name="key"/>, <paramref name="addValueFactory"/> or <paramref name="updateValueFactory"/> is a null reference.
         /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableDictionary1{TKey, TValue}"/> is read-only.
+        /// </exception>
         public TValue AddOrUpdate(TKey key, Func<TKey, TValue> addValueFactory, Func<(TKey key, TValue oldValue), TValue> updateValueFactory)
         {
-            throw new NotImplementedException();
+            if (IsDisposed)
+            {
+                return default;
+            }
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+            if (addValueFactory == null)
+            {
+                throw new ArgumentNullException(nameof(addValueFactory));
+            }
+            if (updateValueFactory == null)
+            {
+                throw new ArgumentNullException(nameof(updateValueFactory));
+            }
+            if (IsReadOnly)
+            {
+                throw ReadOnlyException(nameof(AddOrUpdate));
+            }
+
+            return LockRead(() =>
+            {
+                TValue value = default;
+                KeyValuePair<TKey, TValue> item = new KeyValuePair<TKey, TValue>(key, value);
+                if (dictionary.TryGetValue(key, out TValue oldValue))
+                {
+                    value = updateValueFactory.Invoke((key, oldValue));
+                    int index = Items.IndexOf(item);
+                    LockWrite(() => SetItem(index, item));
+                }
+                else
+                {
+                    value = addValueFactory.Invoke(key);
+                    int index = Count;
+                    LockWrite(() => InsertItem(index, item));
+                }
+                return value;
+            });
         }
 
         /// <summary>
@@ -323,7 +416,16 @@ namespace ObservableHelpers
         /// </exception>
         public bool ContainsKey(TKey key)
         {
-            throw new NotImplementedException();
+            if (IsDisposed)
+            {
+                return default;
+            }
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+
+            return LockRead(() => dictionary.ContainsKey(key));
         }
 
         /// <summary>
@@ -340,6 +442,9 @@ namespace ObservableHelpers
         /// </returns>
         /// <exception cref="ArgumentNullException">
         /// <paramref name="key"/> is a null reference.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableDictionary1{TKey, TValue}"/> is read-only.
         /// </exception>
         public TValue GetOrAdd(TKey key, TValue value)
         {
@@ -361,9 +466,38 @@ namespace ObservableHelpers
         /// <exception cref="ArgumentNullException">
         /// <paramref name="key"/> is a null reference.
         /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableDictionary1{TKey, TValue}"/> is read-only.
+        /// </exception>
         public TValue GetOrAdd(TKey key, Func<TKey, TValue> valueFactory)
         {
-            throw new NotImplementedException();
+            if (IsDisposed)
+            {
+                return default;
+            }
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+            if (valueFactory == null)
+            {
+                throw new ArgumentNullException(nameof(valueFactory));
+            }
+            if (IsReadOnly)
+            {
+                throw ReadOnlyException(nameof(GetOrAdd));
+            }
+
+            return LockRead(() =>
+            {
+                if (!dictionary.TryGetValue(key, out TValue value))
+                {
+                    value = valueFactory.Invoke(key);
+                    int index = Count;
+                    LockWrite(() => InsertItem(index, new KeyValuePair<TKey, TValue>(key, value)));
+                }
+                return value;
+            });
         }
 
         /// <summary>
@@ -378,6 +512,9 @@ namespace ObservableHelpers
         /// <exception cref="ArgumentNullException">
         /// <paramref name="key"/> is a null reference.
         /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableDictionary1{TKey, TValue}"/> is read-only.
+        /// </exception>
         public bool Remove(TKey key)
         {
             return TryRemove(key);
@@ -391,6 +528,9 @@ namespace ObservableHelpers
         /// </param>
         /// <exception cref="ArgumentNullException">
         /// <see cref="KeyValuePair{TKey, TValue}.Key"/> of the <paramref name="item"/> is a null reference.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableDictionary1{TKey, TValue}"/> is read-only.
         /// </exception>
         public bool TryAdd(KeyValuePair<TKey, TValue> item)
         {
@@ -409,6 +549,9 @@ namespace ObservableHelpers
         /// <exception cref="ArgumentNullException">
         /// <paramref name="key"/> is a null reference.
         /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableDictionary1{TKey, TValue}"/> is read-only.
+        /// </exception>
         public bool TryAdd(TKey key, TValue value)
         {
             return TryAdd(key, _ => value);
@@ -426,9 +569,39 @@ namespace ObservableHelpers
         /// <exception cref="ArgumentNullException">
         /// Either <paramref name="key"/> or <paramref name="valueFactory"/> is a null reference.
         /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableDictionary1{TKey, TValue}"/> is read-only.
+        /// </exception>
         public bool TryAdd(TKey key, Func<TKey, TValue> valueFactory)
         {
-            throw new NotImplementedException();
+            if (IsDisposed)
+            {
+                return default;
+            }
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+            if (valueFactory == null)
+            {
+                throw new ArgumentNullException(nameof(valueFactory));
+            }
+            if (IsReadOnly)
+            {
+                throw ReadOnlyException(nameof(TryAdd));
+            }
+
+            return LockRead(() =>
+            {
+                if (!dictionary.ContainsKey(key))
+                {
+                    TValue value = valueFactory.Invoke(key);
+                    int index = Count;
+                    LockWrite(() => InsertItem(index, new KeyValuePair<TKey, TValue>(key, value)));
+                    return true;
+                }
+                return false;
+            });
         }
 
         /// <summary>
@@ -465,7 +638,21 @@ namespace ObservableHelpers
         /// </exception>
         public bool TryGetValue(TKey key, out TValue value)
         {
-            throw new NotImplementedException();
+            value = default;
+
+            if (IsDisposed)
+            {
+                return default;
+            }
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+
+            TValue v = default;
+            bool exists = LockRead(() => dictionary.TryGetValue(key, out v));
+            value = v;
+            return exists;
         }
 
         /// <summary>
@@ -479,6 +666,9 @@ namespace ObservableHelpers
         /// </returns>
         /// <exception cref="ArgumentNullException">
         /// <paramref name="item"/> or <see cref="KeyValuePair{TKey, TValue}.Key"/> of the <paramref name="item"/> is a null reference.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableDictionary1{TKey, TValue}"/> is read-only.
         /// </exception>
         public bool TryRemove(KeyValuePair<TKey, TValue> item)
         {
@@ -500,6 +690,9 @@ namespace ObservableHelpers
         /// <exception cref="ArgumentNullException">
         /// <paramref name="item"/> or <see cref="KeyValuePair{TKey, TValue}.Key"/> of the <paramref name="item"/> is a null reference.
         /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableDictionary1{TKey, TValue}"/> is read-only.
+        /// </exception>
         public bool TryRemove(KeyValuePair<TKey, TValue> item, out KeyValuePair<TKey, TValue> removed)
         {
             bool isRemoved = TryRemove(item.Key, out TValue value);
@@ -518,6 +711,9 @@ namespace ObservableHelpers
         /// </returns>
         /// <exception cref="ArgumentNullException">
         /// <paramref name="key"/> is a null reference.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableDictionary1{TKey, TValue}"/> is read-only.
         /// </exception>
         public bool TryRemove(TKey key)
         {
@@ -539,9 +735,38 @@ namespace ObservableHelpers
         /// <exception cref="ArgumentNullException">
         /// <paramref name="key"/> is a null reference.
         /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableDictionary1{TKey, TValue}"/> is read-only.
+        /// </exception>
         public bool TryRemove(TKey key, out TValue value)
         {
-            throw new NotImplementedException();
+            value = default;
+
+            if (IsDisposed)
+            {
+                return default;
+            }
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+            if (IsReadOnly)
+            {
+                throw ReadOnlyException(nameof(AddOrUpdate));
+            }
+
+            TValue v = default;
+            bool exists = LockRead(() =>
+            {
+                if (dictionary.TryGetValue(key, out v))
+                {
+                    int index = Items.IndexOf(new KeyValuePair<TKey, TValue>(key, v));
+                    return LockWrite(() => RemoveItem(index));
+                }
+                return false;
+            });
+            value = v;
+            return exists;
         }
 
         /// <summary>
@@ -558,6 +783,9 @@ namespace ObservableHelpers
         /// </returns>
         /// <exception cref="ArgumentNullException">
         /// <paramref name="key"/> is a null reference.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableDictionary1{TKey, TValue}"/> is read-only.
         /// </exception>
         public bool TryUpdate(TKey key, TValue newValue)
         {
@@ -582,6 +810,9 @@ namespace ObservableHelpers
         /// <exception cref="ArgumentNullException">
         /// <paramref name="key"/> is a null reference.
         /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableDictionary1{TKey, TValue}"/> is read-only.
+        /// </exception>
         public bool TryUpdate(TKey key, TValue newValue, TValue comparisonValue)
         {
             return TryUpdate(key, _ => newValue, a => !EqualityComparer<TValue>.Default.Equals(a.oldValue, comparisonValue));
@@ -605,6 +836,9 @@ namespace ObservableHelpers
         /// <exception cref="ArgumentNullException">
         /// <paramref name="key"/> is a null reference.
         /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableDictionary1{TKey, TValue}"/> is read-only.
+        /// </exception>
         public bool TryUpdate(TKey key, TValue newValue, Func<(TKey key, TValue newValue, TValue oldValue), bool> validation)
         {
             return TryUpdate(key, _ => newValue, validation);
@@ -624,6 +858,9 @@ namespace ObservableHelpers
         /// </returns>
         /// <exception cref="ArgumentNullException">
         /// <paramref name="key"/> is a null reference.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableDictionary1{TKey, TValue}"/> is read-only.
         /// </exception>
         public bool TryUpdate(TKey key, Func<TKey, TValue> newValueFactory)
         {
@@ -648,6 +885,9 @@ namespace ObservableHelpers
         /// <exception cref="ArgumentNullException">
         /// <paramref name="key"/> is a null reference.
         /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableDictionary1{TKey, TValue}"/> is read-only.
+        /// </exception>
         public bool TryUpdate(TKey key, Func<TKey, TValue> newValueFactory, TValue comparisonValue)
         {
             return TryUpdate(key, newValueFactory, a => EqualityComparer<TValue>.Default.Equals(a.oldValue, comparisonValue));
@@ -671,9 +911,46 @@ namespace ObservableHelpers
         /// <exception cref="ArgumentNullException">
         /// <paramref name="key"/> is a null reference.
         /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableDictionary1{TKey, TValue}"/> is read-only.
+        /// </exception>
         public bool TryUpdate(TKey key, Func<TKey, TValue> newValueFactory, Func<(TKey key, TValue newValue, TValue oldValue), bool> validation)
         {
-            throw new NotImplementedException();
+            if (IsDisposed)
+            {
+                return default;
+            }
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+            if (newValueFactory == null)
+            {
+                throw new ArgumentNullException(nameof(newValueFactory));
+            }
+            if (validation == null)
+            {
+                throw new ArgumentNullException(nameof(validation));
+            }
+            if (IsReadOnly)
+            {
+                throw ReadOnlyException(nameof(AddOrUpdate));
+            }
+
+            return LockRead(() =>
+            {
+                if (dictionary.TryGetValue(key, out TValue oldValue))
+                {
+                    TValue newValue = newValueFactory.Invoke(key);
+                    if (validation.Invoke((key, newValue, oldValue)))
+                    {
+                        int index = Items.IndexOf(new KeyValuePair<TKey, TValue>(key, oldValue));
+                        LockWrite(() => SetItem(index, new KeyValuePair<TKey, TValue>(key, newValue)));
+                        return true;
+                    }
+                }
+                return false;
+            });
         }
 
         /// <summary>
@@ -687,6 +964,9 @@ namespace ObservableHelpers
         /// </param>
         /// <exception cref="ArgumentNullException">
         /// <paramref name="key"/> is a null reference.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableDictionary1{TKey, TValue}"/> is read-only.
         /// </exception>
         public void Update(TKey key, TValue newValue)
         {
@@ -708,6 +988,9 @@ namespace ObservableHelpers
         /// <exception cref="ArgumentNullException">
         /// <paramref name="key"/> is a null reference.
         /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableDictionary1{TKey, TValue}"/> is read-only.
+        /// </exception>
         public void Update(TKey key, TValue newValue, TValue comparisonValue)
         {
             TryUpdate(key, newValue, comparisonValue);
@@ -728,6 +1011,9 @@ namespace ObservableHelpers
         /// <exception cref="ArgumentNullException">
         /// <paramref name="key"/> is a null reference.
         /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableDictionary1{TKey, TValue}"/> is read-only.
+        /// </exception>
         public void Update(TKey key, TValue newValue, Func<(TKey key, TValue newValue, TValue oldValue), bool> validation)
         {
             TryUpdate(key, newValue, validation);
@@ -744,6 +1030,9 @@ namespace ObservableHelpers
         /// </param>
         /// <exception cref="ArgumentNullException">
         /// <paramref name="key"/> is a null reference.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableDictionary1{TKey, TValue}"/> is read-only.
         /// </exception>
         public void Update(TKey key, Func<TKey, TValue> newValueFactory)
         {
@@ -765,6 +1054,9 @@ namespace ObservableHelpers
         /// <exception cref="ArgumentNullException">
         /// <paramref name="key"/> is a null reference.
         /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableDictionary1{TKey, TValue}"/> is read-only.
+        /// </exception>
         public void Update(TKey key, Func<TKey, TValue> newValueFactory, TValue comparisonValue)
         {
             TryUpdate(key, newValueFactory, comparisonValue);
@@ -784,6 +1076,9 @@ namespace ObservableHelpers
         /// </param>
         /// <exception cref="ArgumentNullException">
         /// <paramref name="key"/> is a null reference.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableDictionary1{TKey, TValue}"/> is read-only.
         /// </exception>
         public void Update(TKey key, Func<TKey, TValue> newValueFactory, Func<(TKey key, TValue newValue, TValue oldValue), bool> validation)
         {
@@ -851,7 +1146,7 @@ namespace ObservableHelpers
         /// <summary>
         /// Executed before clearing.
         /// </summary>
-        protected virtual void PreClear()
+        protected virtual void PreClearItems()
         {
 
         }
@@ -887,15 +1182,66 @@ namespace ObservableHelpers
         }
 
         /// <inheritdoc/>
-        protected override void AddItem(KeyValuePair<TKey, TValue> item)
+        protected override bool InternalClearItems(out int lastCount)
         {
-            Add(item.Key, item.Value);
+            PreClearItems();
+            if (base.InternalClearItems(out lastCount))
+            {
+                dictionary.Clear();
+                return true;
+            }
+            return false;
         }
 
         /// <inheritdoc/>
-        protected override bool RemoveItem(KeyValuePair<TKey, TValue> item)
+        protected override bool InternalInsertItem(int index, KeyValuePair<TKey, TValue> item, out int lastCount)
         {
-            return Remove(item.Key);
+            lastCount = Items.Count;
+            if (!dictionary.ContainsKey(item.Key))
+            {
+                PreAddItem(item.Key, item.Value);
+                if (base.InternalInsertItem(index, item, out lastCount))
+                {
+                    dictionary.Add(item.Key, item.Value);
+                    return true;
+                }
+            }
+            else
+            {
+                throw new ArgumentException("An element with the same key already exists in the " + GetType().FullName);
+            }
+            return false;
+        }
+
+        /// <inheritdoc/>
+        protected override bool InternalRemoveItem(int index, out KeyValuePair<TKey, TValue> oldItem)
+        {
+            var item = Items[index];
+            if (dictionary.ContainsKey(item.Key))
+            {
+                PreRemoveItem(item.Key);
+                if (base.InternalRemoveItem(index, out _))
+                {
+                    dictionary.Remove(item.Key);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <inheritdoc/>
+        protected override bool InternalSetItem(int index, KeyValuePair<TKey, TValue> item, out KeyValuePair<TKey, TValue> originalItem)
+        {
+            if (dictionary.TryGetValue(item.Key, out TValue oldValue))
+            {
+                PreUpdateItem(item.Key, oldValue, item.Value);
+                if (base.InternalSetItem(index, item, out _))
+                {
+                    dictionary[item.Key] = item.Value;
+                    return true;
+                }
+            }
+            return false;
         }
 
         #endregion
@@ -911,12 +1257,6 @@ namespace ObservableHelpers
         bool IReadOnlyDictionary<TKey, TValue>.ContainsKey(TKey key) => ContainsKey(key);
 
         bool IReadOnlyDictionary<TKey, TValue>.TryGetValue(TKey key, out TValue value) => TryGetValue(key, out value);
-
-        #endregion
-
-        #region IReadOnlyCollection<T> Members
-
-        int IReadOnlyCollection<KeyValuePair<TKey, TValue>>.Count => Count;
 
         #endregion
 
@@ -1131,18 +1471,18 @@ namespace ObservableHelpers
         /// <summary>
         /// Provides the keys of the <see cref="ObservableDictionary1{TKey, TValue}"/>.
         /// </summary>
-        public class DictionaryKeys : ObservableCollectionBase<TKey, IList<TKey>>
+        public class DictionaryKeys : ObservableCollectionBase<TKey>
         {
             #region Properties
 
             /// <inheritdoc/>
-            protected override IList<TKey> Items
+            protected override List<TKey> Items
             {
                 get
                 {
                     if (isItemsOutdated)
                     {
-                        items = dictionary.Items.Keys.ToList();
+                        items = dictionary.Items.Select(i => i.Key).ToList();
                         isItemsOutdated = false;
                     }
                     return items;
@@ -1163,7 +1503,6 @@ namespace ObservableHelpers
             {
                 this.dictionary = dictionary;
                 IsReadOnly = true;
-                items = dictionary.Items.Keys.ToList();
                 dictionary.ImmediatePropertyChanged += (s, e) =>
                 {
                     if (e.PropertyName == nameof(IndexerName))
@@ -1215,18 +1554,18 @@ namespace ObservableHelpers
         /// <summary>
         /// Provides the values of the <see cref="ObservableDictionary1{TKey, TValue}"/>.
         /// </summary>
-        public class DictionaryValues : ObservableCollectionBase<TValue, IList<TValue>>
+        public class DictionaryValues : ObservableCollectionBase<TValue>
         {
             #region Properties
 
             /// <inheritdoc/>
-            protected override IList<TValue> Items
+            protected override List<TValue> Items
             {
                 get
                 {
                     if (isItemsOutdated)
                     {
-                        items = dictionary.Items.Values.ToList();
+                        items = dictionary.Items.Select(i => i.Value).ToList();
                         isItemsOutdated = false;
                     }
                     return items;

@@ -160,11 +160,6 @@ namespace ObservableHelpers
         /// </summary>
         protected void InitializeProperties()
         {
-            if (IsDisposed)
-            {
-                return;
-            }
-
             foreach (PropertyInfo property in GetType().GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static))
             {
                 try
@@ -209,11 +204,6 @@ namespace ObservableHelpers
             Func<(T oldValue, T newValue), bool> validate = null,
             Action<ObjectPropertySetEventArgs<T>> onSet = null)
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
             return SetProperty(value, null, propertyName, group, validate, onSet);
         }
 
@@ -255,11 +245,6 @@ namespace ObservableHelpers
             Func<(T oldValue, T newValue), bool> validate = null,
             Action<ObjectPropertySetEventArgs<T>> onSet = null)
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
             return SetProperty(value, key, propertyName, group, validate, onSet);
         }
 
@@ -297,11 +282,6 @@ namespace ObservableHelpers
             Func<(T oldValue, T newValue), bool> validate = null,
             Action<ObjectPropertySetEventArgs<T>> onSet = null)
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
             return GetProperty(defaultValue, null, propertyName, group, validate, onSet);
         }
 
@@ -343,11 +323,6 @@ namespace ObservableHelpers
             Func<(T oldValue, T newValue), bool> validate = null,
             Action<ObjectPropertySetEventArgs<T>> onSet = null)
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
             return GetProperty(defaultValue, key, propertyName, group, validate, onSet);
         }
 
@@ -368,11 +343,6 @@ namespace ObservableHelpers
         /// </exception>
         protected bool RemoveProperty(string propertyName)
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
             return RemovePropertyCore(null, propertyName);
         }
 
@@ -393,11 +363,6 @@ namespace ObservableHelpers
         /// </exception>
         protected bool RemovePropertyWithKey(string key)
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
             return RemovePropertyCore(key, null);
         }
 
@@ -418,11 +383,6 @@ namespace ObservableHelpers
         /// </exception>
         protected bool DeleteProperty(string propertyName)
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
             return DeletePropertyCore(null, propertyName);
         }
 
@@ -443,11 +403,6 @@ namespace ObservableHelpers
         /// </exception>
         protected bool DeletePropertyWithKey(string key)
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
             return DeletePropertyCore(key, null);
         }
 
@@ -459,11 +414,6 @@ namespace ObservableHelpers
         /// </param>
         protected void WireNamedProperty(NamedProperty namedProperty)
         {
-            if (IsDisposed)
-            {
-                return;
-            }
-
             namedProperty.Property.SyncOperation.SetContext(this);
 
             PropertyChangedEventHandler eventProxy = new PropertyChangedEventHandler((s, e) =>
@@ -502,11 +452,6 @@ namespace ObservableHelpers
         /// </returns>
         protected IEnumerable<NamedProperty> GetRawProperties(string group = null)
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
             return group == null ? namedProperties.Values.ToList() : namedProperties.Values.Where(i => i.Group == group).ToList();
         }
 
@@ -541,11 +486,6 @@ namespace ObservableHelpers
             Func<NamedProperty, bool> addValidate = null,
             Action<(NamedProperty namedProperty, bool isAdded)> postAction = null)
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
             bool isAdded = false;
             NamedPropertyKey namedPropertyKey = new NamedPropertyKey(key, propertyName);
             if (!namedProperties.TryGetValue(namedPropertyKey, out NamedProperty namedProperty))
@@ -597,11 +537,6 @@ namespace ObservableHelpers
             Func<NamedProperty, bool> updateValidate = null,
             Action<(NamedProperty namedProperty, bool isUpdate, bool hasChanges)> postAction = null)
         {
-            if (IsDisposed)
-            {
-                return;
-            }
-
             bool hasChanges = false;
             bool isUpdate = false;
             NamedProperty namedProperty = GetOrAddCore(key, propertyName, group,
@@ -652,11 +587,6 @@ namespace ObservableHelpers
         /// </exception>
         protected void AddCore(NamedProperty namedProperty)
         {
-            if (IsDisposed)
-            {
-                return;
-            }
-
             bool exists = false;
             NamedPropertyKey key = new NamedPropertyKey(namedProperty);
             if (namedProperties.ContainsKey(key))
@@ -693,10 +623,6 @@ namespace ObservableHelpers
         /// </exception>
         protected NamedProperty GetCore(string key, string propertyName)
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
             if (key == null && propertyName == null)
             {
                 throw new PropertyKeyAndNameNullException();
@@ -728,10 +654,6 @@ namespace ObservableHelpers
         /// </exception>
         protected bool RemovePropertyCore(string key, string propertyName)
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
             if (key == null && propertyName == null)
             {
                 throw new PropertyKeyAndNameNullException();
@@ -761,10 +683,6 @@ namespace ObservableHelpers
         /// </exception>
         protected bool DeletePropertyCore(string key, string propertyName)
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
             if (key == null && propertyName == null)
             {
                 throw new PropertyKeyAndNameNullException();
@@ -795,10 +713,6 @@ namespace ObservableHelpers
         /// </exception>
         protected bool ExistsCore(string key, string propertyName)
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
             if (key == null && propertyName == null)
             {
                 throw new PropertyKeyAndNameNullException();
@@ -824,11 +738,6 @@ namespace ObservableHelpers
         /// </returns>
         protected virtual NamedProperty NamedPropertyFactory(string key, string propertyName, string group)
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
             return new NamedProperty()
             {
                 Property = new ObservableProperty(),
@@ -910,11 +819,6 @@ namespace ObservableHelpers
             Func<(T oldValue, T newValue), bool> validate,
             Action<ObjectPropertySetEventArgs<T>> onSet)
         {
-            if (IsDisposed)
-            {
-                return false;
-            }
-
             T oldValue = default;
             bool hasChanges = false;
             AddOrUpdatePropertyCore(key, propertyName, group,
@@ -964,11 +868,6 @@ namespace ObservableHelpers
             Func<(T oldValue, T newValue), bool> validate,
             Action<ObjectPropertySetEventArgs<T>> onSet)
         {
-            if (IsDisposed)
-            {
-                return defaultValue;
-            }
-
             bool hasChanges = false;
             T oldValue = default;
             T returnValue = defaultValue;

@@ -144,11 +144,6 @@ namespace ObservableHelpers
         /// </returns>
         protected virtual bool SetObject(object obj)
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
             if (obj is ISyncObject sync)
             {
                 sync.SyncOperation.SetContext(this);
@@ -174,11 +169,6 @@ namespace ObservableHelpers
         /// </returns>
         protected virtual object GetObject()
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
             if (objectHolder is ISyncObject sync)
             {
                 sync.SyncOperation.SetContext(this);
