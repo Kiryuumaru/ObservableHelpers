@@ -42,8 +42,7 @@ namespace ObservableHelpers
         /// The collection whose elements are copied to the new list.
         /// </param>
         /// <remarks>
-        /// The elements are copied onto the <see cref="ObservableCollection{T}"/> in the
-        /// same order they are read by the enumerator of the collection.
+        /// The elements are copied onto the <see cref="ObservableCollection{T}"/> in the same order they are read by the enumerator of the collection.
         /// </remarks>
         /// <exception cref="ArgumentNullException">
         /// <paramref name="enumerable"/> is a null reference.

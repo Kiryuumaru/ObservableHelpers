@@ -109,9 +109,16 @@ namespace ObservableHelpers
         /// <param name="items">
         /// The initial items of the dictionary.
         /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="items"/> is a null reference.
+        /// </exception>
         public ObservableDictionary(IEnumerable<KeyValuePair<TKey, TValue>> items)
             : base(() => new List<KeyValuePair<TKey, TValue>>())
         {
+            if (items == null)
+            {
+                throw new ArgumentNullException(nameof(items));
+            }
             dictionary = new Dictionary<TKey, TValue>();
             Populate(items);
             Keys = new DictionaryKeys(this);
@@ -124,9 +131,16 @@ namespace ObservableHelpers
         /// <param name="comparer">
         /// The default item comparer of the dictionary.
         /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="comparer"/> is a null reference.
+        /// </exception>
         public ObservableDictionary(IEqualityComparer<TKey> comparer)
             : base(() => new List<KeyValuePair<TKey, TValue>>())
         {
+            if (comparer == null)
+            {
+                throw new ArgumentNullException(nameof(comparer));
+            }
             dictionary = new Dictionary<TKey, TValue>(comparer);
             Keys = new DictionaryKeys(this);
             Values = new DictionaryValues(this);
@@ -141,9 +155,20 @@ namespace ObservableHelpers
         /// <param name="comparer">
         /// The default item comparer of the dictionary.
         /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Either <paramref name="items"/> or <paramref name="comparer"/> is a null reference.
+        /// </exception>
         public ObservableDictionary(IEnumerable<KeyValuePair<TKey, TValue>> items, IEqualityComparer<TKey> comparer)
             : base(() => new List<KeyValuePair<TKey, TValue>>())
         {
+            if (items == null)
+            {
+                throw new ArgumentNullException(nameof(items));
+            }
+            if (comparer == null)
+            {
+                throw new ArgumentNullException(nameof(comparer));
+            }
             dictionary = new Dictionary<TKey, TValue>(comparer);
             Populate(items);
             Keys = new DictionaryKeys(this);
@@ -153,10 +178,7 @@ namespace ObservableHelpers
         private void Populate(IEnumerable<KeyValuePair<TKey, TValue>> items)
         {
             int index = 0;
-            foreach (KeyValuePair<TKey, TValue> pair in items)
-            {
-                InternalInsertItem(index++, pair, out _);
-            }
+            InternalInsertItems(index++, items, out _);
         }
 
         #endregion
@@ -183,29 +205,6 @@ namespace ObservableHelpers
         /// </exception>
         public void Add(TKey key, TValue value)
         {
-            Add(key, _ => value);
-        }
-
-        /// <summary>
-        /// Adds the specified <paramref name="key"/> and the result of the <paramref name="valueFactory"/> to the <see cref="ObservableDictionary{TKey, TValue}"/> and notify observers if the specified <paramref name="key"/> does not already exists.
-        /// </summary>
-        /// <param name="key">
-        /// The key of the element to add.
-        /// </param>
-        /// <param name="valueFactory">
-        /// The function used to create the value of the element.
-        /// </param>
-        /// <exception cref="ArgumentException">
-        /// An element with the same key already exists in the <see cref="ObservableDictionary{TKey, TValue}"/>.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        /// Either <paramref name="key"/> or <paramref name="valueFactory"/> is a null reference.
-        /// </exception>
-        /// <exception cref="NotSupportedException">
-        /// The <see cref="ObservableDictionary{TKey, TValue}"/> is read-only.
-        /// </exception>
-        public void Add(TKey key, Func<TKey, TValue> valueFactory)
-        {
             if (IsDisposed)
             {
                 return;
@@ -214,10 +213,6 @@ namespace ObservableHelpers
             {
                 throw new ArgumentNullException(nameof(key));
             }
-            if (valueFactory == null)
-            {
-                throw new ArgumentNullException(nameof(valueFactory));
-            }
             if (IsReadOnly)
             {
                 throw ReadOnlyException(nameof(Add));
@@ -225,8 +220,7 @@ namespace ObservableHelpers
 
             LockRead(() =>
             {
-                TValue value = valueFactory.Invoke(key);
-                int index = Count;
+                int index = Items.Count;
                 InsertItem(index, new KeyValuePair<TKey, TValue>(key, value));
             });
         }
@@ -252,6 +246,29 @@ namespace ObservableHelpers
         public TValue AddOrUpdate(TKey key, TValue value)
         {
             return AddOrUpdate(key, _ => value, _ => value);
+        }
+
+        /// <summary>
+        /// Adds or updates the value of the specified <paramref name="key"/> to the <see cref="ObservableDictionary{TKey, TValue}"/> and notify observers.
+        /// </summary>
+        /// <param name="key">
+        /// The key to be added or whose value should be updated.
+        /// </param>
+        /// <param name="valueFactory">
+        /// The function used to create or the add value.
+        /// </param>
+        /// <returns>
+        /// The new value for the key.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Either <paramref name="key"/> or <paramref name="valueFactory"/> is a null reference.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableDictionary{TKey, TValue}"/> is read-only.
+        /// </exception>
+        public TValue AddOrUpdate(TKey key, Func<TKey, TValue> valueFactory)
+        {
+            return AddOrUpdate(key, valueFactory, _ => valueFactory.Invoke(key));
         }
 
         /// <summary>
@@ -391,7 +408,7 @@ namespace ObservableHelpers
                 {
                     value = addValueFactory.Invoke(key);
                     item = new KeyValuePair<TKey, TValue>(key, value);
-                    int index = Count;
+                    int index = Items.Count;
                     InsertItem(index, item);
                 }
                 return value;
@@ -489,7 +506,7 @@ namespace ObservableHelpers
                 if (!dictionary.TryGetValue(key, out TValue value))
                 {
                     value = valueFactory.Invoke(key);
-                    int index = Count;
+                    int index = Items.Count;
                     InsertItem(index, new KeyValuePair<TKey, TValue>(key, value));
                 }
                 return value;
@@ -592,7 +609,7 @@ namespace ObservableHelpers
                 if (!dictionary.ContainsKey(key))
                 {
                     TValue value = valueFactory.Invoke(key);
-                    int index = Count;
+                    int index = Items.Count;
                     InsertItem(index, new KeyValuePair<TKey, TValue>(key, value));
                     return true;
                 }
@@ -1084,57 +1101,44 @@ namespace ObservableHelpers
         /// <summary>
         /// Executed before adding or updating.
         /// </summary>
-        /// <param name="key">
-        /// The key of the value to be added.
+        /// <param name="items">
+        /// The items to add at the <see cref="ObservableDictionary{TKey, TValue}"/>.
         /// </param>
-        /// <param name="value">
-        /// The value to be added.
-        /// </param>
-        protected virtual void PreAddItem(TKey key, TValue value)
+        protected virtual void PreAddItems(IEnumerable<KeyValuePair<TKey, TValue>> items)
         {
-            if (IsDisposed)
+            foreach (KeyValuePair<TKey, TValue> item in items)
             {
-                return;
-            }
-
-            if (value is ISyncObject sync)
-            {
-                sync.SyncOperation.SetContext(this);
+                if (item is ISyncObject sync)
+                {
+                    sync.SyncOperation.SetContext(this);
+                }
             }
         }
 
         /// <summary>
         /// Executed before adding or updating.
         /// </summary>
-        /// <param name="key">
-        /// The key of the value to be added.
+        /// <param name="items">
+        /// The items to update at the <see cref="ObservableDictionary{TKey, TValue}"/>.
         /// </param>
-        /// <param name="oldValue">
-        /// The old value to be updated.
-        /// </param>
-        /// <param name="newValue">
-        /// The new value to be updated.
-        /// </param>
-        protected virtual void PreUpdateItem(TKey key, TValue oldValue, TValue newValue)
+        protected virtual void PreUpdateItems(IEnumerable<KeyValuePair<TKey, TValue>> items)
         {
-            if (IsDisposed)
+            foreach (KeyValuePair<TKey, TValue> item in items)
             {
-                return;
-            }
-
-            if (newValue is ISyncObject sync)
-            {
-                sync.SyncOperation.SetContext(this);
+                if (item is ISyncObject sync)
+                {
+                    sync.SyncOperation.SetContext(this);
+                }
             }
         }
 
         /// <summary>
         /// Executed before removing.
         /// </summary>
-        /// <param name="key">
-        /// The key of the value to be removed.
+        /// <param name="items">
+        /// The items to be removed.
         /// </param>
-        protected virtual void PreRemoveItem(TKey key)
+        protected virtual void PreRemoveItems(IEnumerable<KeyValuePair<TKey, TValue>> items)
         {
 
         }
@@ -1184,11 +1188,11 @@ namespace ObservableHelpers
         /// <param name="items">
         /// The items to add to the <see cref="ObservableDictionary{TKey, TValue}"/>.
         /// </param>
-        /// <exception cref="ArgumentException">
-        /// An element with the same key already exists in the <see cref="ObservableDictionary{TKey, TValue}"/>.
-        /// </exception>
         /// <exception cref="ArgumentNullException">
         /// <paramref name="items"/> is a null reference.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// An element with the same key already exists in the <see cref="ObservableDictionary{TKey, TValue}"/>.
         /// </exception>
         /// <exception cref="NotSupportedException">
         /// The <see cref="ObservableDictionary{TKey, TValue}"/> is read-only.
@@ -1201,6 +1205,9 @@ namespace ObservableHelpers
         /// <param name="items">
         /// The items to add to the <see cref="ObservableDictionary{TKey, TValue}"/>.
         /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="items"/> is a null reference.
+        /// </exception>
         /// <exception cref="ArgumentException">
         /// An element with the same key already exists in the <see cref="ObservableDictionary{TKey, TValue}"/>.
         /// </exception>
@@ -1254,6 +1261,9 @@ namespace ObservableHelpers
         /// <param name="items">
         /// The item to insert into the <see cref="ObservableDictionary{TKey, TValue}"/>.
         /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="items"/> is a null reference.
+        /// </exception>
         /// <exception cref="ArgumentException">
         /// An element with the same key already exists in the <see cref="ObservableDictionary{TKey, TValue}"/>.
         /// </exception>
@@ -1298,15 +1308,27 @@ namespace ObservableHelpers
         }
 
         /// <inheritdoc/>
-        protected override bool InternalInsertItem(int index, KeyValuePair<TKey, TValue> item, out int lastCount)
+        protected override bool InternalInsertItems(int index, IEnumerable<KeyValuePair<TKey, TValue>> items, out int lastCount)
         {
             lastCount = Items.Count;
-            if (!dictionary.ContainsKey(item.Key))
+            bool isAllNew = true;
+            foreach (KeyValuePair<TKey, TValue> item in items)
             {
-                PreAddItem(item.Key, item.Value);
-                if (base.InternalInsertItem(index, item, out lastCount))
+                if (dictionary.ContainsKey(item.Key))
                 {
-                    dictionary.Add(item.Key, item.Value);
+                    isAllNew = false;
+                    break;
+                }
+            }
+            if (isAllNew)
+            {
+                PreAddItems(items);
+                if (base.InternalInsertItems(index, items, out lastCount))
+                {
+                    foreach (KeyValuePair<TKey, TValue> item in items)
+                    {
+                        dictionary.Add(item.Key, item.Value);
+                    }
                     return true;
                 }
             }
@@ -1318,15 +1340,28 @@ namespace ObservableHelpers
         }
 
         /// <inheritdoc/>
-        protected override bool InternalRemoveItem(int index, out KeyValuePair<TKey, TValue> oldItem)
+        protected override bool InternalRemoveItems(int index, int count, out IEnumerable<KeyValuePair<TKey, TValue>> oldItem)
         {
-            var item = Items[index];
-            if (dictionary.ContainsKey(item.Key))
+            oldItem = default;
+            bool isAllExists = true;
+            for (int i = 0; i < count; i++)
             {
-                PreRemoveItem(item.Key);
-                if (base.InternalRemoveItem(index, out _))
+                var item = Items[index + i];
+                if (!dictionary.ContainsKey(item.Key))
                 {
-                    dictionary.Remove(item.Key);
+                    isAllExists = false;
+                    break;
+                }
+            }
+            if (isAllExists)
+            {
+                PreRemoveItems(oldItem);
+                if (base.InternalRemoveItems(index, count, out oldItem))
+                {
+                    foreach (KeyValuePair<TKey, TValue> item in oldItem)
+                    {
+                        dictionary.Remove(item.Key);
+                    }
                     return true;
                 }
             }
@@ -1336,9 +1371,9 @@ namespace ObservableHelpers
         /// <inheritdoc/>
         protected override bool InternalSetItem(int index, KeyValuePair<TKey, TValue> item, out KeyValuePair<TKey, TValue> originalItem)
         {
-            if (dictionary.TryGetValue(item.Key, out TValue oldValue))
+            if (dictionary.ContainsKey(item.Key))
             {
-                PreUpdateItem(item.Key, oldValue, item.Value);
+                PreUpdateItems(new KeyValuePair<TKey, TValue>[] { item });
                 if (base.InternalSetItem(index, item, out _))
                 {
                     dictionary[item.Key] = item.Value;
@@ -1591,7 +1626,6 @@ namespace ObservableHelpers
                     }
                     return items;
                 }
-                set => throw ReadOnlyException(nameof(Items));
             }
 
             private readonly ObservableDictionary<TKey, TValue> dictionary;
@@ -1674,7 +1708,6 @@ namespace ObservableHelpers
                     }
                     return items;
                 }
-                set => throw ReadOnlyException(nameof(Items));
             }
 
             private readonly ObservableDictionary<TKey, TValue> dictionary;
@@ -1749,13 +1782,13 @@ namespace ObservableHelpers
             public KeyValuePair<TKey, TValue> Current => enumerator.Current;
 
             /// <inheritdoc/>
-            public DictionaryEntry Entry => new DictionaryEntry(Current.Key, Current.Value);
-
-            /// <inheritdoc/>
             public object Key => Current.Key;
 
             /// <inheritdoc/>
             public object Value => Current.Value;
+
+            /// <inheritdoc/>
+            public DictionaryEntry Entry => new DictionaryEntry(Key, Value);
 
             object IEnumerator.Current => Current;
 

@@ -6,6 +6,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace ObservableHelpers
 {
@@ -187,6 +188,23 @@ namespace ObservableHelpers
         /// <exception cref="NotSupportedException">
         /// The <see cref="ObservableCollectionBase{T}"/> is read-only.
         /// </exception>
+        public void AddRange(params T[] items)
+        {
+            AddRange(items as IEnumerable<T>);
+        }
+
+        /// <summary>
+        /// Adds an item range to the <see cref="ObservableCollectionBase{T}"/> and notify the observers for changes.
+        /// </summary>
+        /// <param name="items">
+        /// The items to add to the <see cref="ObservableCollectionBase{T}"/>.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="items"/> is a null reference.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableCollectionBase{T}"/> is read-only.
+        /// </exception>
         public void AddRange(IEnumerable<T> items)
         {
             if (IsDisposed)
@@ -197,42 +215,15 @@ namespace ObservableHelpers
             {
                 throw new ArgumentNullException(nameof(items));
             }
-
-            AddRange(items.ToArray());
-        }
-
-        /// <summary>
-        /// Adds an item range to the <see cref="ObservableCollectionBase{T}"/> and notify the observers for changes.
-        /// </summary>
-        /// <param name="items">
-        /// The items to add to the <see cref="ObservableCollectionBase{T}"/>.
-        /// </param>
-        /// <exception cref="NotSupportedException">
-        /// The <see cref="ObservableCollectionBase{T}"/> is read-only.
-        /// </exception>
-        public void AddRange(params T[] items)
-        {
-            if (IsDisposed)
-            {
-                return;
-            }
             if (IsReadOnly)
             {
                 throw ReadOnlyException(nameof(AddRange));
             }
 
-            if (items?.Length == 0)
-            {
-                return;
-            }
-
             LockRead(() =>
             {
-                foreach (T item in items)
-                {
-                    int index = Items.Count;
-                    InsertItem(index, item);
-                }
+                int index = Items.Count;
+                InsertItems(index, items);
             });
         }
 
@@ -276,95 +267,95 @@ namespace ObservableHelpers
         }
 
         /// <summary>
-        /// Copies the elements of the <see cref="ObservableCollectionBase{T}"/> to an <see cref="Array"/>, starting at a particular <see cref="Array"/> index.
+        /// Copies the entire <see cref="ObservableCollectionBase{T}"/> to a compatible one-dimensional <paramref name="array"/>, starting at the beginning of the specified target <paramref name="array"/>.
+        /// </summary>
+        /// <param name="array">
+        /// The one-dimensional <see cref="Array"/> that is the destination of the elements copied from <see cref="ObservableCollectionBase{T}"/>. The <see cref="Array"/> must have zero-based indexing.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="array"/> is a null reference.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// The number of elements in the source <see cref="ObservableCollectionBase{T}"/> is greater than the number of elements that the destination <paramref name="array"/> can contain.
+        /// </exception>
+        public void CopyTo(T[] array)
+        {
+            LockRead(() => Items.CopyTo(array));
+        }
+
+        /// <summary>
+        /// Copies the entire <see cref="ObservableCollectionBase{T}"/> to a compatible one-dimensional <paramref name="array"/>, starting at the specified <paramref name="arrayIndex"/> of the target <paramref name="array"/>.
         /// </summary>
         /// <param name="array">
         /// The one-dimensional <see cref="Array"/> that is the destination of the elements copied from <see cref="ObservableCollectionBase{T}"/>. The <see cref="Array"/> must have zero-based indexing.
         /// </param>
         /// <param name="arrayIndex">
-        /// The zero-based index in array at which copying begins.
+        /// The zero-based index in <paramref name="array"/> at which copying begins.
         /// </param>
         /// <exception cref="ArgumentNullException">
         /// <paramref name="array"/> is a null reference.
         /// </exception>
         /// <exception cref="ArgumentOutOfRangeException">
-        /// <paramref name="arrayIndex"/> is less than 0 or the number of elements in the source <see cref="ObservableCollectionBase{T}"/> is greater than the available space from <paramref name="arrayIndex"/> to the end of the destination <paramref name="array"/>.
+        /// <paramref name="arrayIndex"/> is less than 0.
         /// </exception>
         /// <exception cref="ArgumentException">
         /// The number of elements in the source <see cref="ObservableCollectionBase{T}"/> is greater than the available space from <paramref name="arrayIndex"/> to the end of the destination <paramref name="array"/>.
         /// </exception>
         public void CopyTo(T[] array, int arrayIndex)
         {
-            if (IsDisposed)
-            {
-                return;
-            }
-            if (array == null)
-            {
-                throw new ArgumentNullException(nameof(array));
-            }
-
-            LockRead(() =>
-            {
-                if (arrayIndex < 0 || Items.Count < arrayIndex + array.Length)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(array));
-                }
-
-                int i = 0;
-                foreach (T item in Items)
-                {
-                    array.SetValue(item, arrayIndex + i++);
-                }
-            });
+            LockRead(() => Items.CopyTo(array, arrayIndex));
         }
 
         /// <summary>
-        /// Copies the elements of the <see cref="ObservableCollectionBase{T}"/> to an <see cref="Array"/>, starting at a particular <see cref="Array"/> index.
+        /// Copies the entire <see cref="ObservableCollectionBase{T}"/> to a compatible one-dimensional <paramref name="array"/>, starting at the specified <paramref name="arrayIndex"/> of the target <paramref name="array"/>.
         /// </summary>
+        /// <param name="array">
+        /// The one-dimensional <see cref="Array"/> that is the destination of the elements copied from <see cref="ObservableCollectionBase{T}"/>. The <see cref="Array"/> must have zero-based indexing.
+        /// </param>
+        /// <param name="arrayIndex">
+        /// The zero-based index in <paramref name="array"/> at which copying begins.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="array"/> is a null reference.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="arrayIndex"/> is less than 0.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// The number of elements in the source <see cref="ObservableCollectionBase{T}"/> is greater than the available space from <paramref name="arrayIndex"/> to the end of the destination <paramref name="array"/>.
+        /// </exception>
+        public void CopyTo(Array array, int arrayIndex)
+        {
+            LockRead(() => (Items as ICollection).CopyTo(array, arrayIndex));
+        }
+
+        /// <summary>
+        /// Copies a range of elements from the <see cref="ObservableCollectionBase{T}"/> to a compatible one-dimensional <paramref name="array"/>, starting at the specified <paramref name="arrayIndex"/> of the target <paramref name="array"/>.
+        /// </summary>
+        /// <param name="index">
+        /// The zero-based index in the source <see cref="ObservableCollectionBase{T}"/> at which copying begins.
+        /// </param>
         /// <param name="array">
         /// The one-dimensional <see cref="Array"/> that is the destination of the elements copied from <see cref="ObservableCollectionBase{T}"/>. The <see cref="Array"/> must have zero-based indexing.
         /// </param>
         /// <param name="arrayIndex">
         /// The zero-based index in array at which copying begins.
         /// </param>
+        /// <param name="count">
+        /// The number of elements to copy.
+        /// </param>
         /// <exception cref="ArgumentNullException">
         /// <paramref name="array"/> is a null reference.
         /// </exception>
         /// <exception cref="ArgumentOutOfRangeException">
-        /// <paramref name="arrayIndex"/> is less than 0 or the number of elements in the source <see cref="ObservableCollectionBase{T}"/> is greater than the available space from <paramref name="arrayIndex"/> to the end of the destination <paramref name="array"/>.
+        /// <paramref name="index"/> is less than 0. -or- <paramref name="arrayIndex"/> is less than 0. -or- <paramref name="count"/> is less than 0.
         /// </exception>
         /// <exception cref="ArgumentException">
-        /// <paramref name="array"/> is multi dimension.
+        /// <paramref name="index"/> is equal to or greater than the <see cref="ObservableCollectionBase{T}.Count"/> of the source <see cref="ObservableCollectionBase{T}"/>. -or- The number of elements from <paramref name="index"/> to the end of the source <see cref="ObservableCollectionBase{T}"/> is greater than the available space from <paramref name="arrayIndex"/> to the end of the destination <paramref name="array"/>.
         /// </exception>
-        public void CopyTo(Array array, int arrayIndex)
+        public void CopyTo(int index, T[] array, int arrayIndex, int count)
         {
-            if (IsDisposed)
-            {
-                return;
-            }
-            if (array == null)
-            {
-                throw new ArgumentNullException(nameof(array));
-            }
-            if (array.Rank != 1)
-            {
-                throw new ArgumentException("Array is multi dimension.", nameof(array));
-            }
-
-            LockRead(() =>
-            {
-                if (arrayIndex < 0 || Items.Count < arrayIndex + array.Length)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(array));
-                }
-
-                int i = 0;
-                foreach (T item in Items)
-                {
-                    array.SetValue(item, arrayIndex + i++);
-                }
-            });
+            LockRead(() => Items.CopyTo(index, array, arrayIndex, count));
         }
 
         /// <summary>
@@ -440,6 +431,32 @@ namespace ObservableHelpers
         /// <param name="items">
         /// The item to insert into the <see cref="ObservableCollectionBase{T}"/>.
         /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="items"/> is a null reference.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="index"/> is not a valid index in the <see cref="ObservableCollectionBase{T}"/>.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableCollectionBase{T}"/> is read-only.
+        /// </exception>
+        public void InsertRange(int index, params T[] items)
+        {
+            InsertRange(index, items as IEnumerable<T>);
+        }
+
+        /// <summary>
+        /// Inserts an item range to the <see cref="ObservableCollectionBase{T}"/> at the specified index and notify the observers for changes.
+        /// </summary>
+        /// <param name="index">
+        /// The zero-based index at which item should be inserted.
+        /// </param>
+        /// <param name="items">
+        /// The item to insert into the <see cref="ObservableCollectionBase{T}"/>.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="items"/> is a null reference.
+        /// </exception>
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="index"/> is not a valid index in the <see cref="ObservableCollectionBase{T}"/>.
         /// </exception>
@@ -456,48 +473,12 @@ namespace ObservableHelpers
             {
                 throw new ArgumentNullException(nameof(items));
             }
-
-            InsertRange(index, items.ToArray());
-        }
-
-        /// <summary>
-        /// Inserts an item range to the <see cref="ObservableCollectionBase{T}"/> at the specified index and notify the observers for changes.
-        /// </summary>
-        /// <param name="index">
-        /// The zero-based index at which item should be inserted.
-        /// </param>
-        /// <param name="items">
-        /// The item to insert into the <see cref="ObservableCollectionBase{T}"/>.
-        /// </param>
-        /// <exception cref="ArgumentOutOfRangeException">
-        /// <paramref name="index"/> is not a valid index in the <see cref="ObservableCollectionBase{T}"/>.
-        /// </exception>
-        /// <exception cref="NotSupportedException">
-        /// The <see cref="ObservableCollectionBase{T}"/> is read-only.
-        /// </exception>
-        public void InsertRange(int index, params T[] items)
-        {
-            if (IsDisposed)
-            {
-                return;
-            }
             if (IsReadOnly)
             {
                 throw ReadOnlyException(nameof(InsertRange));
             }
 
-            if (items?.Length == 0)
-            {
-                return;
-            }
-
-            LockRead(() =>
-            {
-                for (int i = 0; i < items.Length; i++)
-                {
-                    InsertItem(index + i, items[i]);
-                }
-            });
+            InsertItems(index, items);
         }
 
         /// <summary>
@@ -627,15 +608,42 @@ namespace ObservableHelpers
                 throw ReadOnlyException(nameof(RemoveAt));
             }
 
-            LockRead(() =>
-            {
-                if (index < 0 || index > Items.Count)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(index));
-                }
+            RemoveItem(index);
+        }
 
-                RemoveItem(index);
-            });
+        /// <summary>
+        /// Removes a specific object range from the <see cref="ObservableCollectionBase{T}"/>.
+        /// </summary>
+        /// <param name="index">
+        /// The zero-based starting index of the elements to remove.
+        /// </param>
+        /// <param name="count">
+        /// The count of elements to remove.
+        /// </param>
+        /// <returns>
+        /// <c>true</c> if items was successfully removed from the <see cref="ObservableCollectionBase{T}"/>; otherwise, <c>false</c>.
+        /// </returns>
+        /// <exception cref="ArgumentException">
+        /// <paramref name="index"/> and <paramref name="count"/> do not denote a valid range of elements in the <see cref="ObservableCollectionBase{T}"/>.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="index"/> is less than zero. -or- is greater than <see cref="ObservableCollectionBase{T}.Count"/>.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableCollectionBase{T}"/> is read-only.
+        /// </exception>
+        public bool RemoveRange(int index, int count)
+        {
+            if (IsDisposed)
+            {
+                return default;
+            }
+            if (IsReadOnly)
+            {
+                throw ReadOnlyException(nameof(RemoveRange));
+            }
+
+            return RemoveItems(index, count);
         }
 
         /// <summary>
@@ -788,18 +796,45 @@ namespace ObservableHelpers
         /// </exception>
         protected bool InsertItem(int index, T item)
         {
+            return InsertItems(index, new T[] { item });
+        }
+
+        /// <summary>
+        /// Inserts an elements into the <see cref="ObservableCollectionBase{T}"/> at the specified <paramref name="index"/> and notify the observers.
+        /// </summary>
+        /// <param name="index">
+        /// The zero-based index at which item should be inserted.
+        /// </param>
+        /// <param name="items">
+        /// The elements to insert. The value can be null for reference types.
+        /// </param>
+        /// <returns>
+        /// <c>true</c> if operation was executed; otherwise <c>false</c>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="items"/> is a null reference.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="index"/> is less than zero. -or- index is greater than <see cref="ObservableCollectionBase{T}.Count"/>.
+        /// </exception>
+        protected bool InsertItems(int index, IEnumerable<T> items)
+        {
             return LockWrite(() =>
             {
+                if (items == null)
+                {
+                    throw new ArgumentNullException(nameof(items));
+                }
                 if (index < 0 || index > Items.Count)
                 {
                     throw new ArgumentOutOfRangeException(nameof(index));
                 }
 
-                if (InternalInsertItem(index, item, out _))
+                if (InternalInsertItems(index, items, out _))
                 {
                     OnPropertyChanged(nameof(Count));
                     OnPropertyChanged(IndexerName);
-                    OnCollectionAdd(item, index);
+                    OnCollectionAdd(items, index);
                     return true;
                 }
                 return false;
@@ -851,11 +886,48 @@ namespace ObservableHelpers
         {
             return LockWrite(() =>
             {
-                if (InternalRemoveItem(index, out T removedItem))
+                if (index < 0 || index >= Items.Count)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(index));
+                }
+                if (InternalRemoveItems(index, 1, out IEnumerable<T> removedItems))
                 {
                     OnPropertyChanged(nameof(Count));
                     OnPropertyChanged(IndexerName);
-                    OnCollectionRemove(removedItem, index);
+                    OnCollectionRemove(removedItems, index);
+                    return true;
+                }
+                return false;
+            });
+        }
+
+        /// <summary>
+        /// Removes the elements at the specified <paramref name="index"/> of the <see cref="ObservableCollectionBase{T}"/> and notify the observers.
+        /// </summary>
+        /// <param name="index">
+        /// The zero-based starting index of the elements to remove.
+        /// </param>
+        /// <param name="count">
+        /// The count of elements to remove.
+        /// </param>
+        /// <returns>
+        /// <c>true</c> if operation was executed; otherwise <c>false</c>.
+        /// </returns>
+        /// <exception cref="ArgumentException">
+        /// <paramref name="index"/> and <paramref name="count"/> do not denote a valid range of elements in the <see cref="ObservableCollectionBase{T}"/>.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="index"/> is less than zero. -or- is greater than <see cref="ObservableCollectionBase{T}.Count"/>.
+        /// </exception>
+        protected bool RemoveItems(int index, int count)
+        {
+            return LockWrite(() =>
+            {
+                if (InternalRemoveItems(index, count, out IEnumerable<T> removedItems))
+                {
+                    OnPropertyChanged(nameof(Count));
+                    OnPropertyChanged(IndexerName);
+                    OnCollectionRemove(removedItems, index);
                     return true;
                 }
                 return false;
@@ -910,13 +982,13 @@ namespace ObservableHelpers
         }
 
         /// <summary>
-        /// Inserts an element into the <see cref="ObservableCollectionBase{T}"/> at the specified <paramref name="index"/>.
+        /// Inserts an elements into the <see cref="ObservableCollectionBase{T}"/> at the specified <paramref name="index"/>.
         /// </summary>
         /// <param name="index">
-        /// The zero-based index at which item should be inserted.
+        /// The zero-based starting index at which elements should be inserted.
         /// </param>
-        /// <param name="item">
-        /// The element to insert. The value can be null for reference types.
+        /// <param name="items">
+        /// The elements to insert. The value can be null for reference types.
         /// </param>
         /// <param name="lastCount">
         /// The last count of the <see cref="ObservableCollectionBase{T}"/> before modification.
@@ -924,19 +996,43 @@ namespace ObservableHelpers
         /// <returns>
         /// <c>true</c> if operation was executed; otherwise <c>false</c>.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="items"/> is a null reference.
+        /// </exception>
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="index"/> is less than zero. -or- index is greater than <see cref="ObservableCollectionBase{T}.Count"/>.
         /// </exception>
-        protected virtual bool InternalInsertItem(int index, T item, out int lastCount)
+        protected virtual bool InternalInsertItems(int index, IEnumerable<T> items, out int lastCount)
         {
+            if (items == null)
+            {
+                throw new ArgumentNullException(nameof(items));
+            }
             if (index < 0 || index > Items.Count)
             {
                 throw new ArgumentOutOfRangeException(nameof(index));
             }
 
+            int insertCount;
+            if (items is T[] itemsArray)
+            {
+                insertCount = itemsArray.Length;
+            }
+            else
+            {
+                insertCount = items.Count();
+            }
+
             lastCount = Items.Count;
 
-            Items.Insert(index, item);
+            if (insertCount == 1)
+            {
+                Items.Insert(index, items.ElementAt(0));
+            }
+            else if (insertCount > 1)
+            {
+                Items.InsertRange(index, items);
+            }
 
             return true;
         }
@@ -985,25 +1081,52 @@ namespace ObservableHelpers
         /// <param name="index">
         /// The zero-based index of the element to remove.
         /// </param>
-        /// <param name="oldItem">
-        /// The removed element at the specified <paramref name="index"/> from the <see cref="ObservableCollectionBase{T}"/>.
+        /// <param name="count">
+        /// The count of elements to remove.
+        /// </param>
+        /// <param name="oldItems">
+        /// The removed elements at the specified <paramref name="index"/> from the <see cref="ObservableCollectionBase{T}"/>.
         /// </param>
         /// <returns>
         /// <c>true</c> if operation was executed; otherwise <c>false</c>.
         /// </returns>
-        /// <exception cref="ArgumentOutOfRangeException">
-        /// <paramref name="index"/> is less than zero. -or- is greater than <see cref="ObservableCollectionBase{T}.Count"/>.
+        /// <exception cref="ArgumentException">
+        /// <paramref name="index"/> and <paramref name="count"/> do not denote a valid range of elements in the <see cref="ObservableCollectionBase{T}"/>.
         /// </exception>
-        protected virtual bool InternalRemoveItem(int index, out T oldItem)
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="index"/> is less than 0. -or- <paramref name="count"/> is less than 0.
+        /// </exception>
+        protected virtual bool InternalRemoveItems(int index, int count, out IEnumerable<T> oldItems)
         {
-            if (index < 0 || index >= Items.Count)
+            if (index < 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(index));
             }
+            if (count <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(count));
+            }
+            if (index + count > Items.Count)
+            {
+                throw new ArgumentException("Index and count do not denote a valid range of elements in the " + GetType().FullName);
+            }
 
-            oldItem = Items[index];
+            if (count == 1)
+            {
+                oldItems = new T[] { Items[index] };
 
-            Items.RemoveAt(index);
+                Items.RemoveAt(index);
+            }
+            else if (count > 1)
+            {
+                oldItems = Items.GetRange(index, count);
+
+                Items.RemoveRange(index, count);
+            }
+            else
+            {
+                oldItems = null;
+            }
 
             return true;
         }
