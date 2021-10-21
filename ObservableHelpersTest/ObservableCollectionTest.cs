@@ -1,6 +1,7 @@
 using ObservableHelpers;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,65 +23,10 @@ namespace ObservableCollectionTest
         }
     }
 
-    public class ConstructorTest
+    public class ConcurrencyTest
     {
         [Fact]
-        public void Parameterless()
-        {
-            var col = new ObservableCollection<int>();
-
-            Assert.Empty(col);
-        }
-
-        [Fact]
-        public void WithInitialItems()
-        {
-            var col = new ObservableCollection<int>(new int[] { 1, 2, 3, 4 });
-
-            Assert.Equal(4, col.Count);
-
-            Assert.Equal(1, col[0]);
-            Assert.Equal(2, col[1]);
-            Assert.Equal(3, col[2]);
-            Assert.Equal(4, col[3]);
-        }
-
-        [Fact]
-        public void Throws()
-        {
-            Assert.Throws<ArgumentNullException>(() => new ObservableCollection<int>(null));
-        }
-    }
-
-    public class AddTest
-    {
-        [Fact]
-        public async void Normal()
-        {
-            var raiseCount = 0;
-            var col = new ObservableCollection<int>();
-
-            col.CollectionChanged += (s, e) =>
-            {
-                raiseCount++;
-            };
-
-            col.Add(1);
-            col.Add(2);
-            col.Add(3);
-
-            await Task.Delay(500);
-
-            Assert.Equal(3, raiseCount);
-            Assert.Equal(3, col.Count);
-
-            Assert.Equal(1, col[0]);
-            Assert.Equal(2, col[1]);
-            Assert.Equal(3, col[2]);
-        }
-
-        [Fact]
-        public async void WithConcurrency()
+        public async void WithConcurrency1()
         {
             var raiseCount1 = 0;
             var raiseCount2 = 0;
@@ -113,17 +59,6 @@ namespace ObservableCollectionTest
                     }
                 }));
 
-            await Task.WhenAny(
-                Task.Delay(60000),
-                Task.Run(async delegate
-                {
-                    while (20000 != raiseCount1 ||
-                           20000 != raiseCount2)
-                    {
-                        await Task.Delay(500);
-                    }
-                }));
-
             Assert.Equal(20000, raiseCount1);
             Assert.Equal(20000, raiseCount2);
             Assert.Equal(20000, col.Count);
@@ -135,42 +70,7 @@ namespace ObservableCollectionTest
         }
 
         [Fact]
-        public void Throws()
-        {
-            var col = new ReadOnlyCollection();
-
-            Assert.Throws<NotSupportedException>(() => col.Add(1));
-        }
-    }
-
-    public class AddRangeTest
-    {
-        [Fact]
-        public async void Normal()
-        {
-            var raiseCount = 0;
-            var col = new ObservableCollection<int>();
-
-            col.CollectionChanged += (s, e) =>
-            {
-                raiseCount++;
-            };
-
-            col.AddRange(1, 2);
-            col.AddRange(new int[] { 3, 4 } as IEnumerable<int>);
-
-            await Task.Delay(500);
-
-            Assert.Equal(2, raiseCount);
-            Assert.Equal(4, col.Count);
-            Assert.Equal(1, col[0]);
-            Assert.Equal(2, col[1]);
-            Assert.Equal(3, col[2]);
-            Assert.Equal(4, col[3]);
-        }
-
-        [Fact]
-        public async void WithConcurrency()
+        public async void WithConcurrency2()
         {
             var raiseCount1 = 0;
             var raiseCount2 = 0;
@@ -198,17 +98,6 @@ namespace ObservableCollectionTest
                     for (int i = 30000; i < 40000; i++)
                     {
                         col.AddRange(new int[] { i, i + 10000, i + 20000 } as IEnumerable<int>);
-                    }
-                }));
-
-            await Task.WhenAny(
-                Task.Delay(60000),
-                Task.Run(async delegate
-                {
-                    while (20000 != raiseCount1 ||
-                           20000 != raiseCount2)
-                    {
-                        await Task.Delay(500);
                     }
                 }));
 
@@ -222,43 +111,9 @@ namespace ObservableCollectionTest
             }
         }
 
-        [Fact]
-        public void Throws()
-        {
-            var col = new ObservableCollection<int>();
-
-            Assert.Throws<ArgumentNullException>(() => col.AddRange(null));
-            Assert.Throws<ArgumentNullException>(() => col.AddRange((IEnumerable<int>)null));
-
-            var col1 = new ReadOnlyCollection();
-
-            Assert.Throws<NotSupportedException>(() => col1.AddRange(1));
-        }
-    }
-
-    public class Clear
-    {
-        [Fact]
-        public async void Normal()
-        {
-            var raiseCount = 0;
-            var col = new ObservableCollection<int>(new int[] { 1, 2, 3, 4, 5, 6 });
-
-            col.CollectionChanged += (s, e) =>
-            {
-                raiseCount++;
-            };
-
-            col.Clear();
-
-            await Task.Delay(500);
-
-            Assert.Equal(1, raiseCount);
-            Assert.Empty(col);
-        }
 
         [Fact]
-        public async void WithConcurrency()
+        public async void WithConcurrency3()
         {
             var raiseCount1 = 0;
             var raiseCount2 = 0;
@@ -289,23 +144,12 @@ namespace ObservableCollectionTest
                     }
                 }));
 
-            await Task.WhenAny(
-                Task.Delay(60000),
-                Task.Run(async delegate
-                {
-                    while (20000 != raiseCount1 ||
-                           20000 != raiseCount2)
-                    {
-                        await Task.Delay(500);
-                    }
-                    for (int i = 0; i < 60000; i++)
-                    {
-                        Assert.Contains(i, col);
-                    }
-                    col.Clear();
-                }));
+            for (int i = 0; i < 60000; i++)
+            {
+                Assert.Contains(i, col);
+            }
 
-            await Task.Delay(500);
+            col.Clear();
 
             Assert.Equal(20001, raiseCount1);
             Assert.Equal(20001, raiseCount2);
@@ -313,33 +157,7 @@ namespace ObservableCollectionTest
         }
 
         [Fact]
-        public void Throws()
-        {
-            var col = new ReadOnlyCollection();
-
-            Assert.Throws<NotSupportedException>(() => col.Clear());
-        }
-    }
-
-    public class Contains
-    {
-        [Fact]
-        public async void Normal()
-        {
-            var col = new ObservableCollection<int>(new int[] { 1, 2, 3, 4 });
-
-            await Task.Delay(500);
-
-            Assert.True(col.Contains(1));
-            Assert.True(col.Contains(2));
-            Assert.True(col.Contains(3));
-            Assert.True(col.Contains(4));
-            Assert.False(col.Contains(5));
-            Assert.False(col.Contains(6));
-        }
-
-        [Fact]
-        public async void WithConcurrency()
+        public async void WithConcurrency4()
         {
             var raiseCount1 = 0;
             var raiseCount2 = 0;
@@ -367,17 +185,6 @@ namespace ObservableCollectionTest
                     for (int i = 30000; i < 40000; i++)
                     {
                         col.AddRange(new int[] { i, i + 10000, i + 20000 } as IEnumerable<int>);
-                    }
-                }));
-
-            await Task.WhenAny(
-                Task.Delay(60000),
-                Task.Run(async delegate
-                {
-                    while (20000 != raiseCount1 ||
-                           20000 != raiseCount2)
-                    {
-                        await Task.Delay(500);
                     }
                 }));
 
@@ -399,47 +206,307 @@ namespace ObservableCollectionTest
         }
     }
 
-    public class CopyTo
+    public class IndexerTest
     {
         [Fact]
-        public async void Normal()
+        public void Normal()
+        {
+            var raiseCol = new List<NotifyCollectionChangedEventArgs>();
+            var col = new ObservableCollection<int>(new int[] { 1, 2, 3 });
+
+            col.CollectionChanged += (s, e) =>
+            {
+                raiseCol.Add(e);
+            };
+
+            Assert.Equal(1, col[0]);
+            Assert.Equal(2, col[1]);
+            Assert.Equal(3, col[2]);
+
+            col[2] = 33;
+
+            Assert.Equal(NotifyCollectionChangedAction.Replace, raiseCol[0].Action);
+            Assert.Equal(2, raiseCol[0].OldStartingIndex);
+            Assert.Equal(2, raiseCol[0].NewStartingIndex);
+            Assert.Equal(3, raiseCol[0].OldItems[0]);
+            Assert.Equal(33, raiseCol[0].NewItems[0]);
+
+            Assert.Collection(col,
+                i => Assert.Equal(1, i),
+                i => Assert.Equal(2, i),
+                i => Assert.Equal(33, i));
+        }
+
+        [Fact]
+        public void Throws()
+        {
+            var col = new ObservableCollection<int>(new int[] { 1, 2, 3 });
+
+            Assert.Throws<ArgumentOutOfRangeException>(() => col[-1]);
+            Assert.Throws<ArgumentOutOfRangeException>(() => col[4]);
+
+            var col2 = new ReadOnlyCollection();
+
+            Assert.Throws<NotSupportedException>(() => col2[0] = 11);
+        }
+    }
+
+    public class CountTest
+    {
+        [Fact]
+        public void Normal()
+        {
+            var col = new ObservableCollection<int>();
+
+            Assert.Empty(col);
+
+            col.AddRange(1, 2, 3, 4, 5, 6);
+
+            Assert.Equal(6, col.Count);
+        }
+    }
+
+    public class IsReadOnlyTest
+    {
+        [Fact]
+        public void Normal()
+        {
+            var listCols = new List<ObservableCollection<int>>(
+                new ObservableCollection<int>[]
+                {
+                    new ObservableCollection<int>(),
+                    new ReadOnlyCollection(),
+                    new ObservableCollection<int>(),
+                    new ReadOnlyCollection(),
+                    new ObservableCollection<int>(),
+                    new ReadOnlyCollection(),
+                });
+
+            foreach (var col in listCols)
+            {
+                if (col.IsReadOnly)
+                {
+                    Assert.Throws<NotSupportedException>(() => col.Add(1));
+                }
+                else
+                {
+                    col.Add(1);
+                }
+            }
+        }
+    }
+
+    public class ConstructorTest
+    {
+        [Fact]
+        public void Parameterless()
+        {
+            var col = new ObservableCollection<int>();
+
+            Assert.Empty(col);
+        }
+
+        [Fact]
+        public void WithInitialItems()
+        {
+            var col = new ObservableCollection<int>(new int[] { 1, 2, 3, 4 });
+
+            Assert.Equal(4, col.Count);
+
+            Assert.Collection(col,
+                i => Assert.Equal(1, i),
+                i => Assert.Equal(2, i),
+                i => Assert.Equal(3, i),
+                i => Assert.Equal(4, i));
+        }
+
+        [Fact]
+        public void Throws()
+        {
+            Assert.Throws<ArgumentNullException>(() => new ObservableCollection<int>(null));
+        }
+    }
+
+    public class AddTest
+    {
+        [Fact]
+        public void Normal()
+        {
+            var raiseCol = new List<NotifyCollectionChangedEventArgs>();
+            var col = new ObservableCollection<int>();
+
+            col.CollectionChanged += (s, e) =>
+            {
+                raiseCol.Add(e);
+            };
+
+            col.Add(1);
+            col.Add(2);
+            col.Add(3);
+
+            Assert.Equal(3, col.Count);
+            Assert.Equal(3, raiseCol.Count);
+
+            Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[0].Action);
+            Assert.Equal(0, raiseCol[0].NewStartingIndex);
+            Assert.Equal(1, raiseCol[0].NewItems[0]);
+
+            Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[1].Action);
+            Assert.Equal(1, raiseCol[1].NewStartingIndex);
+            Assert.Equal(2, raiseCol[1].NewItems[0]);
+
+            Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[2].Action);
+            Assert.Equal(2, raiseCol[2].NewStartingIndex);
+            Assert.Equal(3, raiseCol[2].NewItems[0]);
+
+            Assert.Collection(col,
+                i => Assert.Equal(1, i),
+                i => Assert.Equal(2, i),
+                i => Assert.Equal(3, i));
+        }
+
+        [Fact]
+        public void Throws()
+        {
+            var col = new ReadOnlyCollection();
+
+            Assert.Throws<NotSupportedException>(() => col.Add(1));
+        }
+    }
+
+    public class AddRangeTest
+    {
+        [Fact]
+        public void Normal()
+        {
+            var raiseCol = new List<NotifyCollectionChangedEventArgs>();
+            var col = new ObservableCollection<int>();
+
+            col.CollectionChanged += (s, e) =>
+            {
+                raiseCol.Add(e);
+            };
+
+            col.AddRange(1, 2);
+            col.AddRange(new int[] { 3, 4 } as IEnumerable<int>);
+
+            Assert.Equal(4, col.Count);
+            Assert.Equal(2, raiseCol.Count);
+
+            Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[0].Action);
+            Assert.Equal(0, raiseCol[0].NewStartingIndex);
+            Assert.Equal(1, raiseCol[0].NewItems[0]);
+            Assert.Equal(2, raiseCol[0].NewItems[1]);
+
+            Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[1].Action);
+            Assert.Equal(2, raiseCol[1].NewStartingIndex);
+            Assert.Equal(3, raiseCol[1].NewItems[0]);
+            Assert.Equal(4, raiseCol[1].NewItems[1]);
+
+            Assert.Collection(col,
+                i => Assert.Equal(1, i),
+                i => Assert.Equal(2, i),
+                i => Assert.Equal(3, i),
+                i => Assert.Equal(4, i));
+        }
+
+        [Fact]
+        public void Throws()
+        {
+            var col = new ObservableCollection<int>();
+
+            Assert.Throws<ArgumentNullException>(() => col.AddRange(null));
+            Assert.Throws<ArgumentNullException>(() => col.AddRange((IEnumerable<int>)null));
+
+            var col1 = new ReadOnlyCollection();
+
+            Assert.Throws<NotSupportedException>(() => col1.AddRange(1));
+        }
+    }
+
+    public class ClearTest
+    {
+        [Fact]
+        public void Normal()
+        {
+            var raiseCol = new List<NotifyCollectionChangedEventArgs>();
+            var col = new ObservableCollection<int>(new int[] { 1, 2, 3, 4, 5, 6 });
+
+            col.CollectionChanged += (s, e) =>
+            {
+                raiseCol.Add(e);
+            };
+
+            col.Clear();
+
+            Assert.Empty(col);
+            Assert.Single(raiseCol);
+
+            Assert.Equal(NotifyCollectionChangedAction.Reset, raiseCol[0].Action);
+        }
+
+        [Fact]
+        public void Throws()
+        {
+            var col = new ReadOnlyCollection();
+
+            Assert.Throws<NotSupportedException>(() => col.Clear());
+        }
+    }
+
+    public class ContainsTest
+    {
+        [Fact]
+        public void Normal()
+        {
+            var col = new ObservableCollection<int>(new int[] { 1, 2, 3, 4 });
+
+            Assert.True(col.Contains(1));
+            Assert.True(col.Contains(2));
+            Assert.True(col.Contains(3));
+            Assert.True(col.Contains(4));
+            Assert.False(col.Contains(5));
+            Assert.False(col.Contains(6));
+        }
+    }
+
+    public class CopyToTest
+    {
+        [Fact]
+        public void Normal()
         {
             var col = new ObservableCollection<int>(new int[] { 1, 2, 3, 4 });
             int[] clone1 = new int[4];
             col.CopyTo(clone1);
 
-            await Task.Delay(500);
-
-            Assert.Equal(1, clone1[0]);
-            Assert.Equal(2, clone1[1]);
-            Assert.Equal(3, clone1[2]);
-            Assert.Equal(4, clone1[3]);
+            Assert.Collection(clone1,
+                i => Assert.Equal(1, i),
+                i => Assert.Equal(2, i),
+                i => Assert.Equal(3, i),
+                i => Assert.Equal(4, i));
         }
 
         [Fact]
-        public async void WithArrayIndex()
+        public void WithArrayIndex()
         {
             var col = new ObservableCollection<int>(new int[] { 1, 2, 3, 4 });
             int[] clone2 = new int[4];
             col.CopyTo(clone2, 0);
 
-            await Task.Delay(500);
-
-            Assert.Equal(1, clone2[0]);
-            Assert.Equal(2, clone2[1]);
-            Assert.Equal(3, clone2[2]);
-            Assert.Equal(4, clone2[3]);
+            Assert.Collection(clone2,
+                i => Assert.Equal(1, i),
+                i => Assert.Equal(2, i),
+                i => Assert.Equal(3, i),
+                i => Assert.Equal(4, i));
         }
 
 
         [Fact]
-        public async void ArrayWithArrayIndex()
+        public void ArrayWithArrayIndex()
         {
             var col = new ObservableCollection<int>(new int[] { 1, 2, 3, 4 });
             Array clone3 = new int[6];
             col.CopyTo(clone3, 2);
-
-            await Task.Delay(500);
 
             Assert.Equal(0, clone3.Cast<int>().ElementAt(0));
             Assert.Equal(0, clone3.Cast<int>().ElementAt(1));
@@ -450,31 +517,28 @@ namespace ObservableCollectionTest
         }
 
         [Fact]
-        public async void WithArrayIndexAndSourceIndex()
+        public void WithArrayIndexAndSourceIndex()
         {
             var col = new ObservableCollection<int>(new int[] { 1, 2, 3, 4 });
             int[] clone4 = new int[6];
             col.CopyTo(2, clone4, 2, 2);
 
-            await Task.Delay(500);
-
-            Assert.Equal(0, clone4[0]);
-            Assert.Equal(0, clone4[1]);
-            Assert.Equal(3, clone4[2]);
-            Assert.Equal(4, clone4[3]);
-            Assert.Equal(0, clone4[4]);
-            Assert.Equal(0, clone4[5]);
+            Assert.Collection(clone4,
+                i => Assert.Equal(0, i),
+                i => Assert.Equal(0, i),
+                i => Assert.Equal(3, i),
+                i => Assert.Equal(4, i),
+                i => Assert.Equal(0, i),
+                i => Assert.Equal(0, i));
         }
     }
 
-    public class GetEnumerator
+    public class GetEnumeratorTest
     {
         [Fact]
-        public async void ForLoop()
+        public void ForLoop()
         {
             var col = new ObservableCollection<int>(new int[] { 1, 2, 3, 4 });
-
-            await Task.Delay(500);
 
             var enumerator = col.GetEnumerator();
             for (int i = 0; i < col.Count; i++)
@@ -487,14 +551,12 @@ namespace ObservableCollectionTest
         }
     }
 
-    public class IndexOf
+    public class IndexOfTest
     {
         [Fact]
-        public async void Normal()
+        public void Normal()
         {
             var col = new ObservableCollection<int>(new int[] { 1, 2, 3, 4 });
-
-            await Task.Delay(500);
 
             Assert.Equal(0, col.IndexOf(1));
             Assert.Equal(1, col.IndexOf(2));
@@ -503,17 +565,17 @@ namespace ObservableCollectionTest
         }
     }
 
-    public class Insert
+    public class InsertTest
     {
         [Fact]
-        public async void AtBottom()
+        public void AtBottom()
         {
-            var raiseCount = 0;
+            var raiseCol = new List<NotifyCollectionChangedEventArgs>();
             var col = new ObservableCollection<int>();
 
             col.CollectionChanged += (s, e) =>
             {
-                raiseCount++;
+                raiseCol.Add(e);
             };
 
             col.Insert(0, 1);
@@ -521,25 +583,40 @@ namespace ObservableCollectionTest
             col.Insert(0, 3);
             col.Insert(0, 4);
 
-            await Task.Delay(500);
-
-            Assert.Equal(4, raiseCount);
             Assert.Equal(4, col.Count);
+            Assert.Equal(4, raiseCol.Count);
 
-            Assert.Equal(4, col[0]);
-            Assert.Equal(3, col[1]);
-            Assert.Equal(2, col[2]);
-            Assert.Equal(1, col[3]);
+            Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[0].Action);
+            Assert.Equal(0, raiseCol[0].NewStartingIndex);
+            Assert.Equal(1, raiseCol[0].NewItems[0]);
+
+            Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[1].Action);
+            Assert.Equal(0, raiseCol[1].NewStartingIndex);
+            Assert.Equal(2, raiseCol[1].NewItems[0]);
+
+            Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[2].Action);
+            Assert.Equal(0, raiseCol[2].NewStartingIndex);
+            Assert.Equal(3, raiseCol[2].NewItems[0]);
+
+            Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[3].Action);
+            Assert.Equal(0, raiseCol[3].NewStartingIndex);
+            Assert.Equal(4, raiseCol[3].NewItems[0]);
+
+            Assert.Collection(col,
+                i => Assert.Equal(4, i),
+                i => Assert.Equal(3, i),
+                i => Assert.Equal(2, i),
+                i => Assert.Equal(1, i));
         }
         [Fact]
-        public async void AtTop()
+        public void AtTop()
         {
-            var raiseCount = 0;
+            var raiseCol = new List<NotifyCollectionChangedEventArgs>();
             var col = new ObservableCollection<int>();
 
             col.CollectionChanged += (s, e) =>
             {
-                raiseCount++;
+                raiseCol.Add(e);
             };
 
             col.Insert(col.Count, 1);
@@ -547,15 +624,62 @@ namespace ObservableCollectionTest
             col.Insert(col.Count, 3);
             col.Insert(col.Count, 4);
 
-            await Task.Delay(500);
-
-            Assert.Equal(4, raiseCount);
             Assert.Equal(4, col.Count);
+            Assert.Equal(4, raiseCol.Count);
 
-            Assert.Equal(1, col[0]);
-            Assert.Equal(2, col[1]);
-            Assert.Equal(3, col[2]);
-            Assert.Equal(4, col[3]);
+            Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[0].Action);
+            Assert.Equal(0, raiseCol[0].NewStartingIndex);
+            Assert.Equal(1, raiseCol[0].NewItems[0]);
+
+            Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[1].Action);
+            Assert.Equal(1, raiseCol[1].NewStartingIndex);
+            Assert.Equal(2, raiseCol[1].NewItems[0]);
+
+            Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[2].Action);
+            Assert.Equal(2, raiseCol[2].NewStartingIndex);
+            Assert.Equal(3, raiseCol[2].NewItems[0]);
+
+            Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[3].Action);
+            Assert.Equal(3, raiseCol[3].NewStartingIndex);
+            Assert.Equal(4, raiseCol[3].NewItems[0]);
+
+            Assert.Collection(col,
+                i => Assert.Equal(1, i),
+                i => Assert.Equal(2, i),
+                i => Assert.Equal(3, i),
+                i => Assert.Equal(4, i));
+        }
+
+        [Fact]
+        public void AtAny()
+        {
+            var raiseCol = new List<NotifyCollectionChangedEventArgs>();
+            var col = new ObservableCollection<int>(new int[] { 2, 4 });
+
+            col.CollectionChanged += (s, e) =>
+            {
+                raiseCol.Add(e);
+            };
+
+            col.Insert(0, 1);
+            col.Insert(2, 3);
+
+            Assert.Equal(4, col.Count);
+            Assert.Equal(2, raiseCol.Count);
+
+            Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[0].Action);
+            Assert.Equal(0, raiseCol[0].NewStartingIndex);
+            Assert.Equal(1, raiseCol[0].NewItems[0]);
+
+            Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[1].Action);
+            Assert.Equal(2, raiseCol[1].NewStartingIndex);
+            Assert.Equal(3, raiseCol[1].NewItems[0]);
+
+            Assert.Collection(col,
+                i => Assert.Equal(1, i),
+                i => Assert.Equal(2, i),
+                i => Assert.Equal(3, i),
+                i => Assert.Equal(4, i));
         }
 
         [Fact]
@@ -575,52 +699,70 @@ namespace ObservableCollectionTest
     public class InsertRange
     {
         [Fact]
-        public async void AtBottom()
+        public void AtBottom()
         {
-            var raiseCount = 0;
+            var raiseCol = new List<NotifyCollectionChangedEventArgs>();
             var col = new ObservableCollection<int>();
 
             col.CollectionChanged += (s, e) =>
             {
-                raiseCount++;
+                raiseCol.Add(e);
             };
 
             col.InsertRange(0, 1, 2);
             col.InsertRange(0, new int[] { 3, 4 } as IEnumerable<int>);
 
-            await Task.Delay(500);
-
-            Assert.Equal(2, raiseCount);
             Assert.Equal(4, col.Count);
+            Assert.Equal(2, raiseCol.Count);
 
-            Assert.Equal(3, col[0]);
-            Assert.Equal(4, col[1]);
-            Assert.Equal(1, col[2]);
-            Assert.Equal(2, col[3]);
+            Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[0].Action);
+            Assert.Equal(0, raiseCol[0].NewStartingIndex);
+            Assert.Equal(1, raiseCol[0].NewItems[0]);
+            Assert.Equal(2, raiseCol[0].NewItems[1]);
+
+            Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[1].Action);
+            Assert.Equal(0, raiseCol[1].NewStartingIndex);
+            Assert.Equal(3, raiseCol[1].NewItems[0]);
+            Assert.Equal(4, raiseCol[1].NewItems[1]);
+
+            Assert.Collection(col,
+                i => Assert.Equal(3, i),
+                i => Assert.Equal(4, i),
+                i => Assert.Equal(1, i),
+                i => Assert.Equal(2, i));
         }
         [Fact]
-        public async void AtTop()
+        public void AtTop()
         {
-            var raiseCount = 0;
+            var raiseCol = new List<NotifyCollectionChangedEventArgs>();
             var col = new ObservableCollection<int>();
 
             col.CollectionChanged += (s, e) =>
             {
-                raiseCount++;
+                raiseCol.Add(e);
             };
 
             col.InsertRange(col.Count, 1, 2);
             col.InsertRange(col.Count, new int[] { 3, 4 } as IEnumerable<int>);
 
-            await Task.Delay(500);
-
-            Assert.Equal(2, raiseCount);
             Assert.Equal(4, col.Count);
+            Assert.Equal(2, raiseCol.Count);
 
-            Assert.Equal(1, col[0]);
-            Assert.Equal(2, col[1]);
-            Assert.Equal(3, col[2]);
-            Assert.Equal(4, col[3]);
+            Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[0].Action);
+            Assert.Equal(0, raiseCol[0].NewStartingIndex);
+            Assert.Equal(1, raiseCol[0].NewItems[0]);
+            Assert.Equal(2, raiseCol[0].NewItems[1]);
+
+            Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[1].Action);
+            Assert.Equal(2, raiseCol[1].NewStartingIndex);
+            Assert.Equal(3, raiseCol[1].NewItems[0]);
+            Assert.Equal(4, raiseCol[1].NewItems[1]);
+
+            Assert.Collection(col,
+                i => Assert.Equal(1, i),
+                i => Assert.Equal(2, i),
+                i => Assert.Equal(3, i),
+                i => Assert.Equal(4, i));
         }
 
         [Fact]
@@ -639,32 +781,49 @@ namespace ObservableCollectionTest
         }
     }
 
-    public class Move
+    public class MoveTest
     {
         [Fact]
-        public async void Normal()
+        public void Normal()
         {
-            var raiseCount = 0;
+            var raiseCol = new List<NotifyCollectionChangedEventArgs>();
             var col = new ObservableCollection<int>(new int[] { 1, 2, 3, 4 });
 
             col.CollectionChanged += (s, e) =>
             {
-                raiseCount++;
+                raiseCol.Add(e);
             };
 
             col.Move(3, 0);
             col.Move(3, 1);
             col.Move(3, 2);
 
-            await Task.Delay(500);
-
-            Assert.Equal(3, raiseCount);
             Assert.Equal(4, col.Count);
+            Assert.Equal(3, raiseCol.Count);
 
-            Assert.Equal(4, col[0]);
-            Assert.Equal(3, col[1]);
-            Assert.Equal(2, col[2]);
-            Assert.Equal(1, col[3]);
+            Assert.Equal(NotifyCollectionChangedAction.Move, raiseCol[0].Action);
+            Assert.Equal(3, raiseCol[0].OldStartingIndex);
+            Assert.Equal(0, raiseCol[0].NewStartingIndex);
+            Assert.Equal(4, raiseCol[0].OldItems[0]);
+            Assert.Equal(4, raiseCol[0].NewItems[0]);
+
+            Assert.Equal(NotifyCollectionChangedAction.Move, raiseCol[1].Action);
+            Assert.Equal(3, raiseCol[1].OldStartingIndex);
+            Assert.Equal(1, raiseCol[1].NewStartingIndex);
+            Assert.Equal(3, raiseCol[1].OldItems[0]);
+            Assert.Equal(3, raiseCol[1].NewItems[0]);
+
+            Assert.Equal(NotifyCollectionChangedAction.Move, raiseCol[2].Action);
+            Assert.Equal(3, raiseCol[2].OldStartingIndex);
+            Assert.Equal(2, raiseCol[2].NewStartingIndex);
+            Assert.Equal(2, raiseCol[2].OldItems[0]);
+            Assert.Equal(2, raiseCol[2].NewItems[0]);
+
+            Assert.Collection(col,
+                i => Assert.Equal(4, i),
+                i => Assert.Equal(3, i),
+                i => Assert.Equal(2, i),
+                i => Assert.Equal(1, i));
         }
 
         [Fact]
@@ -683,20 +842,19 @@ namespace ObservableCollectionTest
         }
     }
 
-    public class ObservableFilter
+    public class ObservableFilterTest
     {
         [Fact]
-        public async void Normal()
+        public void Normal()
         {
             var col = new ObservableCollection<int>(new int[] { 1, 2, 3, 4 });
             var col2 = col.ObservableFilter(i => i % 2 == 0);
 
-            await Task.Delay(500);
-
             Assert.Equal(2, col2.Count);
 
-            Assert.Equal(2, col2[0]);
-            Assert.Equal(4, col2[1]);
+            Assert.Collection(col2,
+                i => Assert.Equal(2, i),
+                i => Assert.Equal(4, i));
         }
 
         [Fact]
@@ -709,40 +867,47 @@ namespace ObservableCollectionTest
         }
     }
 
-    public class Remove
+    public class RemoveTest
     {
         [Fact]
-        public async void Normal()
+        public void Normal()
         {
-            var raiseCount = 0;
+            var raiseCol = new List<NotifyCollectionChangedEventArgs>();
             var col = new ObservableCollection<int>(new int[] { 1, 2, 3, 4 });
 
             col.CollectionChanged += (s, e) =>
             {
-                raiseCount++;
+                raiseCol.Add(e);
             };
 
             col.Remove(1);
             col.Remove(3);
 
-            await Task.Delay(500);
-
-            Assert.Equal(2, raiseCount);
             Assert.Equal(2, col.Count);
+            Assert.Equal(2, raiseCol.Count);
 
-            Assert.Equal(2, col[0]);
-            Assert.Equal(4, col[1]);
+            Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[0].Action);
+            Assert.Equal(0, raiseCol[0].OldStartingIndex);
+            Assert.Equal(1, raiseCol[0].OldItems[0]);
+
+            Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[1].Action);
+            Assert.Equal(1, raiseCol[1].OldStartingIndex);
+            Assert.Equal(3, raiseCol[1].OldItems[0]);
+
+            Assert.Collection(col,
+                i => Assert.Equal(2, i),
+                i => Assert.Equal(4, i));
         }
 
         [Fact]
-        public async void All()
+        public void All()
         {
-            var raiseCount = 0;
+            var raiseCol = new List<NotifyCollectionChangedEventArgs>();
             var col = new ObservableCollection<int>(new int[] { 1, 2, 3, 4 });
 
             col.CollectionChanged += (s, e) =>
             {
-                raiseCount++;
+                raiseCol.Add(e);
             };
 
             col.Remove(1);
@@ -750,10 +915,24 @@ namespace ObservableCollectionTest
             col.Remove(3);
             col.Remove(4);
 
-            await Task.Delay(500);
-
-            Assert.Equal(4, raiseCount);
             Assert.Empty(col);
+            Assert.Equal(4, raiseCol.Count);
+
+            Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[0].Action);
+            Assert.Equal(0, raiseCol[0].OldStartingIndex);
+            Assert.Equal(1, raiseCol[0].OldItems[0]);
+
+            Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[1].Action);
+            Assert.Equal(0, raiseCol[1].OldStartingIndex);
+            Assert.Equal(2, raiseCol[1].OldItems[0]);
+
+            Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[2].Action);
+            Assert.Equal(0, raiseCol[2].OldStartingIndex);
+            Assert.Equal(3, raiseCol[2].OldItems[0]);
+
+            Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[3].Action);
+            Assert.Equal(0, raiseCol[3].OldStartingIndex);
+            Assert.Equal(4, raiseCol[3].OldItems[0]);
         }
 
         [Fact]
@@ -765,40 +944,47 @@ namespace ObservableCollectionTest
         }
     }
 
-    public class RemoveAt
+    public class RemoveAtTest
     {
         [Fact]
-        public async void Normal()
+        public void Normal()
         {
-            var raiseCount = 0;
+            var raiseCol = new List<NotifyCollectionChangedEventArgs>();
             var col = new ObservableCollection<int>(new int[] { 1, 2, 3, 4 });
 
             col.CollectionChanged += (s, e) =>
             {
-                raiseCount++;
+                raiseCol.Add(e);
             };
 
             col.RemoveAt(0);
             col.RemoveAt(1);
 
-            await Task.Delay(500);
-
-            Assert.Equal(2, raiseCount);
             Assert.Equal(2, col.Count);
+            Assert.Equal(2, raiseCol.Count);
 
-            Assert.Equal(2, col[0]);
-            Assert.Equal(4, col[1]);
+            Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[0].Action);
+            Assert.Equal(0, raiseCol[0].OldStartingIndex);
+            Assert.Equal(1, raiseCol[0].OldItems[0]);
+
+            Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[1].Action);
+            Assert.Equal(1, raiseCol[1].OldStartingIndex);
+            Assert.Equal(3, raiseCol[1].OldItems[0]);
+
+            Assert.Collection(col,
+                i => Assert.Equal(2, i),
+                i => Assert.Equal(4, i));
         }
 
         [Fact]
-        public async void All()
+        public void All()
         {
-            var raiseCount = 0;
+            var raiseCol = new List<NotifyCollectionChangedEventArgs>();
             var col = new ObservableCollection<int>(new int[] { 1, 2, 3, 4 });
 
             col.CollectionChanged += (s, e) =>
             {
-                raiseCount++;
+                raiseCol.Add(e);
             };
 
             col.RemoveAt(0);
@@ -806,10 +992,24 @@ namespace ObservableCollectionTest
             col.RemoveAt(0);
             col.RemoveAt(0);
 
-            await Task.Delay(500);
-
-            Assert.Equal(4, raiseCount);
             Assert.Empty(col);
+            Assert.Equal(4, raiseCol.Count);
+
+            Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[0].Action);
+            Assert.Equal(0, raiseCol[0].OldStartingIndex);
+            Assert.Equal(1, raiseCol[0].OldItems[0]);
+
+            Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[1].Action);
+            Assert.Equal(0, raiseCol[1].OldStartingIndex);
+            Assert.Equal(2, raiseCol[1].OldItems[0]);
+
+            Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[2].Action);
+            Assert.Equal(0, raiseCol[2].OldStartingIndex);
+            Assert.Equal(3, raiseCol[2].OldItems[0]);
+
+            Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[3].Action);
+            Assert.Equal(0, raiseCol[3].OldStartingIndex);
+            Assert.Equal(4, raiseCol[3].OldItems[0]);
         }
 
         [Fact]
@@ -830,47 +1030,56 @@ namespace ObservableCollectionTest
         }
     }
 
-    public class RemoveRange
+    public class RemoveRangeTest
     {
         [Fact]
-        public async void Normal()
+        public void Normal()
         {
-            var raiseCount = 0;
+            var raiseCol = new List<NotifyCollectionChangedEventArgs>();
             var col = new ObservableCollection<int>(new int[] { 1, 2, 3, 4 });
 
             col.CollectionChanged += (s, e) =>
             {
-                raiseCount++;
+                raiseCol.Add(e);
             };
 
             col.RemoveRange(2, 2);
 
-            await Task.Delay(500);
-
-            Assert.Equal(1, raiseCount);
             Assert.Equal(2, col.Count);
+            Assert.Single(raiseCol);
 
-            Assert.Equal(1, col[0]);
-            Assert.Equal(2, col[1]);
+            Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[0].Action);
+            Assert.Equal(2, raiseCol[0].OldStartingIndex);
+            Assert.Equal(3, raiseCol[0].OldItems[0]);
+            Assert.Equal(4, raiseCol[0].OldItems[1]);
+
+            Assert.Collection(col,
+                i => Assert.Equal(1, i),
+                i => Assert.Equal(2, i));
         }
 
         [Fact]
-        public async void All()
+        public void All()
         {
-            var raiseCount = 0;
+            var raiseCol = new List<NotifyCollectionChangedEventArgs>();
             var col = new ObservableCollection<int>(new int[] { 1, 2, 3, 4 });
 
             col.CollectionChanged += (s, e) =>
             {
-                raiseCount++;
+                raiseCol.Add(e);
             };
 
             col.RemoveRange(0, 4);
 
-            await Task.Delay(500);
+            Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[0].Action);
+            Assert.Equal(0, raiseCol[0].OldStartingIndex);
+            Assert.Equal(1, raiseCol[0].OldItems[0]);
+            Assert.Equal(2, raiseCol[0].OldItems[1]);
+            Assert.Equal(3, raiseCol[0].OldItems[2]);
+            Assert.Equal(4, raiseCol[0].OldItems[3]);
 
-            Assert.Equal(1, raiseCount);
             Assert.Empty(col);
+            Assert.Single(raiseCol);
         }
 
         [Fact]
@@ -898,9 +1107,9 @@ namespace ObservableCollectionTest
         }
     }
 
-    public class Lock : ObservableCollection<int>
+    public class LockTest : ObservableCollection<int>
     {
-        public Lock()
+        public LockTest()
         {
 
         }
@@ -908,7 +1117,7 @@ namespace ObservableCollectionTest
         [Fact]
         public async void Normal()
         {
-            var col = new Lock();
+            var col = new LockTest();
             bool isReadLocked = false;
             bool isWriteLocked = false;
 
@@ -941,7 +1150,7 @@ namespace ObservableCollectionTest
         [Fact]
         public async void WithReturn()
         {
-            var col = new Lock();
+            var col = new LockTest();
             bool isReadLocked = false;
             bool isWriteLocked = false;
 
@@ -978,7 +1187,7 @@ namespace ObservableCollectionTest
         [Fact]
         public void Throws()
         {
-            var col = new Lock();
+            var col = new LockTest();
             col.AddRange(new int[] { 1, 2, 3, 4 });
 
             Assert.Throws<ArgumentNullException>(() => col.LockRead(null));

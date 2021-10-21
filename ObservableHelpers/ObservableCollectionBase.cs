@@ -95,26 +95,6 @@ namespace ObservableHelpers
         public bool IsReadOnly { get; protected set; }
 
         /// <summary>
-        /// Gets an object that can be used to synchronize access to the <see cref="ObservableCollectionBase{T}"/>.
-        /// </summary>
-        public object SyncRoot
-        {
-            get
-            {
-                if (IsDisposed)
-                {
-                    return default;
-                }
-
-                if (syncRoot == null)
-                {
-                    Interlocked.CompareExchange(ref syncRoot, new object(), null);
-                }
-                return syncRoot;
-            }
-        }
-
-        /// <summary>
         /// Gets a <see cref="List{T}"/> wrapper around the <see cref="ObservableCollectionBase{T}"/>.
         /// </summary>
         protected virtual List<T> Items { get; set; }
@@ -124,8 +104,6 @@ namespace ObservableHelpers
         private protected const string IndexerName = "Item[]";
 
         private readonly ReaderWriterLockSlim rwLock = new ReaderWriterLockSlim();
-
-        private object syncRoot;
 
         #endregion
 
@@ -834,7 +812,7 @@ namespace ObservableHelpers
                 {
                     OnPropertyChanged(nameof(Count));
                     OnPropertyChanged(IndexerName);
-                    OnCollectionAdd(items, index);
+                    OnCollectionAdd(items.ToList(), index);
                     return true;
                 }
                 return false;
@@ -863,7 +841,7 @@ namespace ObservableHelpers
                 if (InternalMoveItem(oldIndex, newIndex, out T movedItem))
                 {
                     OnPropertyChanged(IndexerName);
-                    OnCollectionMove(movedItem, newIndex, oldIndex);
+                    OnCollectionMove(movedItem, oldIndex, newIndex);
                     return true;
                 }
                 return false;
@@ -894,7 +872,7 @@ namespace ObservableHelpers
                 {
                     OnPropertyChanged(nameof(Count));
                     OnPropertyChanged(IndexerName);
-                    OnCollectionRemove(removedItems, index);
+                    OnCollectionRemove(removedItems.ToList(), index);
                     return true;
                 }
                 return false;
@@ -927,7 +905,7 @@ namespace ObservableHelpers
                 {
                     OnPropertyChanged(nameof(Count));
                     OnPropertyChanged(IndexerName);
-                    OnCollectionRemove(removedItems, index);
+                    OnCollectionRemove(removedItems.ToList(), index);
                     return true;
                 }
                 return false;
@@ -1448,9 +1426,26 @@ namespace ObservableHelpers
 
         bool ICollection.IsSynchronized => true;
 
-        object ICollection.SyncRoot => SyncRoot;
+        object ICollection.SyncRoot
+        {
+            get
+            {
+                if (IsDisposed)
+                {
+                    return default;
+                }
+
+                if (syncRoot == null)
+                {
+                    Interlocked.CompareExchange(ref syncRoot, new object(), null);
+                }
+                return syncRoot;
+            }
+        }
 
         void ICollection.CopyTo(Array array, int index) => CopyTo(array, index);
+
+        private object syncRoot;
 
         #endregion
 

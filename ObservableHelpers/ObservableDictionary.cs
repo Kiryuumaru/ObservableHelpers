@@ -101,6 +101,8 @@ namespace ObservableHelpers
             : base(() => new List<KeyValuePair<TKey, TValue>>())
         {
             dictionary = new Dictionary<TKey, TValue>();
+            Keys = new DictionaryKeys(this);
+            Values = new DictionaryValues(this);
         }
 
         /// <summary>
@@ -903,7 +905,7 @@ namespace ObservableHelpers
         /// </exception>
         public bool TryUpdate(TKey key, Func<TKey, TValue> newValueFactory, TValue comparisonValue)
         {
-            return TryUpdate(key, newValueFactory, a => EqualityComparer<TValue>.Default.Equals(a.oldValue, comparisonValue));
+            return TryUpdate(key, newValueFactory, a => !EqualityComparer<TValue>.Default.Equals(a.oldValue, comparisonValue));
         }
 
         /// <summary>
@@ -1284,6 +1286,9 @@ namespace ObservableHelpers
         /// <param name="items">
         /// The item to insert into the <see cref="ObservableDictionary{TKey, TValue}"/>.
         /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="items"/> is a null reference.
+        /// </exception>
         /// <exception cref="ArgumentException">
         /// An element with the same key already exists in the <see cref="ObservableDictionary{TKey, TValue}"/>.
         /// </exception>
@@ -1374,7 +1379,7 @@ namespace ObservableHelpers
             if (dictionary.ContainsKey(item.Key))
             {
                 PreUpdateItems(new KeyValuePair<TKey, TValue>[] { item });
-                if (base.InternalSetItem(index, item, out _))
+                if (base.InternalSetItem(index, item, out originalItem))
                 {
                     dictionary[item.Key] = item.Value;
                     return true;
@@ -1658,26 +1663,84 @@ namespace ObservableHelpers
                     switch (e.Action)
                     {
                         case NotifyCollectionChangedAction.Add:
-                            OnCollectionAdd(
-                                e.NewItems?.Cast<KeyValuePair<TKey, TValue>>().Select(i => i.Key),
-                                e.NewStartingIndex);
+                            if (e.NewItems?.Count == 0 || e.NewItems?.Count == 1)
+                            {
+                                OnCollectionAdd(
+                                    (e.NewItems?[0] as KeyValuePair<TKey, TValue>?).Value.Key,
+                                    e.NewStartingIndex);
+                            }
+                            else
+                            {
+                                OnCollectionAdd(
+                                    e.NewItems.Cast<KeyValuePair<TKey, TValue>>().Select(i => i.Key).ToList(),
+                                    e.NewStartingIndex);
+                            }
                             break;
                         case NotifyCollectionChangedAction.Remove:
-                            OnCollectionRemove(
-                                e.OldItems?.Cast<KeyValuePair<TKey, TValue>>().Select(i => i.Key),
-                                e.OldStartingIndex);
+                            if (e.OldItems?.Count == 0 || e.OldItems?.Count == 1)
+                            {
+                                OnCollectionRemove(
+                                    (e.OldItems?[0] as KeyValuePair<TKey, TValue>?).Value.Key,
+                                    e.OldStartingIndex);
+                            }
+                            else
+                            {
+                                OnCollectionRemove(
+                                    e.OldItems?.Cast<KeyValuePair<TKey, TValue>>().Select(i => i.Key).ToList(),
+                                    e.OldStartingIndex);
+                            }
                             break;
                         case NotifyCollectionChangedAction.Replace:
-                            OnCollectionReplace(
-                                e.OldItems?.Cast<KeyValuePair<TKey, TValue>>().Select(i => i.Key),
-                                e.NewItems?.Cast<KeyValuePair<TKey, TValue>>().Select(i => i.Key),
-                                e.NewStartingIndex);
+                            if (e.OldItems?.Count == 0 || e.OldItems?.Count == 1)
+                            {
+                                if (e.NewItems?.Count == 0 || e.NewItems?.Count == 1)
+                                {
+                                    OnCollectionReplace(
+                                        (e.OldItems?[0] as KeyValuePair<TKey, TValue>?).Value.Key,
+                                        (e.NewItems?[0] as KeyValuePair<TKey, TValue>?).Value.Key,
+                                        e.NewStartingIndex);
+                                }
+                                else
+                                {
+                                    OnCollectionReplace(
+                                        (e.OldItems?[0] as KeyValuePair<TKey, TValue>?).Value.Key,
+                                        e.NewItems?.Cast<KeyValuePair<TKey, TValue>>().Select(i => i.Key).ToList(),
+                                        e.NewStartingIndex);
+                                }
+                            }
+                            else
+                            {
+                                if (e.NewItems?.Count == 0 || e.NewItems?.Count == 1)
+                                {
+                                    OnCollectionReplace(
+                                        e.OldItems?.Cast<KeyValuePair<TKey, TValue>>().Select(i => i.Key).ToList(),
+                                        (e.NewItems?[0] as KeyValuePair<TKey, TValue>?).Value.Key,
+                                        e.NewStartingIndex);
+                                }
+                                else
+                                {
+                                    OnCollectionReplace(
+                                        e.OldItems?.Cast<KeyValuePair<TKey, TValue>>().Select(i => i.Key).ToList(),
+                                        e.NewItems?.Cast<KeyValuePair<TKey, TValue>>().Select(i => i.Key).ToList(),
+                                        e.NewStartingIndex);
+                                }
+                            }
                             break;
                         case NotifyCollectionChangedAction.Move:
-                            OnCollectionMove(
-                                e.NewItems?.Cast<KeyValuePair<TKey, TValue>>().Select(i => i.Key),
-                                e.NewStartingIndex,
-                                e.OldStartingIndex);
+                            if (e.NewItems?.Count == 0 || e.NewItems?.Count == 1)
+                            {
+                                OnCollectionMove(
+                                    (e.NewItems?[0] as KeyValuePair<TKey, TValue>?).Value.Key,
+                                    e.OldStartingIndex,
+                                    e.NewStartingIndex);
+                            }
+                            else
+                            {
+                                OnCollectionMove(
+                                    e.NewItems?.Cast<KeyValuePair<TKey, TValue>>().Select(i => i.Key).ToList(),
+                                    e.OldStartingIndex,
+                                    e.NewStartingIndex);
+                            }
                             break;
                         case NotifyCollectionChangedAction.Reset:
                             OnCollectionReset();
@@ -1740,26 +1803,84 @@ namespace ObservableHelpers
                     switch (e.Action)
                     {
                         case NotifyCollectionChangedAction.Add:
-                            OnCollectionAdd(
-                                e.NewItems?.Cast<KeyValuePair<TKey, TValue>>().Select(i => i.Value),
-                                e.NewStartingIndex);
+                            if (e.NewItems?.Count == 0 || e.NewItems?.Count == 1)
+                            {
+                                OnCollectionAdd(
+                                    (e.NewItems?[0] as KeyValuePair<TKey, TValue>?).Value.Value,
+                                    e.NewStartingIndex);
+                            }
+                            else
+                            {
+                                OnCollectionAdd(
+                                    e.NewItems.Cast<KeyValuePair<TKey, TValue>>().Select(i => i.Value).ToList(),
+                                    e.NewStartingIndex);
+                            }
                             break;
                         case NotifyCollectionChangedAction.Remove:
-                            OnCollectionRemove(
-                                e.OldItems?.Cast<KeyValuePair<TKey, TValue>>().Select(i => i.Value),
-                                e.OldStartingIndex);
+                            if (e.OldItems?.Count == 0 || e.OldItems?.Count == 1)
+                            {
+                                OnCollectionRemove(
+                                    (e.OldItems?[0] as KeyValuePair<TKey, TValue>?).Value.Value,
+                                    e.OldStartingIndex);
+                            }
+                            else
+                            {
+                                OnCollectionRemove(
+                                    e.OldItems?.Cast<KeyValuePair<TKey, TValue>>().Select(i => i.Value).ToList(),
+                                    e.OldStartingIndex);
+                            }
                             break;
                         case NotifyCollectionChangedAction.Replace:
-                            OnCollectionReplace(
-                                e.OldItems?.Cast<KeyValuePair<TKey, TValue>>().Select(i => i.Value),
-                                e.NewItems?.Cast<KeyValuePair<TKey, TValue>>().Select(i => i.Value),
-                                e.NewStartingIndex);
+                            if (e.OldItems?.Count == 0 || e.OldItems?.Count == 1)
+                            {
+                                if (e.NewItems?.Count == 0 || e.NewItems?.Count == 1)
+                                {
+                                    OnCollectionReplace(
+                                        (e.OldItems?[0] as KeyValuePair<TKey, TValue>?).Value.Value,
+                                        (e.NewItems?[0] as KeyValuePair<TKey, TValue>?).Value.Value,
+                                        e.NewStartingIndex);
+                                }
+                                else
+                                {
+                                    OnCollectionReplace(
+                                        (e.OldItems?[0] as KeyValuePair<TKey, TValue>?).Value.Value,
+                                        e.NewItems?.Cast<KeyValuePair<TKey, TValue>>().Select(i => i.Value).ToList(),
+                                        e.NewStartingIndex);
+                                }
+                            }
+                            else
+                            {
+                                if (e.NewItems?.Count == 0 || e.NewItems?.Count == 1)
+                                {
+                                    OnCollectionReplace(
+                                        e.OldItems?.Cast<KeyValuePair<TKey, TValue>>().Select(i => i.Value).ToList(),
+                                        (e.NewItems?[0] as KeyValuePair<TKey, TValue>?).Value.Value,
+                                        e.NewStartingIndex);
+                                }
+                                else
+                                {
+                                    OnCollectionReplace(
+                                        e.OldItems?.Cast<KeyValuePair<TKey, TValue>>().Select(i => i.Value).ToList(),
+                                        e.NewItems?.Cast<KeyValuePair<TKey, TValue>>().Select(i => i.Value).ToList(),
+                                        e.NewStartingIndex);
+                                }
+                            }
                             break;
                         case NotifyCollectionChangedAction.Move:
-                            OnCollectionMove(
-                                e.NewItems?.Cast<KeyValuePair<TKey, TValue>>().Select(i => i.Value),
-                                e.NewStartingIndex,
-                                e.OldStartingIndex);
+                            if (e.NewItems?.Count == 0 || e.NewItems?.Count == 1)
+                            {
+                                OnCollectionMove(
+                                    (e.NewItems?[0] as KeyValuePair<TKey, TValue>?).Value.Value,
+                                    e.OldStartingIndex,
+                                    e.NewStartingIndex);
+                            }
+                            else
+                            {
+                                OnCollectionMove(
+                                    e.NewItems?.Cast<KeyValuePair<TKey, TValue>>().Select(i => i.Value).ToList(),
+                                    e.OldStartingIndex,
+                                    e.NewStartingIndex);
+                            }
                             break;
                         case NotifyCollectionChangedAction.Reset:
                             OnCollectionReset();

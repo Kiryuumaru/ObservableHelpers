@@ -105,6 +105,40 @@ namespace ObservableHelpers
         /// <summary>
         /// Raises <see cref="OnCollectionChanged(NotifyCollectionChangedEventArgs)"/> event with <see cref="NotifyCollectionChangedAction.Replace"/> action to any listeners.
         /// </summary>
+        /// <param name="oldItem">
+        /// The new item that is replacing the original item.
+        /// </param>
+        /// <param name="newItems">
+        /// The original items that is replaced.
+        /// </param>
+        /// <param name="index">
+        /// The index of the item being replaced.
+        /// </param>
+        protected void OnCollectionReplace(object oldItem, IList newItems, int index)
+        {
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, newItems, new object[] { oldItem }, index));
+        }
+
+        /// <summary>
+        /// Raises <see cref="OnCollectionChanged(NotifyCollectionChangedEventArgs)"/> event with <see cref="NotifyCollectionChangedAction.Replace"/> action to any listeners.
+        /// </summary>
+        /// <param name="oldItems">
+        /// The new items that is replacing the original item.
+        /// </param>
+        /// <param name="newItem">
+        /// The original item that is replaced.
+        /// </param>
+        /// <param name="index">
+        /// The index of the item being replaced.
+        /// </param>
+        protected void OnCollectionReplace(IList oldItems, object newItem, int index)
+        {
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, new object[] { newItem }, oldItems, index));
+        }
+
+        /// <summary>
+        /// Raises <see cref="OnCollectionChanged(NotifyCollectionChangedEventArgs)"/> event with <see cref="NotifyCollectionChangedAction.Replace"/> action to any listeners.
+        /// </summary>
         /// <param name="oldItems">
         /// The new items that is replacing the original item.
         /// </param>
@@ -125,13 +159,13 @@ namespace ObservableHelpers
         /// <param name="item">
         /// The item affected by the change.
         /// </param>
-        /// <param name="newIndex">
-        /// The new index for the changed item.
-        /// </param>
         /// <param name="oldIndex">
         /// The old index for the changed item.
         /// </param>
-        protected void OnCollectionMove(object item, int newIndex, int oldIndex)
+        /// <param name="newIndex">
+        /// The new index for the changed item.
+        /// </param>
+        protected void OnCollectionMove(object item, int oldIndex, int newIndex)
         {
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move, item, newIndex, oldIndex));
         }
@@ -148,7 +182,7 @@ namespace ObservableHelpers
         /// <param name="oldIndex">
         /// The old index for the changed item.
         /// </param>
-        protected void OnCollectionMove(IList items, int newIndex, int oldIndex)
+        protected void OnCollectionMove(IList items, int oldIndex, int newIndex)
         {
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move, items, newIndex, oldIndex));
         }
@@ -174,7 +208,7 @@ namespace ObservableHelpers
                 return;
             }
             ImmediateCollectionChanged?.Invoke(this, e);
-            ContextPost(delegate
+            ContextSend(delegate
             {
                 CollectionChanged?.Invoke(this, e);
             });
