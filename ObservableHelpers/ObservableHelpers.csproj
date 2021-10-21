@@ -14,8 +14,8 @@
 
   <PropertyGroup>
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
-    <Version>1.1.12</Version>
-    <PackageReleaseNotes>* Bug fixes</PackageReleaseNotes>
+    <Version>1.2.0</Version>
+    <PackageReleaseNotes>* Added ObservableCollection</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
