@@ -1,5 +1,6 @@
 ﻿using ObservableHelpers;
 using System.Collections.Concurrent;
+using System.ComponentModel;
 using System.Diagnostics;
 
 //ObservableCollection<int> s = new ObservableCollection<int>();
@@ -32,8 +33,17 @@ using System.Diagnostics;
 //d.AddOrUpdate("2", 222);
 //d.AddOrUpdate("2", 2222);
 
-var list = new List<int>();
+var raiseCol = new List<PropertyChangedEventArgs>();
+var prop = new ObservableProperty<string>();
 
-list[0] = 1;
+prop.PropertyChanged += (s, e) =>
+{
+    raiseCol.Add(e);
+};
+
+prop.Value = "test";
+prop.Value = "test";
+prop.Value = "test1";
+prop.Value = "test1";
 
 Console.WriteLine("");

@@ -15,96 +15,6 @@ namespace ObservableHelpers
     public class ObservableObject :
         ObservableSyncContext
     {
-        #region Helpers
-
-        /// <summary>
-        /// Provides the property with key, name and group.
-        /// </summary>
-        protected class NamedProperty
-        {
-            /// <summary>
-            /// Creates new instance for <see cref="NamedProperty"/>
-            /// </summary>
-            public NamedProperty()
-            {
-
-            }
-
-            /// <summary>
-            /// Gets or sets the <see cref="ObservableProperty"/> of the object.
-            /// </summary>
-            public ObservableProperty Property { get; set; }
-
-            /// <summary>
-            /// Gets or sets the key of the <see cref="Property"/>
-            /// </summary>
-            public string Key { get; set; }
-
-            /// <summary>
-            /// Gets or sets the name of the <see cref="Property"/>
-            /// </summary>
-            public string PropertyName { get; set; }
-
-            /// <summary>
-            /// Gets or sets the group of the <see cref="Property"/>
-            /// </summary>
-            public string Group { get; set; }
-
-            /// <summary>
-            /// Gets or sets <c>true</c> if the property is from default value; otherwise <c>false</c>.
-            /// </summary>
-            public bool IsDefault { get; set; }
-
-            /// <inheritdoc/>
-            public override string ToString()
-            {
-                return "(" + (Key ?? "null") + ", " + (PropertyName ?? "null") + ", " + (Group ?? "null") + ") = " + (Property?.Property?.ToString() ?? "null");
-            }
-        }
-
-        private struct NamedPropertyKey
-        {
-            public string Key => property == null ? key : property.Key;
-
-            public string PropertyName => property == null ? propertyName : property.PropertyName;
-
-            private readonly string key;
-            private readonly string propertyName;
-            private NamedProperty property;
-
-            public NamedPropertyKey(string key, string propertyName)
-            {
-                this.key = key;
-                this.propertyName = propertyName;
-                property = null;
-            }
-
-            public NamedPropertyKey(NamedProperty property)
-            {
-                key = null;
-                propertyName = null;
-                this.property = property;
-            }
-
-            internal void Update(NamedProperty property)
-            {
-                this.property = property;
-            }
-
-            public override bool Equals(object obj)
-            {
-                return obj is NamedPropertyKey namedPropertyKey
-                    && (Key == null && namedPropertyKey.Key == null ? PropertyName == namedPropertyKey.PropertyName : Key == namedPropertyKey.Key);
-            }
-
-            public override int GetHashCode()
-            {
-                return 990326508 + (Key == null ? 0 : EqualityComparer<string>.Default.GetHashCode(Key));
-            }
-        }
-
-        #endregion
-
         #region Properties
 
         private readonly ConcurrentDictionary<NamedPropertyKey, NamedProperty> namedProperties = new ConcurrentDictionary<NamedPropertyKey, NamedProperty>();
@@ -124,36 +34,6 @@ namespace ObservableHelpers
         #endregion
 
         #region Methods
-
-        /// <inheritdoc/>
-        public override bool SetNull()
-        {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
-            bool hasChanges = false;
-            foreach (KeyValuePair<NamedPropertyKey, NamedProperty> propHolder in namedProperties)
-            {
-                if (propHolder.Value.Property.SetNull())
-                {
-                    hasChanges = true;
-                }
-            }
-            return hasChanges;
-        }
-
-        /// <inheritdoc/>
-        public override bool IsNull()
-        {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
-            return namedProperties.All(i => i.Value.Property.IsNull());
-        }
 
         /// <summary>
         /// Initializes all property with its key, name and group.
@@ -422,7 +302,7 @@ namespace ObservableHelpers
                 {
                     return;
                 }
-                if (e.PropertyName == nameof(namedProperty.Property.Property))
+                if (e.PropertyName == nameof(namedProperty.Property.Value))
                 {
                     OnPropertyChanged(namedProperty.Key, namedProperty.PropertyName, namedProperty.Group);
                 }
@@ -904,5 +784,130 @@ namespace ObservableHelpers
         }
 
         #endregion
+
+        #region INullableObject Members
+
+        /// <inheritdoc/>
+        public override bool SetNull()
+        {
+            if (IsDisposed)
+            {
+                return default;
+            }
+
+            bool hasChanges = false;
+            foreach (KeyValuePair<NamedPropertyKey, NamedProperty> propHolder in namedProperties)
+            {
+                if (propHolder.Value.Property.SetNull())
+                {
+                    hasChanges = true;
+                }
+            }
+            return hasChanges;
+        }
+
+        /// <inheritdoc/>
+        public override bool IsNull()
+        {
+            if (IsDisposed)
+            {
+                return default;
+            }
+
+            return namedProperties.All(i => i.Value.Property.IsNull());
+        }
+
+        #endregion
+
+        #region Helper Classes
+
+        /// <summary>
+        /// Provides the property with key, name and group.
+        /// </summary>
+        protected class NamedProperty
+        {
+            /// <summary>
+            /// Creates new instance for <see cref="NamedProperty"/>
+            /// </summary>
+            public NamedProperty()
+            {
+
+            }
+
+            /// <summary>
+            /// Gets or sets the <see cref="ObservableProperty"/> of the object.
+            /// </summary>
+            public ObservableProperty Property { get; set; }
+
+            /// <summary>
+            /// Gets or sets the key of the <see cref="Property"/>
+            /// </summary>
+            public string Key { get; set; }
+
+            /// <summary>
+            /// Gets or sets the name of the <see cref="Property"/>
+            /// </summary>
+            public string PropertyName { get; set; }
+
+            /// <summary>
+            /// Gets or sets the group of the <see cref="Property"/>
+            /// </summary>
+            public string Group { get; set; }
+
+            /// <summary>
+            /// Gets or sets <c>true</c> if the property is from default value; otherwise <c>false</c>.
+            /// </summary>
+            public bool IsDefault { get; set; }
+
+            /// <inheritdoc/>
+            public override string ToString()
+            {
+                return "(" + (Key ?? "null") + ", " + (PropertyName ?? "null") + ", " + (Group ?? "null") + ") = " + (Property?.Value?.ToString() ?? "null");
+            }
+        }
+
+        private struct NamedPropertyKey
+        {
+            public string Key => property == null ? key : property.Key;
+
+            public string PropertyName => property == null ? propertyName : property.PropertyName;
+
+            private readonly string key;
+            private readonly string propertyName;
+            private NamedProperty property;
+
+            public NamedPropertyKey(string key, string propertyName)
+            {
+                this.key = key;
+                this.propertyName = propertyName;
+                property = null;
+            }
+
+            public NamedPropertyKey(NamedProperty property)
+            {
+                key = null;
+                propertyName = null;
+                this.property = property;
+            }
+
+            internal void Update(NamedProperty property)
+            {
+                this.property = property;
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is NamedPropertyKey namedPropertyKey
+                    && (Key == null && namedPropertyKey.Key == null ? PropertyName == namedPropertyKey.PropertyName : Key == namedPropertyKey.Key);
+            }
+
+            public override int GetHashCode()
+            {
+                return 990326508 + (Key == null ? 0 : EqualityComparer<string>.Default.GetHashCode(Key));
+            }
+        }
+
+        #endregion
+
     }
 }

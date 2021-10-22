@@ -13,15 +13,39 @@ namespace ObservableHelpers
         #region Properties
 
         /// <summary>
-        /// Gets or sets the object property
+        /// Gets the value of the property.
         /// </summary>
-        public object Property
+        public object Value
         {
-            get => GetObject();
-            set => SetObject(value);
+            get
+            {
+                if (IsDisposed)
+                {
+                    return default;
+                }
+
+                return GetObject().value;
+            }
         }
 
-        private object objectHolder;
+        /// <summary>
+        /// Gets the type of the value of the property.
+        /// </summary>
+        public Type Type
+        {
+            get
+            {
+                if (IsDisposed)
+                {
+                    return default;
+                }
+
+                return GetObject().type;
+            }
+        }
+
+        private object valueHolder;
+        private Type valueType;
 
         #endregion
 
@@ -39,44 +63,6 @@ namespace ObservableHelpers
 
         #region Methods
 
-        /// <inheritdoc/>
-        public override bool SetNull()
-        {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
-            if (GetObject() is INullableObject model)
-            {
-                return model.SetNull();
-            }
-            else
-            {
-                return SetObject(null);
-            }
-        }
-
-        /// <inheritdoc/>
-        public override bool IsNull()
-        {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
-            object obj = GetObject();
-
-            if (obj is INullableObject model)
-            {
-                return model.IsNull();
-            }
-            else
-            {
-                return obj == null;
-            }
-        }
-
         /// <summary>
         /// Sets the value of the property.
         /// </summary>
@@ -89,14 +75,14 @@ namespace ObservableHelpers
         /// <returns>
         /// <c>true</c> whether the property has changed; otherwise <c>false</c>.
         /// </returns>
-        public virtual bool SetValue<T>(T value)
+        public bool SetValue<T>(T value)
         {
             if (IsDisposed)
             {
                 return default;
             }
 
-            return SetObject(value);
+            return SetObject(value, typeof(T));
         }
 
         /// <summary>
@@ -111,14 +97,14 @@ namespace ObservableHelpers
         /// <returns>
         /// The value of the property.
         /// </returns>
-        public virtual T GetValue<T>(T defaultValue = default)
+        public T GetValue<T>(T defaultValue = default)
         {
             if (IsDisposed)
             {
                 return default;
             }
 
-            if (GetObject() is T tObj)
+            if (GetObject().value is T tObj)
             {
                 return tObj;
             }
@@ -139,26 +125,50 @@ namespace ObservableHelpers
         /// <param name="obj">
         /// The value object of the property.
         /// </param>
+        /// <param name="objType">
+        /// The underlying type of the object.
+        /// </param>
         /// <returns>
         /// <c>true</c> whether the property has changed; otherwise <c>false</c>.
         /// </returns>
-        protected virtual bool SetObject(object obj)
+        /// <exception cref="ArgumentException">
+        /// <paramref name="obj"/> <see cref="System.Type"/> and <paramref name="objType"/> mismatch.
+        /// </exception>
+        protected virtual bool SetObject(object obj, Type objType)
         {
-            if (obj is ISyncObject sync)
+            if (obj != null)
             {
-                sync.SyncOperation.SetContext(this);
+                if (obj.GetType() != objType)
+                {
+                    throw new ArgumentException("Provided " + nameof(obj) + " type and" + nameof(objType) + " mismatch.");
+                }
             }
 
-            if (!(objectHolder?.Equals(obj) ?? obj == null))
+            bool isValueChanged = false;
+            bool isTypeChanged = false;
+
+            if (!(valueHolder?.Equals(obj) ?? obj == null))
             {
-                objectHolder = obj;
-                OnPropertyChanged(new PropertyChangedEventArgs(nameof(Property)));
-                return true;
+                if (obj is ISyncObject sync)
+                {
+                    sync.SyncOperation.SetContext(this);
+                }
+
+                valueHolder = obj;
+                OnPropertyChanged(nameof(Value));
+
+                isValueChanged = true;
             }
-            else
+
+            if (!(valueType?.Equals(objType) ?? objType == null))
             {
-                return false;
+                valueType = objType;
+                OnPropertyChanged(nameof(Type));
+
+                isTypeChanged = true;
             }
+
+            return isValueChanged || isTypeChanged;
         }
 
         /// <summary>
@@ -167,14 +177,51 @@ namespace ObservableHelpers
         /// <returns>
         /// The value object of the property.
         /// </returns>
-        protected virtual object GetObject()
+        protected virtual (object value, Type type) GetObject()
         {
-            if (objectHolder is ISyncObject sync)
+            return (valueHolder, valueType);
+        }
+
+        #endregion
+
+        #region INullableObject Members
+
+        /// <inheritdoc/>
+        public override bool SetNull()
+        {
+            if (IsDisposed)
             {
-                sync.SyncOperation.SetContext(this);
+                return default;
             }
 
-            return objectHolder;
+            if (GetObject().value is INullableObject model)
+            {
+                return model.SetNull();
+            }
+            else
+            {
+                return SetObject(null, Type);
+            }
+        }
+
+        /// <inheritdoc/>
+        public override bool IsNull()
+        {
+            if (IsDisposed)
+            {
+                return default;
+            }
+
+            object obj = GetObject().value;
+
+            if (obj is INullableObject model)
+            {
+                return model.IsNull();
+            }
+            else
+            {
+                return obj == null;
+            }
         }
 
         #endregion
@@ -194,10 +241,10 @@ namespace ObservableHelpers
         /// <summary>
         /// Gets or sets the value of the property.
         /// </summary>
-        public T Value
+        public new T Value
         {
-            get => GetValue<T>();
-            set => SetValue(Value);
+            get => GetValue();
+            set => SetValue(value);
         }
 
         #endregion
@@ -216,14 +263,32 @@ namespace ObservableHelpers
 
         #region Methods
 
-        /// <inheritdoc/>
-        protected override void OnPropertyChanged(PropertyChangedEventArgs args)
+        /// <summary>
+        /// Sets the value of the property.
+        /// </summary>
+        /// <param name="value">
+        /// The value of the property.
+        /// </param>
+        /// <returns>
+        /// <c>true</c> whether the property has changed; otherwise <c>false</c>.
+        /// </returns>
+        public bool SetValue(T value)
         {
-            base.OnPropertyChanged(args);
-            if (args.PropertyName == nameof(Property))
-            {
-                base.OnPropertyChanged(new PropertyChangedEventArgs(nameof(Value)));
-            }
+            return SetValue<T>(value);
+        }
+
+        /// <summary>
+        /// Gets the value of the property.
+        /// </summary>
+        /// <param name="defaultValue">
+        /// The default value return if the property is disposed or null.
+        /// </param>
+        /// <returns>
+        /// The value of the property.
+        /// </returns>
+        public T GetValue(T defaultValue = default)
+        {
+            return GetValue<T>(defaultValue);
         }
 
         #endregion
