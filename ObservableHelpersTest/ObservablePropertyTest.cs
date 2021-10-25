@@ -46,11 +46,10 @@ namespace ObservablePropertyTest
             prop.SetValue("test1");
             Assert.Equal("test1", prop.Value);
 
-            Assert.Equal(3, raiseCol.Count);
+            Assert.Equal(2, raiseCol.Count);
 
             Assert.Equal(nameof(prop.Value), raiseCol[0].PropertyName);
-            Assert.Equal(nameof(prop.Type), raiseCol[1].PropertyName);
-            Assert.Equal(nameof(prop.Value), raiseCol[2].PropertyName);
+            Assert.Equal(nameof(prop.Value), raiseCol[1].PropertyName);
         }
     }
 
@@ -72,21 +71,15 @@ namespace ObservablePropertyTest
             prop.SetValue("test");
             Assert.Equal("test", prop.Value);
 
-            Assert.Equal(typeof(string), prop.Type);
-
             prop.SetValue(1);
             Assert.Equal(1, prop.Value);
             prop.SetValue(1);
             Assert.Equal(1, prop.Value);
 
-            Assert.Equal(typeof(int), prop.Type);
-
-            Assert.Equal(4, raiseCol.Count);
+            Assert.Equal(2, raiseCol.Count);
 
             Assert.Equal(nameof(prop.Value), raiseCol[0].PropertyName);
-            Assert.Equal(nameof(prop.Type), raiseCol[1].PropertyName);
-            Assert.Equal(nameof(prop.Value), raiseCol[2].PropertyName);
-            Assert.Equal(nameof(prop.Type), raiseCol[3].PropertyName);
+            Assert.Equal(nameof(prop.Value), raiseCol[1].PropertyName);
         }
     }
 
@@ -110,11 +103,10 @@ namespace ObservablePropertyTest
 
             Assert.Equal("test1", prop.Value);
 
-            Assert.Equal(3, raiseCol.Count);
+            Assert.Equal(2, raiseCol.Count);
 
             Assert.Equal(nameof(prop.Value), raiseCol[0].PropertyName);
-            Assert.Equal(nameof(prop.Type), raiseCol[1].PropertyName);
-            Assert.Equal(nameof(prop.Value), raiseCol[2].PropertyName);
+            Assert.Equal(nameof(prop.Value), raiseCol[1].PropertyName);
         }
     }
 
@@ -153,16 +145,14 @@ namespace ObservablePropertyTest
             Assert.Equal("test1", prop1.GetValue<string>());
             Assert.Equal("test1", prop2.GetValue());
 
-            Assert.Equal(3, raiseCol1.Count);
-            Assert.Equal(3, raiseCol2.Count);
+            Assert.Equal(2, raiseCol1.Count);
+            Assert.Equal(2, raiseCol2.Count);
 
             Assert.Equal(nameof(prop1.Value), raiseCol1[0].PropertyName);
-            Assert.Equal(nameof(prop1.Type), raiseCol1[1].PropertyName);
-            Assert.Equal(nameof(prop1.Value), raiseCol1[2].PropertyName);
+            Assert.Equal(nameof(prop1.Value), raiseCol1[1].PropertyName);
 
             Assert.Equal(nameof(prop2.Value), raiseCol2[0].PropertyName);
-            Assert.Equal(nameof(prop2.Type), raiseCol2[1].PropertyName);
-            Assert.Equal(nameof(prop2.Value), raiseCol2[2].PropertyName);
+            Assert.Equal(nameof(prop2.Value), raiseCol2[1].PropertyName);
         }
     }
 
@@ -206,16 +196,14 @@ namespace ObservablePropertyTest
             Assert.Null(prop1.Value);
             Assert.Null(prop2.Value);
 
-            Assert.Equal(3, raiseCol1.Count);
-            Assert.Equal(3, raiseCol2.Count);
+            Assert.Equal(2, raiseCol1.Count);
+            Assert.Equal(2, raiseCol2.Count);
 
             Assert.Equal(nameof(prop1.Value), raiseCol1[0].PropertyName);
-            Assert.Equal(nameof(prop1.Type), raiseCol1[1].PropertyName);
-            Assert.Equal(nameof(prop1.Value), raiseCol1[2].PropertyName);
+            Assert.Equal(nameof(prop1.Value), raiseCol1[1].PropertyName);
 
             Assert.Equal(nameof(prop2.Value), raiseCol2[0].PropertyName);
-            Assert.Equal(nameof(prop2.Type), raiseCol2[1].PropertyName);
-            Assert.Equal(nameof(prop2.Value), raiseCol2[2].PropertyName);
+            Assert.Equal(nameof(prop2.Value), raiseCol2[1].PropertyName);
         }
     }
 }

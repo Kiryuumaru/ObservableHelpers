@@ -25,28 +25,11 @@ namespace ObservableHelpers
                     return default;
                 }
 
-                return GetObject().value;
-            }
-        }
-
-        /// <summary>
-        /// Gets the type of the value of the property.
-        /// </summary>
-        public Type Type
-        {
-            get
-            {
-                if (IsDisposed)
-                {
-                    return default;
-                }
-
-                return GetObject().type;
+                return GetObject();
             }
         }
 
         private object valueHolder;
-        private Type valueType;
 
         #endregion
 
@@ -102,10 +85,12 @@ namespace ObservableHelpers
         {
             if (IsDisposed)
             {
-                return default;
+                return defaultValue;
             }
 
-            if (GetObject().value is T tObj)
+            object obj = GetObject(typeof(T));
+
+            if (obj is T tObj)
             {
                 return tObj;
             }
@@ -132,22 +117,8 @@ namespace ObservableHelpers
         /// <returns>
         /// <c>true</c> whether the property has changed; otherwise <c>false</c>.
         /// </returns>
-        /// <exception cref="ArgumentException">
-        /// <paramref name="obj"/> <see cref="System.Type"/> and <paramref name="objType"/> mismatch.
-        /// </exception>
-        protected virtual bool SetObject(object obj, Type objType)
+        protected virtual bool SetObject(object obj, Type objType = null)
         {
-            if (obj != null)
-            {
-                if (obj.GetType() != objType)
-                {
-                    throw new ArgumentException("Provided " + nameof(obj) + " type and" + nameof(objType) + " mismatch.");
-                }
-            }
-
-            bool isValueChanged = false;
-            bool isTypeChanged = false;
-
             if (!(valueHolder?.Equals(obj) ?? obj == null))
             {
                 if (obj is ISyncObject sync)
@@ -156,36 +127,24 @@ namespace ObservableHelpers
                 }
 
                 valueHolder = obj;
-                isValueChanged = true;
-            }
-
-            if (!(valueType?.Equals(objType) ?? objType == null))
-            {
-                valueType = objType;
-                isTypeChanged = true;
-            }
-
-            if (isValueChanged || isTypeChanged)
-            {
                 OnPropertyChanged(nameof(Value));
+                return true;
             }
-            if (isTypeChanged)
-            {
-                OnPropertyChanged(nameof(Type));
-            }
-
-            return isValueChanged || isTypeChanged;
+            return false;
         }
 
         /// <summary>
         /// Gets the value object of the property.
         /// </summary>
+        /// <param name="type">
+        /// The type of the object to get.
+        /// </param>
         /// <returns>
         /// The value object of the property.
         /// </returns>
-        protected virtual (object value, Type type) GetObject()
+        protected virtual object GetObject(Type type = null)
         {
-            return (valueHolder, valueType);
+            return valueHolder;
         }
 
         #endregion
@@ -200,13 +159,15 @@ namespace ObservableHelpers
                 return default;
             }
 
-            if (GetObject().value is INullableObject model)
+            object obj = GetObject();
+
+            if (obj is INullableObject model)
             {
                 return model.SetNull();
             }
             else
             {
-                return SetObject(null, Type);
+                return SetObject(null);
             }
         }
 
@@ -218,7 +179,7 @@ namespace ObservableHelpers
                 return default;
             }
 
-            object obj = GetObject().value;
+            object obj = GetObject();
 
             if (obj is INullableObject model)
             {
