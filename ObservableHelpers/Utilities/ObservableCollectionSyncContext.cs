@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 
-namespace ObservableHelpers
+namespace ObservableHelpers.Utilities
 {
     /// <summary>
     /// Contains all implementations for performing observable operations.

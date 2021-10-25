@@ -2,10 +2,10 @@
 using System;
 using System.Threading.Tasks;
 
-namespace ObservableHelpers
+namespace ObservableHelpers.Utilities
 {
     /// <summary>
-    /// Provides operations for <see cref="ObservableHelpers.SyncOperation"/> with proper disposable implementations.
+    /// Provides operations for <see cref="Utilities.SyncOperation"/> with proper disposable implementations.
     /// </summary>
     public class SyncContext :
         Disposable,
@@ -25,7 +25,7 @@ namespace ObservableHelpers
         /// </summary>
         /// <remarks>
         /// <para>To use safely in UI operations, create the instance in UI thread.</para>
-        /// <para>See <see cref="ObservableHelpers.SyncOperation"/></para>
+        /// <para>See <see cref="Utilities.SyncOperation"/></para>
         /// </remarks>
         public SyncContext()
         {

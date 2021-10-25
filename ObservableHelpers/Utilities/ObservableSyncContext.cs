@@ -1,7 +1,7 @@
 ﻿using ObservableHelpers.Abstraction;
 using System.ComponentModel;
 
-namespace ObservableHelpers
+namespace ObservableHelpers.Utilities
 {
     /// <summary>
     /// Contains all implementations for performing observable operations.

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace ObservableHelpers
+namespace ObservableHelpers.Utilities
 {
     /// <summary>
     /// Provides disposable action with <see cref="IDisposable"/> implementation.

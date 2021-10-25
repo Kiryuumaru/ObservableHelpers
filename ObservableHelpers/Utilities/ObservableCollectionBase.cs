@@ -8,7 +8,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ObservableHelpers
+namespace ObservableHelpers.Utilities
 {
     /// <summary>
     /// Provides a thread-safe observable collection used for data binding.
@@ -48,7 +48,7 @@ namespace ObservableHelpers
                     return default;
                 }
 
-                return LockRead(() =>
+                return RWLock.LockRead(() =>
                 {
                     if (index < 0 || index >= Items.Count)
                     {
@@ -84,7 +84,7 @@ namespace ObservableHelpers
                     return default;
                 }
 
-                //return LockRead(() => Items.Count);
+                //return rwLock.LockRead(() => Items.Count);
                 return Items.Count;
             }
         }
@@ -95,6 +95,11 @@ namespace ObservableHelpers
         public bool IsReadOnly { get; protected set; }
 
         /// <summary>
+        /// Gets the read-write lock for concurrency.
+        /// </summary>
+        protected RWLock RWLock { get; } = new RWLock();
+
+        /// <summary>
         /// Gets a <see cref="List{T}"/> wrapper around the <see cref="ObservableCollectionBase{T}"/>.
         /// </summary>
         protected virtual List<T> Items { get; set; }
@@ -102,8 +107,6 @@ namespace ObservableHelpers
         // This must agree with Binding.IndexerName. It is declared separately
         // here so as to avoid a dependency on PresentationFramework.dll.
         private protected const string IndexerName = "Item[]";
-
-        private readonly ReaderWriterLockSlim rwLock = new ReaderWriterLockSlim();
 
         #endregion
 
@@ -147,7 +150,7 @@ namespace ObservableHelpers
                 throw ReadOnlyException(nameof(Add));
             }
 
-            LockRead(() =>
+            RWLock.LockRead(() =>
             {
                 int index = Items.Count;
                 InsertItem(index, item);
@@ -198,7 +201,7 @@ namespace ObservableHelpers
                 throw ReadOnlyException(nameof(AddRange));
             }
 
-            LockRead(() =>
+            RWLock.LockRead(() =>
             {
                 int index = Items.Count;
                 InsertItems(index, items);
@@ -241,7 +244,7 @@ namespace ObservableHelpers
                 return default;
             }
 
-            return LockRead(() => Items.Contains(item));
+            return RWLock.LockRead(() => Items.Contains(item));
         }
 
         /// <summary>
@@ -258,7 +261,7 @@ namespace ObservableHelpers
         /// </exception>
         public void CopyTo(T[] array)
         {
-            LockRead(() => Items.CopyTo(array));
+            RWLock.LockRead(() => Items.CopyTo(array));
         }
 
         /// <summary>
@@ -281,7 +284,7 @@ namespace ObservableHelpers
         /// </exception>
         public void CopyTo(T[] array, int arrayIndex)
         {
-            LockRead(() => Items.CopyTo(array, arrayIndex));
+            RWLock.LockRead(() => Items.CopyTo(array, arrayIndex));
         }
 
         /// <summary>
@@ -304,7 +307,7 @@ namespace ObservableHelpers
         /// </exception>
         public void CopyTo(Array array, int arrayIndex)
         {
-            LockRead(() => (Items as ICollection).CopyTo(array, arrayIndex));
+            RWLock.LockRead(() => (Items as ICollection).CopyTo(array, arrayIndex));
         }
 
         /// <summary>
@@ -333,7 +336,7 @@ namespace ObservableHelpers
         /// </exception>
         public void CopyTo(int index, T[] array, int arrayIndex, int count)
         {
-            LockRead(() => Items.CopyTo(index, array, arrayIndex, count));
+            RWLock.LockRead(() => Items.CopyTo(index, array, arrayIndex, count));
         }
 
         /// <summary>
@@ -349,7 +352,7 @@ namespace ObservableHelpers
                 return default;
             }
 
-            return LockRead(() => Items.GetEnumerator());
+            return RWLock.LockRead(() => Items.GetEnumerator());
         }
 
         /// <summary>
@@ -368,7 +371,7 @@ namespace ObservableHelpers
                 return default;
             }
 
-            return LockRead(() => Items.IndexOf(value));
+            return RWLock.LockRead(() => Items.IndexOf(value));
         }
 
         /// <summary>
@@ -505,7 +508,7 @@ namespace ObservableHelpers
                 throw new ArgumentNullException(nameof(predicate));
             }
 
-            ObservableCollectionFilter filter = LockRead(() =>
+            ObservableCollectionFilter filter = RWLock.LockRead(() =>
             {
                 filter = new ObservableCollectionFilter(Items.Where(i => predicate.Invoke(i)));
                 filter.SyncOperation.SetContext(this);
@@ -514,7 +517,7 @@ namespace ObservableHelpers
 
             void Filter_ImmediateCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
             {
-                filter.LockWrite(() =>
+                filter.RWLock.LockWrite(() =>
                 {
                     filter.Items = Items.Where(i => predicate.Invoke(i)).ToList();
                     filter.OnCollectionReset();
@@ -552,7 +555,7 @@ namespace ObservableHelpers
                 throw ReadOnlyException(nameof(Remove));
             }
 
-            return LockRead(() =>
+            return RWLock.LockRead(() =>
             {
                 int index = Items.IndexOf(item);
                 if (index == -1)
@@ -625,118 +628,6 @@ namespace ObservableHelpers
         }
 
         /// <summary>
-        /// Locks read operations of the <see cref="ObservableCollectionBase{T}"/> while executing the <paramref name="block"/> action.
-        /// </summary>
-        /// <param name="block">
-        /// The action to be executed inside the lock block.
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="block"/> is a null reference.
-        /// </exception>
-        protected void LockRead(Action block)
-        {
-            if (block == null)
-            {
-                throw new ArgumentNullException(nameof(block));
-            }
-
-            LockRead(() =>
-            {
-                block();
-                return 0;
-            });
-        }
-
-        /// <summary>
-        /// Locks read operations of the <see cref="ObservableCollectionBase{T}"/> while executing the <paramref name="block"/> function.
-        /// </summary>
-        /// <typeparam name="TReturn">
-        /// The object type returned by the <paramref name="block"/> function.
-        /// </typeparam>
-        /// <param name="block">
-        /// The function to be executed inside the lock block.
-        /// </param>
-        /// <returns>
-        /// The object returned by the <paramref name="block"/> function.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="block"/> is a null reference.
-        /// </exception>
-        protected TReturn LockRead<TReturn>(Func<TReturn> block)
-        {
-            if (block == null)
-            {
-                throw new ArgumentNullException(nameof(block));
-            }
-
-            try
-            {
-                rwLock.EnterUpgradeableReadLock();
-                return block();
-            }
-            finally
-            {
-                rwLock.ExitUpgradeableReadLock();
-            }
-        }
-
-        /// <summary>
-        /// Locks write operations of the <see cref="ObservableCollectionBase{T}"/> while executing the <paramref name="block"/> action.
-        /// </summary>
-        /// <param name="block">
-        /// The action to be executed inside the lock block.
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="block"/> is a null reference.
-        /// </exception>
-        protected void LockWrite(Action block)
-        {
-            if (block == null)
-            {
-                throw new ArgumentNullException(nameof(block));
-            }
-
-            LockWrite(() =>
-            {
-                block();
-                return 0;
-            });
-        }
-
-        /// <summary>
-        /// Locks write operations of the <see cref="ObservableCollectionBase{T}"/> while executing the <paramref name="block"/> function.
-        /// </summary>
-        /// <typeparam name="TReturn">
-        /// The object type returned by the <paramref name="block"/> function.
-        /// </typeparam>
-        /// <param name="block">
-        /// The function to be executed inside the lock block.
-        /// </param>
-        /// <returns>
-        /// The object returned by the <paramref name="block"/> function.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="block"/> is a null reference.
-        /// </exception>
-        protected TReturn LockWrite<TReturn>(Func<TReturn> block)
-        {
-            if (block == null)
-            {
-                throw new ArgumentNullException(nameof(block));
-            }
-
-            try
-            {
-                rwLock.EnterWriteLock();
-                return block();
-            }
-            finally
-            {
-                rwLock.ExitWriteLock();
-            }
-        }
-
-        /// <summary>
         /// Removes all elements from the <see cref="ObservableCollectionBase{T}"/> and notify the observers.
         /// </summary>
         /// <returns>
@@ -744,7 +635,7 @@ namespace ObservableHelpers
         /// </returns>
         protected bool ClearItems()
         {
-            return LockWrite(() =>
+            return RWLock.LockWrite(() =>
             {
                 if (InternalClearItems(out _))
                 {
@@ -797,7 +688,7 @@ namespace ObservableHelpers
         /// </exception>
         protected bool InsertItems(int index, IEnumerable<T> items)
         {
-            return LockWrite(() =>
+            return RWLock.LockWrite(() =>
             {
                 if (items == null)
                 {
@@ -836,7 +727,7 @@ namespace ObservableHelpers
         /// </exception>
         protected bool MoveItem(int oldIndex, int newIndex)
         {
-            return LockWrite(() =>
+            return RWLock.LockWrite(() =>
             {
                 if (InternalMoveItem(oldIndex, newIndex, out T movedItem))
                 {
@@ -862,7 +753,7 @@ namespace ObservableHelpers
         /// </exception>
         protected bool RemoveItem(int index)
         {
-            return LockWrite(() =>
+            return RWLock.LockWrite(() =>
             {
                 if (index < 0 || index >= Items.Count)
                 {
@@ -899,7 +790,7 @@ namespace ObservableHelpers
         /// </exception>
         protected bool RemoveItems(int index, int count)
         {
-            return LockWrite(() =>
+            return RWLock.LockWrite(() =>
             {
                 if (InternalRemoveItems(index, count, out IEnumerable<T> removedItems))
                 {
@@ -929,7 +820,7 @@ namespace ObservableHelpers
         /// </exception>
         protected bool SetItem(int index, T item)
         {
-            return LockWrite(() =>
+            return RWLock.LockWrite(() =>
             {
                 if (InternalSetItem(index, item, out T originalItem))
                 {
@@ -1163,7 +1054,7 @@ namespace ObservableHelpers
                 return default;
             }
 
-            return LockRead(() => Items.Count == 0);
+            return RWLock.LockRead(() => Items.Count == 0);
         }
 
         /// <inheritdoc/>
@@ -1174,7 +1065,7 @@ namespace ObservableHelpers
                 return default;
             }
 
-            return LockRead(() =>
+            return RWLock.LockRead(() =>
             {
                 bool isNull = Items.Count == 0;
                 Clear();
@@ -1257,7 +1148,7 @@ namespace ObservableHelpers
                 return default;
             }
 
-            return LockRead(() =>
+            return RWLock.LockRead(() =>
             {
                 int oldCount = Items.Count;
                 if (value is null)

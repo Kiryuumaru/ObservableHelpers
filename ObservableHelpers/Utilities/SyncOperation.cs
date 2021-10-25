@@ -4,7 +4,7 @@ using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ObservableHelpers
+namespace ObservableHelpers.Utilities
 {
     /// <summary>
     /// <para>Contains helpers for <see cref="SynchronizationContext"/> operations.</para>

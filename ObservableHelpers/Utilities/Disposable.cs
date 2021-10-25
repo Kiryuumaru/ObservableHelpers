@@ -2,7 +2,7 @@
 using System;
 using System.Threading;
 
-namespace ObservableHelpers
+namespace ObservableHelpers.Utilities
 {
     /// <summary>
     /// Contains all methods for performing proper disposable operations.
