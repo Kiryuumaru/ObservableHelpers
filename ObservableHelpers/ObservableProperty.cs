@@ -111,13 +111,13 @@ namespace ObservableHelpers
         /// <param name="obj">
         /// The value object of the property.
         /// </param>
-        /// <param name="objType">
+        /// <param name="type">
         /// The underlying type of the object.
         /// </param>
         /// <returns>
         /// <c>true</c> whether the property has changed; otherwise <c>false</c>.
         /// </returns>
-        protected virtual bool SetObject(object obj, Type objType = null)
+        protected virtual bool SetObject(object obj, Type type = null)
         {
             if (!(valueHolder?.Equals(obj) ?? obj == null))
             {
