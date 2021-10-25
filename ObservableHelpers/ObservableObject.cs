@@ -534,7 +534,7 @@ namespace ObservableHelpers
         }
 
         /// <summary>
-        /// Invokes <see cref="INotifyPropertyChanged.PropertyChanged"/> io9 nto the current context.
+        /// Invokes <see cref="INotifyPropertyChanged.PropertyChanged"/> into the current context.
         /// </summary>
         /// <param name="key">
         /// The key of the property changed.

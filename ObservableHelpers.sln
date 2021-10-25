@@ -12,8 +12,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ObservableHelpersTest", "ObservableHelpersTest\ObservableHelpersTest.csproj", "{9EA4AED5-593E-421F-B3B7-07D718FF7920}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Playground", "Playground\Playground.csproj", "{28054E44-CEAA-4BEA-B463-904423EA5419}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -28,10 +26,6 @@ Global
 		{9EA4AED5-593E-421F-B3B7-07D718FF7920}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9EA4AED5-593E-421F-B3B7-07D718FF7920}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9EA4AED5-593E-421F-B3B7-07D718FF7920}.Release|Any CPU.Build.0 = Release|Any CPU
-		{28054E44-CEAA-4BEA-B463-904423EA5419}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{28054E44-CEAA-4BEA-B463-904423EA5419}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{28054E44-CEAA-4BEA-B463-904423EA5419}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{28054E44-CEAA-4BEA-B463-904423EA5419}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
