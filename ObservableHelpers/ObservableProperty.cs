@@ -1,4 +1,5 @@
 ﻿using ObservableHelpers.Abstraction;
+using ObservableHelpers.Utilities;
 using System;
 using System.ComponentModel;
 
@@ -155,17 +156,22 @@ namespace ObservableHelpers
                 }
 
                 valueHolder = obj;
-                OnPropertyChanged(nameof(Value));
-
                 isValueChanged = true;
             }
 
             if (!(valueType?.Equals(objType) ?? objType == null))
             {
                 valueType = objType;
-                OnPropertyChanged(nameof(Type));
-
                 isTypeChanged = true;
+            }
+
+            if (isValueChanged || isTypeChanged)
+            {
+                OnPropertyChanged(nameof(Value));
+            }
+            if (isTypeChanged)
+            {
+                OnPropertyChanged(nameof(Type));
             }
 
             return isValueChanged || isTypeChanged;

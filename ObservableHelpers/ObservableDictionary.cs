@@ -1,4 +1,5 @@
 ﻿using ObservableHelpers.Abstraction;
+using ObservableHelpers.Utilities;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -57,7 +58,7 @@ namespace ObservableHelpers
                     throw new ArgumentNullException(nameof(key));
                 }
 
-                return LockRead(() => dictionary[key]);
+                return RWLock.LockRead(() => dictionary[key]);
             }
             set
             {
@@ -220,7 +221,7 @@ namespace ObservableHelpers
                 throw ReadOnlyException(nameof(Add));
             }
 
-            LockRead(() =>
+            RWLock.LockRead(() =>
             {
                 int index = Items.Count;
                 InsertItem(index, new KeyValuePair<TKey, TValue>(key, value));
@@ -395,7 +396,7 @@ namespace ObservableHelpers
                 throw ReadOnlyException(nameof(AddOrUpdate));
             }
 
-            return LockRead(() =>
+            return RWLock.LockRead(() =>
             {
                 TValue value = default;
                 KeyValuePair<TKey, TValue> item;
@@ -440,7 +441,7 @@ namespace ObservableHelpers
                 throw new ArgumentNullException(nameof(key));
             }
 
-            return LockRead(() => dictionary.ContainsKey(key));
+            return RWLock.LockRead(() => dictionary.ContainsKey(key));
         }
 
         /// <summary>
@@ -503,7 +504,7 @@ namespace ObservableHelpers
                 throw ReadOnlyException(nameof(GetOrAdd));
             }
 
-            return LockRead(() =>
+            return RWLock.LockRead(() =>
             {
                 if (!dictionary.TryGetValue(key, out TValue value))
                 {
@@ -606,7 +607,7 @@ namespace ObservableHelpers
                 throw ReadOnlyException(nameof(TryAdd));
             }
 
-            return LockRead(() =>
+            return RWLock.LockRead(() =>
             {
                 if (!dictionary.ContainsKey(key))
                 {
@@ -664,9 +665,9 @@ namespace ObservableHelpers
                 throw new ArgumentNullException(nameof(key));
             }
 
-            TValue v = default;
-            bool exists = LockRead(() => dictionary.TryGetValue(key, out v));
-            value = v;
+            TValue proxy = default;
+            bool exists = RWLock.LockRead(() => dictionary.TryGetValue(key, out proxy));
+            value = proxy;
             return exists;
         }
 
@@ -770,17 +771,17 @@ namespace ObservableHelpers
                 throw ReadOnlyException(nameof(TryRemove));
             }
 
-            TValue v = default;
-            bool exists = LockRead(() =>
+            TValue proxy = default;
+            bool exists = RWLock.LockRead(() =>
             {
-                if (dictionary.TryGetValue(key, out v))
+                if (dictionary.TryGetValue(key, out proxy))
                 {
                     int index = Items.FindIndex(i => EqualityComparer<TKey>.Default.Equals(i.Key, key));
                     return RemoveItem(index);
                 }
                 return false;
             });
-            value = v;
+            value = proxy;
             return exists;
         }
 
@@ -952,7 +953,7 @@ namespace ObservableHelpers
                 throw ReadOnlyException(nameof(TryUpdate));
             }
 
-            return LockRead(() =>
+            return RWLock.LockRead(() =>
             {
                 if (dictionary.TryGetValue(key, out TValue oldValue))
                 {
