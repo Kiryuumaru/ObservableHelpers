@@ -14,8 +14,8 @@
 
   <PropertyGroup>
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
-    <Version>1.2.3</Version>
-    <PackageReleaseNotes>* ObservableObject fixes</PackageReleaseNotes>
+    <Version>1.2.5</Version>
+    <PackageReleaseNotes>* Bugs fixes</PackageReleaseNotes>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 

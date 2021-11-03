@@ -21,7 +21,7 @@ namespace ObservableHelpers
     /// Specifies the type of the values in this collection.
     /// </typeparam>
     public class ObservableDictionary<TKey, TValue> :
-        ObservableCollectionBase<KeyValuePair<TKey, TValue>>,
+        ObservableCollection<KeyValuePair<TKey, TValue>>,
         IReadOnlyDictionary<TKey, TValue>,
         IDictionary<TKey, TValue>,
         IDictionary
@@ -1616,7 +1616,7 @@ namespace ObservableHelpers
         /// <summary>
         /// Provides the keys of the <see cref="ObservableDictionary{TKey, TValue}"/>.
         /// </summary>
-        public class DictionaryKeys : ObservableCollectionBase<TKey>
+        public class DictionaryKeys : ObservableCollection<TKey>
         {
             #region Properties
 
@@ -1756,7 +1756,7 @@ namespace ObservableHelpers
         /// <summary>
         /// Provides the values of the <see cref="ObservableDictionary{TKey, TValue}"/>.
         /// </summary>
-        public class DictionaryValues : ObservableCollectionBase<TValue>
+        public class DictionaryValues : ObservableCollection<TValue>
         {
             #region Properties
 

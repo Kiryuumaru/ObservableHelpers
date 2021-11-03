@@ -780,13 +780,7 @@ namespace ObservableHelpers
         /// </summary>
         public class NamedProperty
         {
-            /// <summary>
-            /// Creates new instance for <see cref="NamedProperty"/>
-            /// </summary>
-            public NamedProperty()
-            {
-
-            }
+            #region Properties
 
             /// <summary>
             /// Gets or sets the <see cref="ObservableProperty"/> of the object.
@@ -813,15 +807,35 @@ namespace ObservableHelpers
             /// </summary>
             public bool IsDefault { get; set; }
 
+            #endregion
+
+            #region Initializers
+
+            /// <summary>
+            /// Creates new instance for <see cref="NamedProperty"/>
+            /// </summary>
+            public NamedProperty()
+            {
+
+            }
+
+            #endregion
+
+            #region Object Members
+
             /// <inheritdoc/>
             public override string ToString()
             {
                 return "(" + (Key ?? "null") + ", " + (PropertyName ?? "null") + ", " + (Group ?? "null") + ") = " + (Property?.Value?.ToString() ?? "null");
             }
+
+            #endregion
         }
 
-        private struct NamedPropertyKey
+        private class NamedPropertyKey
         {
+            #region Properties
+
             public string Key => property == null ? key : property.Key;
 
             public string PropertyName => property == null ? propertyName : property.PropertyName;
@@ -829,6 +843,10 @@ namespace ObservableHelpers
             private readonly string key;
             private readonly string propertyName;
             private NamedProperty property;
+
+            #endregion
+
+            #region Initializers
 
             public NamedPropertyKey(string key, string propertyName)
             {
@@ -844,10 +862,18 @@ namespace ObservableHelpers
                 this.property = property;
             }
 
+            #endregion
+
+            #region Methods
+
             internal void Update(NamedProperty property)
             {
                 this.property = property;
             }
+
+            #endregion
+
+            #region Object Members
 
             public override bool Equals(object obj)
             {
@@ -864,6 +890,8 @@ namespace ObservableHelpers
             {
                 return 990326508 + (Key == null ? 0 : EqualityComparer<string>.Default.GetHashCode(Key));
             }
+
+            #endregion
         }
 
         /// <summary>
@@ -872,6 +900,8 @@ namespace ObservableHelpers
         public class ObjectPropertyChangesEventArgs :
             PropertyChangedEventArgs
         {
+            #region Properties
+
             /// <summary>
             /// Gets the key of the property that changed.
             /// </summary>
@@ -882,6 +912,10 @@ namespace ObservableHelpers
             /// </summary>
             public string Group { get; }
 
+            #endregion
+
+            #region Initializers
+
             internal ObjectPropertyChangesEventArgs(
                 string key,
                 string propertyName,
@@ -891,6 +925,8 @@ namespace ObservableHelpers
                 Key = key;
                 Group = group;
             }
+
+            #endregion
         }
 
         #endregion
