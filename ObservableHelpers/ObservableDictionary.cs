@@ -1287,9 +1287,9 @@ namespace ObservableHelpers
         }
 
         /// <inheritdoc/>
-        protected override bool InternalRemoveItems(int index, int count, out IEnumerable<KeyValuePair<TKey, TValue>> oldItem)
+        protected override bool InternalRemoveItems(int index, int count, out IEnumerable<KeyValuePair<TKey, TValue>> oldItems)
         {
-            oldItem = default;
+            oldItems = default;
             bool isAllExists = true;
             for (int i = 0; i < count; i++)
             {
@@ -1302,9 +1302,9 @@ namespace ObservableHelpers
             }
             if (isAllExists)
             {
-                if (base.InternalRemoveItems(index, count, out oldItem))
+                if (base.InternalRemoveItems(index, count, out oldItems))
                 {
-                    foreach (KeyValuePair<TKey, TValue> item in oldItem)
+                    foreach (KeyValuePair<TKey, TValue> item in oldItems)
                     {
                         dictionary.Remove(item.Key);
                     }
