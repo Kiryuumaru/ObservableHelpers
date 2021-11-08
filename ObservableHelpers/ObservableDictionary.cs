@@ -1101,59 +1101,6 @@ namespace ObservableHelpers
             TryUpdate(key, newValueFactory, validation);
         }
 
-        /// <summary>
-        /// Executed before adding or updating.
-        /// </summary>
-        /// <param name="items">
-        /// The items to add at the <see cref="ObservableDictionary{TKey, TValue}"/>.
-        /// </param>
-        protected virtual void PreAddItems(IEnumerable<KeyValuePair<TKey, TValue>> items)
-        {
-            foreach (KeyValuePair<TKey, TValue> item in items)
-            {
-                if (item is ISyncObject sync)
-                {
-                    sync.SyncOperation.SetContext(this);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Executed before adding or updating.
-        /// </summary>
-        /// <param name="items">
-        /// The items to update at the <see cref="ObservableDictionary{TKey, TValue}"/>.
-        /// </param>
-        protected virtual void PreUpdateItems(IEnumerable<KeyValuePair<TKey, TValue>> items)
-        {
-            foreach (KeyValuePair<TKey, TValue> item in items)
-            {
-                if (item is ISyncObject sync)
-                {
-                    sync.SyncOperation.SetContext(this);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Executed before removing.
-        /// </summary>
-        /// <param name="items">
-        /// The items to be removed.
-        /// </param>
-        protected virtual void PreRemoveItems(IEnumerable<KeyValuePair<TKey, TValue>> items)
-        {
-
-        }
-
-        /// <summary>
-        /// Executed before clearing.
-        /// </summary>
-        protected virtual void PreClearItems()
-        {
-
-        }
-
         private ArgumentException WrongKeyTypeException(string propertyName, Type providedType)
         {
             return new ArgumentException("Expected key type is \"" + typeof(TKey).FullName + "\" but dictionary was provided with \"" + providedType.FullName + "\" key type.", propertyName);
@@ -1166,7 +1113,7 @@ namespace ObservableHelpers
 
         #endregion
 
-        #region ObservableCollectionBase<T, TCollectionWrapper> Members
+        #region ObservableCollection<T, TCollectionWrapper> Members
 
         /// <summary>
         /// Adds the specified <paramref name="item"/> to the <see cref="ObservableDictionary{TKey, TValue}"/> and notify observers if the specified <paramref name="item"/> does not already exists.
@@ -1304,7 +1251,6 @@ namespace ObservableHelpers
         /// <inheritdoc/>
         protected override bool InternalClearItems(out int lastCount)
         {
-            PreClearItems();
             if (base.InternalClearItems(out lastCount))
             {
                 dictionary.Clear();
@@ -1328,7 +1274,6 @@ namespace ObservableHelpers
             }
             if (isAllNew)
             {
-                PreAddItems(items);
                 if (base.InternalInsertItems(index, items, out lastCount))
                 {
                     foreach (KeyValuePair<TKey, TValue> item in items)
@@ -1361,7 +1306,6 @@ namespace ObservableHelpers
             }
             if (isAllExists)
             {
-                PreRemoveItems(oldItem);
                 if (base.InternalRemoveItems(index, count, out oldItem))
                 {
                     foreach (KeyValuePair<TKey, TValue> item in oldItem)
@@ -1379,7 +1323,6 @@ namespace ObservableHelpers
         {
             if (dictionary.ContainsKey(item.Key))
             {
-                PreUpdateItems(new KeyValuePair<TKey, TValue>[] { item });
                 if (base.InternalSetItem(index, item, out originalItem))
                 {
                     dictionary[item.Key] = item.Value;

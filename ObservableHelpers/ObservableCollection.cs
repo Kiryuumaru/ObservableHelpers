@@ -1,4 +1,5 @@
-﻿using ObservableHelpers.Utilities;
+﻿using ObservableHelpers.Abstraction;
+using ObservableHelpers.Utilities;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -884,6 +885,7 @@ namespace ObservableHelpers
         {
             lastCount = Items.Count;
 
+            PreClearItems();
             Items.Clear();
 
             return true;
@@ -933,6 +935,7 @@ namespace ObservableHelpers
 
             lastCount = Items.Count;
 
+            PreInsertItems(index, items);
             if (insertCount == 1)
             {
                 Items.Insert(index, items.ElementAt(0));
@@ -977,6 +980,7 @@ namespace ObservableHelpers
 
             movedItem = Items[oldIndex];
 
+            PreMoveItems(oldIndex, newIndex, movedItem);
             Items.RemoveAt(oldIndex);
             Items.Insert(newIndex, movedItem);
 
@@ -1023,12 +1027,14 @@ namespace ObservableHelpers
             {
                 oldItems = new T[] { Items[index] };
 
+                PreRemoveItems(index, count, oldItems);
                 Items.RemoveAt(index);
             }
             else if (count > 1)
             {
                 oldItems = Items.GetRange(index, count);
 
+                PreRemoveItems(index, count, oldItems);
                 Items.RemoveRange(index, count);
             }
             else
@@ -1066,9 +1072,92 @@ namespace ObservableHelpers
 
             originalItem = Items[index];
 
+            PreSetItem(index, item, originalItem);
             Items[index] = item;
 
             return true;
+        }
+
+        /// <summary>
+        /// Executed before clearing.
+        /// </summary>
+        protected virtual void PreClearItems()
+        {
+
+        }
+
+        /// <summary>
+        /// Executed before inserting.
+        /// </summary>
+        /// <param name="index">
+        /// The zero-based starting index at which elements should be inserted.
+        /// </param>
+        /// <param name="items">
+        /// The items to add at the <see cref="ObservableDictionary{TKey, TValue}"/>.
+        /// </param>
+        protected virtual void PreInsertItems(int index, IEnumerable<T> items)
+        {
+            foreach (T item in items)
+            {
+                if (item is ISyncObject sync)
+                {
+                    sync.SyncOperation.SetContext(this);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Executed before moving.
+        /// </summary>
+        /// <param name="oldIndex">
+        /// The index of the element to be moved.
+        /// </param>
+        /// <param name="newIndex">
+        /// The new index of the element to be moved.
+        /// </param>
+        /// <param name="movedItem">
+        /// The element to be moved at the specified <paramref name="oldIndex"/> to the specified <paramref name="newIndex"/> from the <see cref="ObservableCollection{T}"/>.
+        /// </param>
+        protected virtual void PreMoveItems(int oldIndex, int newIndex, T movedItem)
+        {
+
+        }
+
+        /// <summary>
+        /// Executed before removing.
+        /// </summary>
+        /// <param name="index">
+        /// The zero-based index of the element to be removed.
+        /// </param>
+        /// <param name="count">
+        /// The count of elements to be removed.
+        /// </param>
+        /// <param name="oldItems">
+        /// The elements to be removed at the specified <paramref name="index"/> from the <see cref="ObservableCollection{T}"/>.
+        /// </param>
+        protected virtual void PreRemoveItems(int index, int count, IEnumerable<T> oldItems)
+        {
+
+        }
+
+        /// <summary>
+        /// Executed before setting.
+        /// </summary>
+        /// <param name="index">
+        /// The zero-based index of the element to be replaced.
+        /// </param>
+        /// <param name="newItem">
+        /// The new item to update at the <see cref="ObservableDictionary{TKey, TValue}"/>.
+        /// </param>
+        /// <param name="originalItem">
+        /// The new item to be updated at the <see cref="ObservableDictionary{TKey, TValue}"/>.
+        /// </param>
+        protected virtual void PreSetItem(int index, T newItem, T originalItem)
+        {
+            if (newItem is ISyncObject sync)
+            {
+                sync.SyncOperation.SetContext(this);
+            }
         }
 
         private protected ArgumentException WrongTypeException(string propertyName, Type providedType)
