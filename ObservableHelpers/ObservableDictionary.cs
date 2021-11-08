@@ -1,13 +1,9 @@
-﻿using ObservableHelpers.Abstraction;
-using ObservableHelpers.Utilities;
+﻿using ObservableHelpers.Utilities;
 using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.ComponentModel;
 using System.Linq;
-using System.Threading;
 
 namespace ObservableHelpers
 {
@@ -1113,7 +1109,7 @@ namespace ObservableHelpers
 
         #endregion
 
-        #region ObservableCollection<T, TCollectionWrapper> Members
+        #region ObservableCollection<T> Members
 
         /// <summary>
         /// Adds the specified <paramref name="item"/> to the <see cref="ObservableDictionary{TKey, TValue}"/> and notify observers if the specified <paramref name="item"/> does not already exists.
