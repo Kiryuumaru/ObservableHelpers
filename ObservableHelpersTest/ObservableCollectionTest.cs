@@ -1,4 +1,5 @@
 using ObservableHelpers;
+using ObservableHelpers.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -324,7 +325,7 @@ namespace ObservableCollectionTest
         public void Throws()
         {
             Assert.Throws<ArgumentNullException>(() => new ObservableCollection<int>((IEnumerable<int>)null));
-            Assert.Throws<ArgumentNullException>(() => new ObservableCollection<int>((Func<List<int>>)null));
+            Assert.Throws<ArgumentNullException>(() => new ObservableCollection<int>((Func<ObservableCollectionBase<int>, List<int>>)null));
         }
     }
 
@@ -1089,7 +1090,6 @@ namespace ObservableCollectionTest
             var col = new ObservableCollection<int>(new int[] { 1, 2, 3, 4 });
 
             Assert.Throws<ArgumentOutOfRangeException>(() => col.RemoveRange(-1, 1));
-            Assert.Throws<ArgumentOutOfRangeException>(() => col.RemoveRange(0, 0));
             Assert.Throws<ArgumentOutOfRangeException>(() => col.RemoveRange(0, -1));
             Assert.Throws<ArgumentException>(() => col.RemoveRange(0, 5));
             Assert.Throws<ArgumentException>(() => col.RemoveRange(1, 4));

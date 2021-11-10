@@ -14,8 +14,8 @@
 
   <PropertyGroup>
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
-    <Version>1.2.6</Version>
-    <PackageReleaseNotes>* Added pre-actions to ObservableCollection</PackageReleaseNotes>
+    <Version>1.2.7</Version>
+    <PackageReleaseNotes>* Removed pre-actions from ObservableCollection</PackageReleaseNotes>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 

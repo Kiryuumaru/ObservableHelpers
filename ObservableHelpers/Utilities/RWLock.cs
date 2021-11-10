@@ -8,14 +8,22 @@ namespace ObservableHelpers.Utilities
     /// </summary>
     public class RWLock
     {
-        private readonly ReaderWriterLockSlim rwLock = new ReaderWriterLockSlim();
+        private readonly ReaderWriterLockSlim rwLock;
 
         /// <summary>
         /// Creates new instance of <see cref="RWLock"/>.
         /// </summary>
         public RWLock()
         {
+            rwLock = new ReaderWriterLockSlim();
+        }
 
+        /// <summary>
+        /// Creates new instance of <see cref="RWLock"/>, specifying the <see cref="LockRecursionPolicy"/>.
+        /// </summary>
+        public RWLock(LockRecursionPolicy recursionPolicy)
+        {
+            rwLock = new ReaderWriterLockSlim(recursionPolicy);
         }
 
         /// <summary>

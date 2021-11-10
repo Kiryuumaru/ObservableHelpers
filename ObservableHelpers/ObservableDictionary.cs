@@ -95,7 +95,7 @@ namespace ObservableHelpers
         /// Creates new instance of the <see cref="ObservableDictionary{TKey, TValue}"/> class that is empty.
         /// </summary>
         public ObservableDictionary()
-            : base(() => new List<KeyValuePair<TKey, TValue>>())
+            : base(_ => new List<KeyValuePair<TKey, TValue>>())
         {
             dictionary = new Dictionary<TKey, TValue>();
             Keys = new DictionaryKeys(this);
@@ -112,7 +112,7 @@ namespace ObservableHelpers
         /// <paramref name="items"/> is a null reference.
         /// </exception>
         public ObservableDictionary(IEnumerable<KeyValuePair<TKey, TValue>> items)
-            : base(() => new List<KeyValuePair<TKey, TValue>>())
+            : base(_ => new List<KeyValuePair<TKey, TValue>>())
         {
             if (items == null)
             {
@@ -134,7 +134,7 @@ namespace ObservableHelpers
         /// <paramref name="comparer"/> is a null reference.
         /// </exception>
         public ObservableDictionary(IEqualityComparer<TKey> comparer)
-            : base(() => new List<KeyValuePair<TKey, TValue>>())
+            : base(_ => new List<KeyValuePair<TKey, TValue>>())
         {
             if (comparer == null)
             {
@@ -158,7 +158,7 @@ namespace ObservableHelpers
         /// Either <paramref name="items"/> or <paramref name="comparer"/> is a null reference.
         /// </exception>
         public ObservableDictionary(IEnumerable<KeyValuePair<TKey, TValue>> items, IEqualityComparer<TKey> comparer)
-            : base(() => new List<KeyValuePair<TKey, TValue>>())
+            : base(_ => new List<KeyValuePair<TKey, TValue>>())
         {
             if (items == null)
             {
@@ -1582,7 +1582,7 @@ namespace ObservableHelpers
             #region Initializers
 
             internal DictionaryKeys(ObservableDictionary<TKey, TValue> dictionary)
-                : base(() => new List<TKey>())
+                : base(_ => new List<TKey>())
             {
                 this.dictionary = dictionary;
                 IsReadOnly = true;
@@ -1722,7 +1722,7 @@ namespace ObservableHelpers
             #region Initializers
 
             internal DictionaryValues(ObservableDictionary<TKey, TValue> dictionary)
-                : base(() => new List<TValue>())
+                : base(_ => new List<TValue>())
             {
                 this.dictionary = dictionary;
                 IsReadOnly = true;
