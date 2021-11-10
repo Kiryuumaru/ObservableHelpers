@@ -324,8 +324,7 @@ namespace ObservableCollectionTest
         [Fact]
         public void Throws()
         {
-            Assert.Throws<ArgumentNullException>(() => new ObservableCollection<int>((IEnumerable<int>)null));
-            Assert.Throws<ArgumentNullException>(() => new ObservableCollection<int>((Func<ObservableCollectionBase<int>, List<int>>)null));
+            Assert.Throws<ArgumentNullException>(() => new ObservableCollection<int>(null));
         }
     }
 

@@ -17,7 +17,7 @@ namespace ObservableHelpers
     /// Specifies the type of the values in this collection.
     /// </typeparam>
     public class ObservableDictionary<TKey, TValue> :
-        ObservableCollection<KeyValuePair<TKey, TValue>>,
+        ObservableCollectionBase<KeyValuePair<TKey, TValue>>,
         IReadOnlyDictionary<TKey, TValue>,
         IDictionary<TKey, TValue>,
         IDictionary
@@ -204,13 +204,33 @@ namespace ObservableHelpers
         /// </exception>
         public void Add(TKey key, TValue value)
         {
+            Add(new KeyValuePair<TKey, TValue>(key, value));
+        }
+
+        /// <summary>
+        /// Adds the specified <paramref name="item"/> to the <see cref="ObservableDictionary{TKey, TValue}"/> and notify observers if the specified <paramref name="item"/> does not already exists.
+        /// </summary>
+        /// <param name="item">
+        /// The element to add.
+        /// </param>
+        /// <exception cref="ArgumentException">
+        /// An element with the same key already exists in the <see cref="ObservableDictionary{TKey, TValue}"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        /// <see cref="KeyValuePair{TKey, TValue}.Key"/> of the <paramref name="item"/> is a null reference.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableDictionary{TKey, TValue}"/> is read-only.
+        /// </exception>
+        public void Add(KeyValuePair<TKey, TValue> item)
+        {
             if (IsDisposed)
             {
                 return;
             }
-            if (key == null)
+            if (item.Key == null)
             {
-                throw new ArgumentNullException(nameof(key));
+                throw new ArgumentNullException(nameof(item.Key));
             }
             if (IsReadOnly)
             {
@@ -220,7 +240,7 @@ namespace ObservableHelpers
             RWLock.LockRead(() =>
             {
                 int index = Items.Count;
-                InsertItem(index, new KeyValuePair<TKey, TValue>(key, value));
+                InsertItem(index, item, out _);
             });
         }
 
@@ -401,17 +421,94 @@ namespace ObservableHelpers
                     value = updateValueFactory.Invoke((key, oldValue));
                     item = new KeyValuePair<TKey, TValue>(key, value);
                     int index = Items.FindIndex(i => EqualityComparer<TKey>.Default.Equals(i.Key, key));
-                    SetItem(index, item);
+                    SetItem(index, item, out _);
                 }
                 else
                 {
                     value = addValueFactory.Invoke(key);
                     item = new KeyValuePair<TKey, TValue>(key, value);
                     int index = Items.Count;
-                    InsertItem(index, item);
+                    InsertItem(index, item, out _);
                 }
                 return value;
             });
+        }
+
+        /// <summary>
+        /// Adds an item range to the <see cref="ObservableDictionary{TKey, TValue}"/> and notify the observers for changes.
+        /// </summary>
+        /// <param name="items">
+        /// The items to add to the <see cref="ObservableDictionary{TKey, TValue}"/>.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="items"/> is a null reference.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// An element with the same key already exists in the <see cref="ObservableDictionary{TKey, TValue}"/>.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableDictionary{TKey, TValue}"/> is read-only.
+        /// </exception>
+        public void AddRange(params KeyValuePair<TKey, TValue>[] items)
+        {
+            AddRange(items as IEnumerable<KeyValuePair<TKey, TValue>>);
+        }
+
+        /// <summary>
+        /// Adds an item range to the <see cref="ObservableDictionary{TKey, TValue}"/> and notify the observers for changes.
+        /// </summary>
+        /// <param name="items">
+        /// The items to add to the <see cref="ObservableDictionary{TKey, TValue}"/>.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="items"/> is a null reference.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// An element with the same key already exists in the <see cref="ObservableDictionary{TKey, TValue}"/>.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableDictionary{TKey, TValue}"/> is read-only.
+        /// </exception>
+        public void AddRange(IEnumerable<KeyValuePair<TKey, TValue>> items)
+        {
+            if (IsDisposed)
+            {
+                return;
+            }
+            if (items == null)
+            {
+                throw new ArgumentNullException(nameof(items));
+            }
+            if (IsReadOnly)
+            {
+                throw ReadOnlyException(nameof(AddRange));
+            }
+
+            RWLock.LockRead(() =>
+            {
+                int index = Items.Count;
+                InsertItems(index, items, out _);
+            });
+        }
+
+        /// <summary>
+        /// Removes all elements from the <see cref="ObservableDictionary{TKey, TValue}"/> and notify the observers for changes.
+        /// </summary>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableDictionary{TKey, TValue}"/> is read-only.
+        /// </exception>
+        public void Clear()
+        {
+            if (IsDisposed)
+            {
+                return;
+            }
+            if (IsReadOnly)
+            {
+                throw ReadOnlyException(nameof(Clear));
+            }
+
+            ClearItems(out _);
         }
 
         /// <summary>
@@ -506,10 +603,130 @@ namespace ObservableHelpers
                 {
                     value = valueFactory.Invoke(key);
                     int index = Items.Count;
-                    InsertItem(index, new KeyValuePair<TKey, TValue>(key, value));
+                    InsertItem(index, new KeyValuePair<TKey, TValue>(key, value), out _);
                 }
                 return value;
             });
+        }
+
+        /// <summary>
+        /// Inserts an item to the <see cref="ObservableDictionary{TKey, TValue}"/> at the specified index and notify the observers for changes.
+        /// </summary>
+        /// <param name="index">
+        /// The zero-based index at which item should be inserted.
+        /// </param>
+        /// <param name="item">
+        /// The item to insert into the <see cref="ObservableDictionary{TKey, TValue}"/>.
+        /// </param>
+        /// <exception cref="ArgumentException">
+        /// An element with the same key already exists in the <see cref="ObservableDictionary{TKey, TValue}"/>.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="index"/> is not a valid index in the <see cref="ObservableDictionary{TKey, TValue}"/>.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableDictionary{TKey, TValue}"/> is read-only.
+        /// </exception>
+        public void Insert(int index, KeyValuePair<TKey, TValue> item)
+        {
+            if (IsDisposed)
+            {
+                return;
+            }
+            if (IsReadOnly)
+            {
+                throw ReadOnlyException(nameof(Insert));
+            }
+
+            InsertItem(index, item, out _);
+        }
+
+        /// <summary>
+        /// Inserts an item range to the <see cref="ObservableDictionary{TKey, TValue}"/> at the specified index and notify the observers for changes.
+        /// </summary>
+        /// <param name="index">
+        /// The zero-based index at which item should be inserted.
+        /// </param>
+        /// <param name="items">
+        /// The item to insert into the <see cref="ObservableDictionary{TKey, TValue}"/>.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="items"/> is a null reference.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// An element with the same key already exists in the <see cref="ObservableDictionary{TKey, TValue}"/>.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="index"/> is not a valid index in the <see cref="ObservableDictionary{TKey, TValue}"/>.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableDictionary{TKey, TValue}"/> is read-only.
+        /// </exception>
+        public void InsertRange(int index, params KeyValuePair<TKey, TValue>[] items)
+        {
+            InsertRange(index, items as IEnumerable<KeyValuePair<TKey, TValue>>);
+        }
+
+        /// <summary>
+        /// Inserts an item range to the <see cref="ObservableDictionary{TKey, TValue}"/> at the specified index and notify the observers for changes.
+        /// </summary>
+        /// <param name="index">
+        /// The zero-based index at which item should be inserted.
+        /// </param>
+        /// <param name="items">
+        /// The item to insert into the <see cref="ObservableDictionary{TKey, TValue}"/>.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="items"/> is a null reference.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// An element with the same key already exists in the <see cref="ObservableDictionary{TKey, TValue}"/>.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="index"/> is not a valid index in the <see cref="ObservableDictionary{TKey, TValue}"/>.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableDictionary{TKey, TValue}"/> is read-only.
+        /// </exception>
+        public void InsertRange(int index, IEnumerable<KeyValuePair<TKey, TValue>> items)
+        {
+            if (IsDisposed)
+            {
+                return;
+            }
+            if (items == null)
+            {
+                throw new ArgumentNullException(nameof(items));
+            }
+            if (IsReadOnly)
+            {
+                throw ReadOnlyException(nameof(InsertRange));
+            }
+
+            InsertItems(index, items, out _);
+        }
+
+        /// <summary>
+        /// Moves an element at the specified <paramref name="oldIndex"/> to the specified <paramref name="newIndex"/> of the <see cref="ObservableDictionary{TKey, TValue}"/> and notify the observers.
+        /// </summary>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Either or both <paramref name="oldIndex"/> or <paramref name="newIndex"/> are less than zero. -or- is greater than <see cref="ObservableCollectionBase{T}.Count"/>.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableDictionary{TKey, TValue}"/> is read-only.
+        /// </exception>
+        public void Move(int oldIndex, int newIndex)
+        {
+            if (IsDisposed)
+            {
+                return;
+            }
+            if (IsReadOnly)
+            {
+                throw ReadOnlyException(nameof(Move));
+            }
+
+            MoveItem(oldIndex, newIndex, out _);
         }
 
         /// <summary>
@@ -530,6 +747,87 @@ namespace ObservableHelpers
         public bool Remove(TKey key)
         {
             return TryRemove(key);
+        }
+
+        /// <summary>
+        /// Removes the first occurrence of a specific object from the <see cref="ObservableDictionary{TKey, TValue}"/>.
+        /// </summary>
+        /// <param name="item">
+        /// The object to remove from the <see cref="ObservableDictionary{TKey, TValue}"/>.
+        /// </param>
+        /// <returns>
+        /// <c>true</c> if item was successfully removed from the <see cref="ObservableDictionary{TKey, TValue}"/>; otherwise, <c>false</c>. This method also returns false if item is not found in the <see cref="ObservableDictionary{TKey, TValue}"/>.
+        /// </returns>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableDictionary{TKey, TValue}"/> is read-only.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        /// <see cref="KeyValuePair{TKey, TValue}.Key"/> of the <paramref name="item"/> is a null reference.
+        /// </exception>
+        public bool Remove(KeyValuePair<TKey, TValue> item)
+        {
+            return TryRemove(item.Key);
+        }
+
+        /// <summary>
+        /// Removes the <see cref="ObservableDictionary{TKey, TValue}"/> item at the specified index.
+        /// </summary>
+        /// <param name="index">
+        /// The zero-based index of the item to remove.
+        /// </param>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="index"/> is not a valid index in the <see cref="ObservableDictionary{TKey, TValue}"/>.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableDictionary{TKey, TValue}"/> is read-only.
+        /// </exception>
+        public void RemoveAt(int index)
+        {
+            if (IsDisposed)
+            {
+                return;
+            }
+            if (IsReadOnly)
+            {
+                throw ReadOnlyException(nameof(RemoveAt));
+            }
+
+            RemoveItem(index, out _);
+        }
+
+        /// <summary>
+        /// Removes a specific object range from the <see cref="ObservableDictionary{TKey, TValue}"/>.
+        /// </summary>
+        /// <param name="index">
+        /// The zero-based starting index of the elements to remove.
+        /// </param>
+        /// <param name="count">
+        /// The count of elements to remove.
+        /// </param>
+        /// <returns>
+        /// <c>true</c> if items was successfully removed from the <see cref="ObservableDictionary{TKey, TValue}"/>; otherwise, <c>false</c>.
+        /// </returns>
+        /// <exception cref="ArgumentException">
+        /// <paramref name="index"/> and <paramref name="count"/> do not denote a valid range of elements in the <see cref="ObservableDictionary{TKey, TValue}"/>.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="index"/> is less than zero. -or- is greater than <see cref="ObservableCollectionBase{T}.Count"/>.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// The <see cref="ObservableDictionary{TKey, TValue}"/> is read-only.
+        /// </exception>
+        public bool RemoveRange(int index, int count)
+        {
+            if (IsDisposed)
+            {
+                return default;
+            }
+            if (IsReadOnly)
+            {
+                throw ReadOnlyException(nameof(RemoveRange));
+            }
+
+            return RemoveItems(index, count, out _);
         }
 
         /// <summary>
@@ -609,7 +907,7 @@ namespace ObservableHelpers
                 {
                     TValue value = valueFactory.Invoke(key);
                     int index = Items.Count;
-                    InsertItem(index, new KeyValuePair<TKey, TValue>(key, value));
+                    InsertItem(index, new KeyValuePair<TKey, TValue>(key, value), out _);
                     return true;
                 }
                 return false;
@@ -773,7 +1071,7 @@ namespace ObservableHelpers
                 if (dictionary.TryGetValue(key, out proxy))
                 {
                     int index = Items.FindIndex(i => EqualityComparer<TKey>.Default.Equals(i.Key, key));
-                    return RemoveItem(index);
+                    return RemoveItem(index, out _);
                 }
                 return false;
             });
@@ -957,7 +1255,7 @@ namespace ObservableHelpers
                     if (validation.Invoke((key, newValue, oldValue)))
                     {
                         int index = Items.FindIndex(i => EqualityComparer<TKey>.Default.Equals(i.Key, key));
-                        SetItem(index, new KeyValuePair<TKey, TValue>(key, newValue));
+                        SetItem(index, new KeyValuePair<TKey, TValue>(key, newValue), out _);
                         return true;
                     }
                 }
@@ -1111,64 +1409,8 @@ namespace ObservableHelpers
 
         #region ObservableCollection<T> Members
 
-        /// <summary>
-        /// Adds the specified <paramref name="item"/> to the <see cref="ObservableDictionary{TKey, TValue}"/> and notify observers if the specified <paramref name="item"/> does not already exists.
-        /// </summary>
-        /// <param name="item">
-        /// The element to add.
-        /// </param>
-        /// <exception cref="ArgumentException">
-        /// An element with the same key already exists in the <see cref="ObservableDictionary{TKey, TValue}"/>.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="item"/> is a null reference.
-        /// </exception>
-        /// <exception cref="NotSupportedException">
-        /// The <see cref="ObservableDictionary{TKey, TValue}"/> is read-only.
-        /// </exception>
-        public new void Add(KeyValuePair<TKey, TValue> item) => base.Add(item);
-
-        /// <summary>
-        /// Adds an item range to the <see cref="ObservableDictionary{TKey, TValue}"/> and notify the observers for changes.
-        /// </summary>
-        /// <param name="items">
-        /// The items to add to the <see cref="ObservableDictionary{TKey, TValue}"/>.
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="items"/> is a null reference.
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        /// An element with the same key already exists in the <see cref="ObservableDictionary{TKey, TValue}"/>.
-        /// </exception>
-        /// <exception cref="NotSupportedException">
-        /// The <see cref="ObservableDictionary{TKey, TValue}"/> is read-only.
-        /// </exception>
-        public new void AddRange(IEnumerable<KeyValuePair<TKey, TValue>> items) => base.AddRange(items);
-
-        /// <summary>
-        /// Adds an item range to the <see cref="ObservableDictionary{TKey, TValue}"/> and notify the observers for changes.
-        /// </summary>
-        /// <param name="items">
-        /// The items to add to the <see cref="ObservableDictionary{TKey, TValue}"/>.
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="items"/> is a null reference.
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        /// An element with the same key already exists in the <see cref="ObservableDictionary{TKey, TValue}"/>.
-        /// </exception>
-        /// <exception cref="NotSupportedException">
-        /// The <see cref="ObservableDictionary{TKey, TValue}"/> is read-only.
-        /// </exception>
-        public new void AddRange(params KeyValuePair<TKey, TValue>[] items) => base.AddRange(items);
-
-        /// <summary>
-        /// Returns a dictionary enumerator that iterates through the dictionary collection.
-        /// </summary>
-        /// <returns>
-        /// An enumerator that can be used to iterate through the dictionary collection.
-        /// </returns>
-        public new DictionaryEnumerator GetEnumerator()
+        /// <inheritdoc/>
+        public override IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
         {
             if (IsDisposed)
             {
@@ -1177,73 +1419,6 @@ namespace ObservableHelpers
 
             return new DictionaryEnumerator(this);
         }
-
-        /// <summary>
-        /// Inserts an item to the <see cref="ObservableDictionary{TKey, TValue}"/> at the specified index and notify the observers for changes.
-        /// </summary>
-        /// <param name="index">
-        /// The zero-based index at which item should be inserted.
-        /// </param>
-        /// <param name="item">
-        /// The item to insert into the <see cref="ObservableDictionary{TKey, TValue}"/>.
-        /// </param>
-        /// <exception cref="ArgumentException">
-        /// An element with the same key already exists in the <see cref="ObservableDictionary{TKey, TValue}"/>.
-        /// </exception>
-        /// <exception cref="ArgumentOutOfRangeException">
-        /// <paramref name="index"/> is not a valid index in the <see cref="ObservableDictionary{TKey, TValue}"/>.
-        /// </exception>
-        /// <exception cref="NotSupportedException">
-        /// The <see cref="ObservableDictionary{TKey, TValue}"/> is read-only.
-        /// </exception>
-        public new void Insert(int index, KeyValuePair<TKey, TValue> item) => base.Insert(index, item);
-
-        /// <summary>
-        /// Inserts an item range to the <see cref="ObservableDictionary{TKey, TValue}"/> at the specified index and notify the observers for changes.
-        /// </summary>
-        /// <param name="index">
-        /// The zero-based index at which item should be inserted.
-        /// </param>
-        /// <param name="items">
-        /// The item to insert into the <see cref="ObservableDictionary{TKey, TValue}"/>.
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="items"/> is a null reference.
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        /// An element with the same key already exists in the <see cref="ObservableDictionary{TKey, TValue}"/>.
-        /// </exception>
-        /// <exception cref="ArgumentOutOfRangeException">
-        /// <paramref name="index"/> is not a valid index in the <see cref="ObservableDictionary{TKey, TValue}"/>.
-        /// </exception>
-        /// <exception cref="NotSupportedException">
-        /// The <see cref="ObservableDictionary{TKey, TValue}"/> is read-only.
-        /// </exception>
-        public new void InsertRange(int index, IEnumerable<KeyValuePair<TKey, TValue>> items) => base.InsertRange(index, items);
-
-        /// <summary>
-        /// Inserts an item range to the <see cref="ObservableDictionary{TKey, TValue}"/> at the specified index and notify the observers for changes.
-        /// </summary>
-        /// <param name="index">
-        /// The zero-based index at which item should be inserted.
-        /// </param>
-        /// <param name="items">
-        /// The item to insert into the <see cref="ObservableDictionary{TKey, TValue}"/>.
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="items"/> is a null reference.
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        /// An element with the same key already exists in the <see cref="ObservableDictionary{TKey, TValue}"/>.
-        /// </exception>
-        /// <exception cref="ArgumentOutOfRangeException">
-        /// <paramref name="index"/> is not a valid index in the <see cref="ObservableDictionary{TKey, TValue}"/>.
-        /// </exception>
-        /// <exception cref="NotSupportedException">
-        /// The <see cref="ObservableDictionary{TKey, TValue}"/> is read-only.
-        /// </exception>
-        public new void InsertRange(int index, params KeyValuePair<TKey, TValue>[] items) => base.InsertRange(index, items);
-
         /// <inheritdoc/>
         protected override bool InternalClearItems(out int lastCount)
         {
@@ -1523,7 +1698,7 @@ namespace ObservableHelpers
             }
         }
 
-        IDictionaryEnumerator IDictionary.GetEnumerator() => GetEnumerator();
+        IDictionaryEnumerator IDictionary.GetEnumerator() => GetEnumerator() as IDictionaryEnumerator;
 
         void IDictionary.Remove(object key)
         {
@@ -1531,7 +1706,7 @@ namespace ObservableHelpers
             {
                 if (default(TKey) == null)
                 {
-                    Remove(default);
+                    Remove(default(TKey));
                 }
                 else
                 {
@@ -1582,7 +1757,6 @@ namespace ObservableHelpers
             #region Initializers
 
             internal DictionaryKeys(ObservableDictionary<TKey, TValue> dictionary)
-                : base(_ => new List<TKey>())
             {
                 this.dictionary = dictionary;
                 IsReadOnly = true;
@@ -1722,7 +1896,6 @@ namespace ObservableHelpers
             #region Initializers
 
             internal DictionaryValues(ObservableDictionary<TKey, TValue> dictionary)
-                : base(_ => new List<TValue>())
             {
                 this.dictionary = dictionary;
                 IsReadOnly = true;
@@ -1835,7 +2008,7 @@ namespace ObservableHelpers
         /// <summary>
         /// Provides the default enumerator of the <see cref="ObservableDictionary{TKey, TValue}"/>.
         /// </summary>
-        public class DictionaryEnumerator : IEnumerator<KeyValuePair<TKey, TValue>>, IDictionaryEnumerator
+        public struct DictionaryEnumerator : IEnumerator<KeyValuePair<TKey, TValue>>, IDictionaryEnumerator
         {
             #region Properties
 
@@ -1843,15 +2016,13 @@ namespace ObservableHelpers
             public KeyValuePair<TKey, TValue> Current => enumerator.Current;
 
             /// <inheritdoc/>
-            public object Key => Current.Key;
+            public object Key => enumerator.Current.Key;
 
             /// <inheritdoc/>
-            public object Value => Current.Value;
+            public object Value => enumerator.Current.Value;
 
             /// <inheritdoc/>
             public DictionaryEntry Entry => new DictionaryEntry(Key, Value);
-
-            object IEnumerator.Current => Current;
 
             private readonly IEnumerator<KeyValuePair<TKey, TValue>> enumerator;
 
@@ -1876,6 +2047,12 @@ namespace ObservableHelpers
 
             /// <inheritdoc/>
             public void Reset() => enumerator.Reset();
+
+            #endregion
+
+            #region IEnumerator Members
+
+            object IEnumerator.Current => enumerator.Current;
 
             #endregion
         }

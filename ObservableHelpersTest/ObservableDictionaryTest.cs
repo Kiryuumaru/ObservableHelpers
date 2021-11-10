@@ -973,7 +973,7 @@ namespace ObservableDictionaryTest
                 new KeyValuePair<string, string>("4", "four")
             });
 
-            var enumerator = dict.GetEnumerator();
+            var enumerator = (ObservableDictionary<string, string>.DictionaryEnumerator)dict.GetEnumerator();
 
             Assert.True(enumerator.MoveNext());
             Assert.Equal("1", enumerator.Key);

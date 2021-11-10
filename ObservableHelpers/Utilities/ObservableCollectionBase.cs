@@ -18,13 +18,12 @@ namespace ObservableHelpers.Utilities
     public abstract class ObservableCollectionBase<T> :
         ObservableCollectionSyncContext,
         IReadOnlyList<T>,
-        IList<T>,
-        IList
+        ICollection
     {
         #region Properties
 
         /// <summary>
-        /// Gets or sets the element at the specified index.
+        /// Gets the element at the specified index.
         /// </summary>
         /// <param name="index">
         /// The zero-based index of the element to get or set.
@@ -34,9 +33,6 @@ namespace ObservableHelpers.Utilities
         /// </returns>
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="index"/> is not a valid index in the <see cref="ObservableCollectionBase{T}"/>.
-        /// </exception>
-        /// <exception cref="NotSupportedException">
-        /// The property is set and the <see cref="ObservableCollectionBase{T}"/> is read-only.
         /// </exception>
         public T this[int index]
         {
@@ -55,19 +51,6 @@ namespace ObservableHelpers.Utilities
                     }
                     return Items[index];
                 });
-            }
-            set
-            {
-                if (IsDisposed)
-                {
-                    return;
-                }
-                if (IsReadOnly)
-                {
-                    throw ReadOnlyException(nameof(IndexerName));
-                }
-
-                SetItem(index, value);
             }
         }
 
@@ -142,104 +125,6 @@ namespace ObservableHelpers.Utilities
         #region Members
 
         /// <summary>
-        /// Adds an item to the <see cref="ObservableCollectionBase{T}"/> and notify the observers for changes.
-        /// </summary>
-        /// <param name="item">
-        /// The item to add to the <see cref="ObservableCollectionBase{T}"/>.
-        /// </param>
-        /// <exception cref="NotSupportedException">
-        /// The <see cref="ObservableCollectionBase{T}"/> is read-only.
-        /// </exception>
-        public void Add(T item)
-        {
-            if (IsDisposed)
-            {
-                return;
-            }
-            if (IsReadOnly)
-            {
-                throw ReadOnlyException(nameof(Add));
-            }
-
-            RWLock.LockRead(() =>
-            {
-                int index = Items.Count;
-                InsertItem(index, item);
-            });
-        }
-
-        /// <summary>
-        /// Adds an item range to the <see cref="ObservableCollectionBase{T}"/> and notify the observers for changes.
-        /// </summary>
-        /// <param name="items">
-        /// The items to add to the <see cref="ObservableCollectionBase{T}"/>.
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="items"/> is a null reference.
-        /// </exception>
-        /// <exception cref="NotSupportedException">
-        /// The <see cref="ObservableCollectionBase{T}"/> is read-only.
-        /// </exception>
-        public void AddRange(params T[] items)
-        {
-            AddRange(items as IEnumerable<T>);
-        }
-
-        /// <summary>
-        /// Adds an item range to the <see cref="ObservableCollectionBase{T}"/> and notify the observers for changes.
-        /// </summary>
-        /// <param name="items">
-        /// The items to add to the <see cref="ObservableCollectionBase{T}"/>.
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="items"/> is a null reference.
-        /// </exception>
-        /// <exception cref="NotSupportedException">
-        /// The <see cref="ObservableCollectionBase{T}"/> is read-only.
-        /// </exception>
-        public void AddRange(IEnumerable<T> items)
-        {
-            if (IsDisposed)
-            {
-                return;
-            }
-            if (items == null)
-            {
-                throw new ArgumentNullException(nameof(items));
-            }
-            if (IsReadOnly)
-            {
-                throw ReadOnlyException(nameof(AddRange));
-            }
-
-            RWLock.LockRead(() =>
-            {
-                int index = Items.Count;
-                InsertItems(index, items);
-            });
-        }
-
-        /// <summary>
-        /// Removes all elements from the <see cref="ObservableCollectionBase{T}"/> and notify the observers for changes.
-        /// </summary>
-        /// <exception cref="NotSupportedException">
-        /// The <see cref="ObservableCollectionBase{T}"/> is read-only.
-        /// </exception>
-        public void Clear()
-        {
-            if (IsDisposed)
-            {
-                return;
-            }
-            if (IsReadOnly)
-            {
-                throw ReadOnlyException(nameof(Clear));
-            }
-
-            ClearItems();
-        }
-
-        /// <summary>
         /// Determines whether the <see cref="ObservableCollectionBase{T}"/> contains a specific <paramref name="item"/>.
         /// </summary>
         /// <param name="item">
@@ -272,6 +157,11 @@ namespace ObservableHelpers.Utilities
         /// </exception>
         public void CopyTo(T[] array)
         {
+            if (IsDisposed)
+            {
+                return;
+            }
+
             RWLock.LockRead(() => Items.CopyTo(array));
         }
 
@@ -295,6 +185,11 @@ namespace ObservableHelpers.Utilities
         /// </exception>
         public void CopyTo(T[] array, int arrayIndex)
         {
+            if (IsDisposed)
+            {
+                return;
+            }
+
             RWLock.LockRead(() => Items.CopyTo(array, arrayIndex));
         }
 
@@ -318,6 +213,11 @@ namespace ObservableHelpers.Utilities
         /// </exception>
         public void CopyTo(Array array, int arrayIndex)
         {
+            if (IsDisposed)
+            {
+                return;
+            }
+
             RWLock.LockRead(() => (Items as ICollection).CopyTo(array, arrayIndex));
         }
 
@@ -347,6 +247,11 @@ namespace ObservableHelpers.Utilities
         /// </exception>
         public void CopyTo(int index, T[] array, int arrayIndex, int count)
         {
+            if (IsDisposed)
+            {
+                return;
+            }
+
             RWLock.LockRead(() => Items.CopyTo(index, array, arrayIndex, count));
         }
 
@@ -356,7 +261,7 @@ namespace ObservableHelpers.Utilities
         /// <returns>
         /// An enumerator that can be used to iterate through the collection.
         /// </returns>
-        public IEnumerator<T> GetEnumerator()
+        public virtual IEnumerator<T> GetEnumerator()
         {
             if (IsDisposed)
             {
@@ -383,117 +288,6 @@ namespace ObservableHelpers.Utilities
             }
 
             return RWLock.LockRead(() => Items.IndexOf(value));
-        }
-
-        /// <summary>
-        /// Inserts an item to the <see cref="ObservableCollectionBase{T}"/> at the specified index and notify the observers for changes.
-        /// </summary>
-        /// <param name="index">
-        /// The zero-based index at which item should be inserted.
-        /// </param>
-        /// <param name="item">
-        /// The item to insert into the <see cref="ObservableCollectionBase{T}"/>.
-        /// </param>
-        /// <exception cref="ArgumentOutOfRangeException">
-        /// <paramref name="index"/> is not a valid index in the <see cref="ObservableCollectionBase{T}"/>.
-        /// </exception>
-        /// <exception cref="NotSupportedException">
-        /// The <see cref="ObservableCollectionBase{T}"/> is read-only.
-        /// </exception>
-        public void Insert(int index, T item)
-        {
-            if (IsDisposed)
-            {
-                return;
-            }
-            if (IsReadOnly)
-            {
-                throw ReadOnlyException(nameof(Insert));
-            }
-
-            InsertItem(index, item);
-        }
-
-        /// <summary>
-        /// Inserts an item range to the <see cref="ObservableCollectionBase{T}"/> at the specified index and notify the observers for changes.
-        /// </summary>
-        /// <param name="index">
-        /// The zero-based index at which item should be inserted.
-        /// </param>
-        /// <param name="items">
-        /// The item to insert into the <see cref="ObservableCollectionBase{T}"/>.
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="items"/> is a null reference.
-        /// </exception>
-        /// <exception cref="ArgumentOutOfRangeException">
-        /// <paramref name="index"/> is not a valid index in the <see cref="ObservableCollectionBase{T}"/>.
-        /// </exception>
-        /// <exception cref="NotSupportedException">
-        /// The <see cref="ObservableCollectionBase{T}"/> is read-only.
-        /// </exception>
-        public void InsertRange(int index, params T[] items)
-        {
-            InsertRange(index, items as IEnumerable<T>);
-        }
-
-        /// <summary>
-        /// Inserts an item range to the <see cref="ObservableCollectionBase{T}"/> at the specified index and notify the observers for changes.
-        /// </summary>
-        /// <param name="index">
-        /// The zero-based index at which item should be inserted.
-        /// </param>
-        /// <param name="items">
-        /// The item to insert into the <see cref="ObservableCollectionBase{T}"/>.
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="items"/> is a null reference.
-        /// </exception>
-        /// <exception cref="ArgumentOutOfRangeException">
-        /// <paramref name="index"/> is not a valid index in the <see cref="ObservableCollectionBase{T}"/>.
-        /// </exception>
-        /// <exception cref="NotSupportedException">
-        /// The <see cref="ObservableCollectionBase{T}"/> is read-only.
-        /// </exception>
-        public void InsertRange(int index, IEnumerable<T> items)
-        {
-            if (IsDisposed)
-            {
-                return;
-            }
-            if (items == null)
-            {
-                throw new ArgumentNullException(nameof(items));
-            }
-            if (IsReadOnly)
-            {
-                throw ReadOnlyException(nameof(InsertRange));
-            }
-
-            InsertItems(index, items);
-        }
-
-        /// <summary>
-        /// Moves an element at the specified <paramref name="oldIndex"/> to the specified <paramref name="newIndex"/> of the <see cref="ObservableCollectionBase{T}"/> and notify the observers.
-        /// </summary>
-        /// <exception cref="ArgumentOutOfRangeException">
-        /// Either or both <paramref name="oldIndex"/> or <paramref name="newIndex"/> are less than zero. -or- is greater than <see cref="ObservableCollectionBase{T}.Count"/>.
-        /// </exception>
-        /// <exception cref="NotSupportedException">
-        /// The <see cref="ObservableCollectionBase{T}"/> is read-only.
-        /// </exception>
-        public void Move(int oldIndex, int newIndex)
-        {
-            if (IsDisposed)
-            {
-                return;
-            }
-            if (IsReadOnly)
-            {
-                throw ReadOnlyException(nameof(Move));
-            }
-
-            MoveItem(oldIndex, newIndex);
         }
 
         /// <summary>
@@ -544,119 +338,33 @@ namespace ObservableHelpers.Utilities
         }
 
         /// <summary>
-        /// Removes the first occurrence of a specific object from the <see cref="ObservableCollectionBase{T}"/>.
-        /// </summary>
-        /// <param name="item">
-        /// The object to remove from the <see cref="ObservableCollectionBase{T}"/>.
-        /// </param>
-        /// <returns>
-        /// <c>true</c> if item was successfully removed from the <see cref="ObservableCollectionBase{T}"/>; otherwise, <c>false</c>. This method also returns false if item is not found in the <see cref="ObservableCollectionBase{T}"/>.
-        /// </returns>
-        /// <exception cref="NotSupportedException">
-        /// The <see cref="ObservableCollectionBase{T}"/> is read-only.
-        /// </exception>
-        public bool Remove(T item)
-        {
-            if (IsDisposed)
-            {
-                return default;
-            }
-            if (IsReadOnly)
-            {
-                throw ReadOnlyException(nameof(Remove));
-            }
-
-            return RWLock.LockRead(() =>
-            {
-                int index = Items.IndexOf(item);
-                if (index == -1)
-                {
-                    return false;
-                }
-                return RemoveItem(index);
-            });
-        }
-
-        /// <summary>
-        /// Removes the <see cref="ObservableCollectionBase{T}"/> item at the specified index.
-        /// </summary>
-        /// <param name="index">
-        /// The zero-based index of the item to remove.
-        /// </param>
-        /// <exception cref="ArgumentOutOfRangeException">
-        /// <paramref name="index"/> is not a valid index in the <see cref="ObservableCollectionBase{T}"/>.
-        /// </exception>
-        /// <exception cref="NotSupportedException">
-        /// The <see cref="ObservableCollectionBase{T}"/> is read-only.
-        /// </exception>
-        public void RemoveAt(int index)
-        {
-            if (IsDisposed)
-            {
-                return;
-            }
-            if (IsReadOnly)
-            {
-                throw ReadOnlyException(nameof(RemoveAt));
-            }
-
-            RemoveItem(index);
-        }
-
-        /// <summary>
-        /// Removes a specific object range from the <see cref="ObservableCollectionBase{T}"/>.
-        /// </summary>
-        /// <param name="index">
-        /// The zero-based starting index of the elements to remove.
-        /// </param>
-        /// <param name="count">
-        /// The count of elements to remove.
-        /// </param>
-        /// <returns>
-        /// <c>true</c> if items was successfully removed from the <see cref="ObservableCollectionBase{T}"/>; otherwise, <c>false</c>.
-        /// </returns>
-        /// <exception cref="ArgumentException">
-        /// <paramref name="index"/> and <paramref name="count"/> do not denote a valid range of elements in the <see cref="ObservableCollectionBase{T}"/>.
-        /// </exception>
-        /// <exception cref="ArgumentOutOfRangeException">
-        /// <paramref name="index"/> is less than zero. -or- is greater than <see cref="ObservableCollectionBase{T}.Count"/>.
-        /// </exception>
-        /// <exception cref="NotSupportedException">
-        /// The <see cref="ObservableCollectionBase{T}"/> is read-only.
-        /// </exception>
-        public bool RemoveRange(int index, int count)
-        {
-            if (IsDisposed)
-            {
-                return default;
-            }
-            if (IsReadOnly)
-            {
-                throw ReadOnlyException(nameof(RemoveRange));
-            }
-
-            return RemoveItems(index, count);
-        }
-
-        /// <summary>
         /// Removes all elements from the <see cref="ObservableCollectionBase{T}"/> and notify the observers.
         /// </summary>
+        /// <param name="lastCount">
+        /// The last <see cref="Count"/> of the <see cref="ObservableCollectionBase{T}"/> before the operation.
+        /// </param>
         /// <returns>
         /// <c>true</c> if operation was executed; otherwise <c>false</c>.
         /// </returns>
-        protected bool ClearItems()
+        protected bool ClearItems(out int lastCount)
         {
-            return RWLock.LockWrite(() =>
+            int proxy = default;
+            bool ret = RWLock.LockRead(() =>
             {
-                if (InternalClearItems(out _))
+                return RWLock.LockWrite(() =>
                 {
-                    OnPropertyChanged(nameof(Count));
-                    OnPropertyChanged(IndexerName);
-                    OnCollectionReset();
-                    return true;
-                }
-                return false;
+                    if (InternalClearItems(out proxy))
+                    {
+                        OnPropertyChanged(nameof(Count));
+                        OnPropertyChanged(IndexerName);
+                        OnCollectionReset();
+                        return true;
+                    }
+                    return false;
+                });
             });
+            lastCount = proxy;
+            return ret;
         }
 
         /// <summary>
@@ -668,15 +376,19 @@ namespace ObservableHelpers.Utilities
         /// <param name="item">
         /// The element to insert. The value can be null for reference types.
         /// </param>
+        /// <param name="lastCount">
+        /// The last <see cref="Count"/> of the <see cref="ObservableCollectionBase{T}"/> before the operation.
+        /// </param>
         /// <returns>
         /// <c>true</c> if operation was executed; otherwise <c>false</c>.
         /// </returns>
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="index"/> is less than zero. -or- index is greater than <see cref="ObservableCollectionBase{T}.Count"/>.
         /// </exception>
-        protected bool InsertItem(int index, T item)
+        protected bool InsertItem(int index, T item, out int lastCount)
         {
-            return RWLock.LockRead(() =>
+            int proxy = default;
+            bool ret = RWLock.LockRead(() =>
             {
                 if (index < 0 || index > Items.Count)
                 {
@@ -685,7 +397,7 @@ namespace ObservableHelpers.Utilities
 
                 return RWLock.LockWrite(() =>
                 {
-                    if (InternalInsertItems(index, new T[] { item }, out _))
+                    if (InternalInsertItems(index, new T[] { item }, out proxy))
                     {
                         if (item is ISyncObject sync)
                         {
@@ -699,6 +411,8 @@ namespace ObservableHelpers.Utilities
                     return false;
                 });
             });
+            lastCount = proxy;
+            return ret;
         }
 
         /// <summary>
@@ -710,6 +424,9 @@ namespace ObservableHelpers.Utilities
         /// <param name="items">
         /// The elements to insert. The value can be null for reference types.
         /// </param>
+        /// <param name="lastCount">
+        /// The last <see cref="Count"/> of the <see cref="ObservableCollectionBase{T}"/> before the operation.
+        /// </param>
         /// <returns>
         /// <c>true</c> if operation was executed; otherwise <c>false</c>.
         /// </returns>
@@ -719,9 +436,10 @@ namespace ObservableHelpers.Utilities
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="index"/> is less than zero. -or- index is greater than <see cref="ObservableCollectionBase{T}.Count"/>.
         /// </exception>
-        protected bool InsertItems(int index, IEnumerable<T> items)
+        protected bool InsertItems(int index, IEnumerable<T> items, out int lastCount)
         {
-            return RWLock.LockRead(() =>
+            int proxy = default;
+            bool ret = RWLock.LockRead(() =>
             {
                 if (items == null)
                 {
@@ -734,7 +452,7 @@ namespace ObservableHelpers.Utilities
 
                 return RWLock.LockWrite(() =>
                 {
-                    if (InternalInsertItems(index, items, out _))
+                    if (InternalInsertItems(index, items, out proxy))
                     {
                         foreach (T item in items)
                         {
@@ -745,12 +463,21 @@ namespace ObservableHelpers.Utilities
                         }
                         OnPropertyChanged(nameof(Count));
                         OnPropertyChanged(IndexerName);
-                        OnCollectionAdd(items.ToList(), index);
+                        if (items is IList list)
+                        {
+                            OnCollectionAdd(list, index);
+                        }
+                        else
+                        {
+                            OnCollectionAdd(items.ToList(), index);
+                        }
                         return true;
                     }
                     return false;
                 });
             });
+            lastCount = proxy;
+            return ret;
         }
 
         /// <summary>
@@ -762,15 +489,19 @@ namespace ObservableHelpers.Utilities
         /// <param name="newIndex">
         /// The new index of the element to move to.
         /// </param>
+        /// <param name="movedItem">
+        /// The moved element at the specified <paramref name="oldIndex"/> to the specified <paramref name="newIndex"/> from the <see cref="ObservableCollectionBase{T}"/>.
+        /// </param>
         /// <returns>
         /// <c>true</c> if operation was executed; otherwise <c>false</c>.
         /// </returns>
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="oldIndex"/> or <paramref name="newIndex"/> is less than zero. -or- is greater than or equal to <see cref="ObservableCollectionBase{T}.Count"/>.
         /// </exception>
-        protected bool MoveItem(int oldIndex, int newIndex)
+        protected bool MoveItem(int oldIndex, int newIndex, out T movedItem)
         {
-            return RWLock.LockRead(() =>
+            T proxy = default;
+            bool ret = RWLock.LockRead(() =>
             {
                 if (oldIndex < 0 || oldIndex >= Items.Count)
                 {
@@ -784,15 +515,17 @@ namespace ObservableHelpers.Utilities
 
                 return RWLock.LockWrite(() =>
                 {
-                    if (InternalMoveItem(oldIndex, newIndex, out T movedItem))
+                    if (InternalMoveItem(oldIndex, newIndex, out proxy))
                     {
                         OnPropertyChanged(IndexerName);
-                        OnCollectionMove(movedItem, oldIndex, newIndex);
+                        OnCollectionMove(proxy, oldIndex, newIndex);
                         return true;
                     }
                     return false;
                 });
             });
+            movedItem = proxy;
+            return ret;
         }
 
         /// <summary>
@@ -801,15 +534,19 @@ namespace ObservableHelpers.Utilities
         /// <param name="index">
         /// The zero-based index of the element to remove.
         /// </param>
+        /// <param name="removedItem">
+        /// The removed element at the specified <paramref name="index"/> from the <see cref="ObservableCollectionBase{T}"/>.
+        /// </param>
         /// <returns>
         /// <c>true</c> if operation was executed; otherwise <c>false</c>.
         /// </returns>
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="index"/> is less than zero. -or- is greater than <see cref="ObservableCollectionBase{T}.Count"/>.
         /// </exception>
-        protected bool RemoveItem(int index)
+        protected bool RemoveItem(int index, out T removedItem)
         {
-            return RWLock.LockRead(() =>
+            T proxy = default;
+            bool ret = RWLock.LockRead(() =>
             {
                 if (index < 0 || index >= Items.Count)
                 {
@@ -820,14 +557,24 @@ namespace ObservableHelpers.Utilities
                 {
                     if (InternalRemoveItems(index, 1, out IEnumerable<T> removedItems))
                     {
+                        proxy = removedItems.FirstOrDefault();
                         OnPropertyChanged(nameof(Count));
                         OnPropertyChanged(IndexerName);
-                        OnCollectionRemove(removedItems.ToList(), index);
+                        if (removedItems is IList list)
+                        {
+                            OnCollectionRemove(list, index);
+                        }
+                        else
+                        {
+                            OnCollectionRemove(removedItems.ToList(), index);
+                        }
                         return true;
                     }
                     return false;
                 });
             });
+            removedItem = proxy;
+            return ret;
         }
 
         /// <summary>
@@ -839,6 +586,9 @@ namespace ObservableHelpers.Utilities
         /// <param name="count">
         /// The count of elements to remove.
         /// </param>
+        /// <param name="removedItems">
+        /// The removed elements at the specified <paramref name="index"/> from the <see cref="ObservableCollectionBase{T}"/>.
+        /// </param>
         /// <returns>
         /// <c>true</c> if operation was executed; otherwise <c>false</c>.
         /// </returns>
@@ -848,9 +598,10 @@ namespace ObservableHelpers.Utilities
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="index"/> or <paramref name="count"/> is less than zero.
         /// </exception>
-        protected bool RemoveItems(int index, int count)
+        protected bool RemoveItems(int index, int count, out IEnumerable<T> removedItems)
         {
-            return RWLock.LockRead(() =>
+            IEnumerable<T> proxy = default;
+            bool ret = RWLock.LockRead(() =>
             {
                 if (index < 0)
                 {
@@ -867,16 +618,25 @@ namespace ObservableHelpers.Utilities
 
                 return RWLock.LockWrite(() =>
                 {
-                    if (InternalRemoveItems(index, count, out IEnumerable<T> removedItems))
+                    if (InternalRemoveItems(index, count, out proxy))
                     {
                         OnPropertyChanged(nameof(Count));
                         OnPropertyChanged(IndexerName);
-                        OnCollectionRemove(removedItems.ToList(), index);
+                        if (proxy is IList list)
+                        {
+                            OnCollectionRemove(list, index);
+                        }
+                        else
+                        {
+                            OnCollectionRemove(proxy.ToList(), index);
+                        }
                         return true;
                     }
                     return false;
                 });
             });
+            removedItems = proxy;
+            return ret;
         }
 
         /// <summary>
@@ -888,15 +648,19 @@ namespace ObservableHelpers.Utilities
         /// <param name="item">
         /// The new value for the element at the specified <paramref name="index"/>. The value can be <c>null</c> for reference types.
         /// </param>
+        /// <param name="originalItem">
+        /// The replaced original element at the specified <paramref name="index"/> from the <see cref="ObservableCollectionBase{T}"/>.
+        /// </param>
         /// <returns>
         /// <c>true</c> if operation was executed; otherwise <c>false</c>.
         /// </returns>
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="index"/> is less than zero. -or- is greater than or equal to <see cref="ObservableCollectionBase{T}.Count"/>.
         /// </exception>
-        protected bool SetItem(int index, T item)
+        protected bool SetItem(int index, T item, out T originalItem)
         {
-            return RWLock.LockRead(() =>
+            T proxy = default;
+            bool ret = RWLock.LockRead(() =>
             {
                 if (index < 0 || index >= Items.Count)
                 {
@@ -905,26 +669,28 @@ namespace ObservableHelpers.Utilities
 
                 return RWLock.LockWrite(() =>
                 {
-                    if (InternalSetItem(index, item, out T originalItem))
+                    if (InternalSetItem(index, item, out proxy))
                     {
                         if (item is ISyncObject sync)
                         {
                             sync.SyncOperation.SetContext(this);
                         }
                         OnPropertyChanged(IndexerName);
-                        OnCollectionReplace(originalItem, item, index);
+                        OnCollectionReplace(proxy, item, index);
                         return true;
                     }
                     return false;
                 });
             });
+            originalItem = proxy;
+            return ret;
         }
 
         /// <summary>
         /// Provides an overridable internal operation for <see cref="ClearItems"/>.
         /// </summary>
         /// <param name="lastCount">
-        /// The last count of the <see cref="ObservableCollectionBase{T}"/> before modification.
+        /// The last <see cref="Count"/> of the <see cref="ObservableCollectionBase{T}"/> before the operation.
         /// </param>
         /// <returns>
         /// <c>true</c> if operation was executed; otherwise <c>false</c>.
@@ -939,7 +705,7 @@ namespace ObservableHelpers.Utilities
         }
 
         /// <summary>
-        /// Provides an overridable internal operation for <see cref="InsertItem(int, T)"/> and <see cref="InsertItems(int, IEnumerable{T})"/>.
+        /// Provides an overridable internal operation for <see cref="InsertItem(int, T, out int)"/> and <see cref="InsertItems(int, IEnumerable{T}, out int)"/>.
         /// </summary>
         /// <param name="index">
         /// The zero-based starting index at which elements should be inserted.
@@ -948,7 +714,7 @@ namespace ObservableHelpers.Utilities
         /// The elements to insert. The value can be null for reference types.
         /// </param>
         /// <param name="lastCount">
-        /// The last count of the <see cref="ObservableCollectionBase{T}"/> before modification.
+        /// The last <see cref="Count"/> of the <see cref="ObservableCollectionBase{T}"/> before the operation.
         /// </param>
         /// <returns>
         /// <c>true</c> if operation was executed; otherwise <c>false</c>.
@@ -957,19 +723,7 @@ namespace ObservableHelpers.Utilities
         {
             lastCount = Items.Count;
 
-            int insertCount;
-            if (items is ICollection<T> col1)
-            {
-                insertCount = col1.Count;
-            }
-            else if (items is ICollection col2)
-            {
-                insertCount = col2.Count;
-            }
-            else
-            {
-                insertCount = items.Count();
-            }
+            int insertCount = items.Count();
 
             if (insertCount == 1)
             {
@@ -991,7 +745,7 @@ namespace ObservableHelpers.Utilities
         }
 
         /// <summary>
-        /// Provides an overridable internal operation for <see cref="MoveItem(int, int)"/>.
+        /// Provides an overridable internal operation for <see cref="MoveItem(int, int, out T)"/>.
         /// </summary>
         /// <param name="oldIndex">
         /// The index of the element to be moved.
@@ -1016,7 +770,7 @@ namespace ObservableHelpers.Utilities
         }
 
         /// <summary>
-        /// Provides an overridable internal operation for <see cref="RemoveItem(int)"/> and <see cref="RemoveItems(int, int)"/>.
+        /// Provides an overridable internal operation for <see cref="RemoveItem(int, out T)"/> and <see cref="RemoveItems(int, int, out IEnumerable{T})"/>.
         /// </summary>
         /// <param name="index">
         /// The zero-based index of the element to remove.
@@ -1058,7 +812,7 @@ namespace ObservableHelpers.Utilities
         }
 
         /// <summary>
-        /// Provides an overridable internal operation for <see cref="SetItem(int, T)"/>.
+        /// Provides an overridable internal operation for <see cref="SetItem(int, T, out T)"/>.
         /// </summary>
         /// <param name="index">
         /// The zero-based index of the element to replace.
@@ -1109,17 +863,7 @@ namespace ObservableHelpers.Utilities
         /// <inheritdoc/>
         public override bool SetNull()
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
-            return RWLock.LockRead(() =>
-            {
-                bool isNull = Items.Count == 0;
-                Clear();
-                return !isNull;
-            });
+            throw ReadOnlyException(nameof(SetNull));
         }
 
         #endregion
@@ -1133,230 +877,6 @@ namespace ObservableHelpers.Utilities
         #region IReadOnlyCollection<T> Members
 
         int IReadOnlyCollection<T>.Count => Count;
-
-        #endregion
-
-        #region IList<T> Members
-
-        T IList<T>.this[int index]
-        {
-            get => this[index];
-            set => this[index] = value;
-        }
-
-        int IList<T>.IndexOf(T item) => IndexOf(item);
-
-        void IList<T>.Insert(int index, T item) => Insert(index, item);
-
-        void IList<T>.RemoveAt(int index) => RemoveAt(index);
-
-        #endregion
-
-        #region IList Members
-
-        object IList.this[int index]
-        {
-            get => this[index];
-            set
-            {
-                if (IsDisposed)
-                {
-                    return;
-                }
-
-                if (value is null)
-                {
-                    if (default(T) == null)
-                    {
-                        this[index] = default;
-                    }
-                    else
-                    {
-                        throw WrongTypeException(nameof(value), value?.GetType());
-                    }
-                }
-                else if (value is T item)
-                {
-                    this[index] = item;
-                }
-                else
-                {
-                    throw WrongTypeException(nameof(value), value?.GetType());
-                }
-            }
-        }
-
-        bool IList.IsReadOnly => IsReadOnly;
-
-        bool IList.IsFixedSize => false;
-
-        int IList.Add(object value)
-        {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
-            return RWLock.LockRead(() =>
-            {
-                int oldCount = Items.Count;
-                if (value is null)
-                {
-                    if (default(T) == null)
-                    {
-                        Add(default);
-                    }
-                    else
-                    {
-                        throw WrongTypeException(nameof(value), value?.GetType());
-                    }
-                }
-                else if (value is T item)
-                {
-                    Add(item);
-                }
-                else
-                {
-                    throw WrongTypeException(nameof(value), value?.GetType());
-                }
-                int newCount = Items.Count;
-                return oldCount != newCount ? newCount : -1;
-            });
-        }
-
-        void IList.Clear() => Clear();
-
-        bool IList.Contains(object value)
-        {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
-            if (value is null)
-            {
-                if (default(T) == null)
-                {
-                    return Contains(default);
-                }
-                else
-                {
-                    throw WrongTypeException(nameof(value), value?.GetType());
-                }
-            }
-            else if (value is T item)
-            {
-                return Contains(item);
-            }
-            else
-            {
-                throw WrongTypeException(nameof(value), value?.GetType());
-            }
-        }
-
-        int IList.IndexOf(object value)
-        {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
-            if (value is null)
-            {
-                if (default(T) == null)
-                {
-                    return IndexOf(default);
-                }
-                else
-                {
-                    throw WrongTypeException(nameof(value), value?.GetType());
-                }
-            }
-            else if (value is T item)
-            {
-                return IndexOf(item);
-            }
-            else
-            {
-                throw WrongTypeException(nameof(value), value?.GetType());
-            }
-        }
-
-        void IList.Insert(int index, object value)
-        {
-            if (IsDisposed)
-            {
-                return;
-            }
-
-            if (value is null)
-            {
-                if (default(T) == null)
-                {
-                    Insert(index, default);
-                }
-                else
-                {
-                    throw WrongTypeException(nameof(value), value?.GetType());
-                }
-            }
-            else if (value is T item)
-            {
-                Insert(index, item);
-            }
-            else
-            {
-                throw WrongTypeException(nameof(value), value?.GetType());
-            }
-        }
-
-        void IList.Remove(object value)
-        {
-            if (IsDisposed)
-            {
-                return;
-            }
-
-            if (value is null)
-            {
-                if (default(T) == null)
-                {
-                    Remove(default);
-                }
-                else
-                {
-                    throw WrongTypeException(nameof(value), value?.GetType());
-                }
-            }
-            else if (value is T item)
-            {
-                Remove(item);
-            }
-            else
-            {
-                throw WrongTypeException(nameof(value), value?.GetType());
-            }
-        }
-
-        void IList.RemoveAt(int index) => RemoveAt(index);
-
-        #endregion
-
-        #region ICollection<T> Members
-
-        int ICollection<T>.Count => Count;
-
-        bool ICollection<T>.IsReadOnly => IsReadOnly;
-
-        void ICollection<T>.Add(T item) => Add(item);
-
-        void ICollection<T>.Clear() => Clear();
-
-        bool ICollection<T>.Contains(T item) => Contains(item);
-
-        void ICollection<T>.CopyTo(T[] array, int arrayIndex) => CopyTo(array, arrayIndex);
-
-        bool ICollection<T>.Remove(T item) => Remove(item);
 
         #endregion
 
@@ -1411,7 +931,7 @@ namespace ObservableHelpers.Utilities
             internal ObservableCollectionBaseFilter(IEnumerable<T> initialItems)
                 : base(_ => initialItems.ToList())
             {
-                IsReadOnly = true;
+
             }
         }
 
