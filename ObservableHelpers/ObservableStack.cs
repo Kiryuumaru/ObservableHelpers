@@ -550,6 +550,5 @@ namespace ObservableHelpers
         }
 
         #endregion
-
     }
 }

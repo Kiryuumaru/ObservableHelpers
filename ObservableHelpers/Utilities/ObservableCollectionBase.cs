@@ -1,5 +1,4 @@
 ﻿using ObservableHelpers.Abstraction;
-using ObservableHelpers.Utilities;
 using System;
 using System.Collections;
 using System.Collections.Generic;
