@@ -8,14 +8,23 @@ namespace ObservableHelpers.Utilities
     /// </summary>
     public class RWLock
     {
-        private readonly ReaderWriterLockSlim rwLock;
+        #region Properties
 
         /// <summary>
-        /// Creates new instance of <see cref="RWLock"/>.
+        /// Gets the wrapped <see cref="ReaderWriterLockSlim"/>.
+        /// </summary>
+        public ReaderWriterLockSlim ReaderWriterLockSlim { get; }
+
+        #endregion
+
+        #region Initializers
+
+        /// <summary>
+        /// Creates new instance of <see cref="RWLock"/> with default <see cref="LockRecursionPolicy.NoRecursion"/>.
         /// </summary>
         public RWLock()
         {
-            rwLock = new ReaderWriterLockSlim();
+            ReaderWriterLockSlim = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
         }
 
         /// <summary>
@@ -23,8 +32,12 @@ namespace ObservableHelpers.Utilities
         /// </summary>
         public RWLock(LockRecursionPolicy recursionPolicy)
         {
-            rwLock = new ReaderWriterLockSlim(recursionPolicy);
+            ReaderWriterLockSlim = new ReaderWriterLockSlim(recursionPolicy);
         }
+
+        #endregion
+
+        #region Methods
 
         /// <summary>
         /// Locks read operations while executing the <paramref name="block"/> action.
@@ -73,12 +86,12 @@ namespace ObservableHelpers.Utilities
 
             try
             {
-                rwLock.EnterUpgradeableReadLock();
+                ReaderWriterLockSlim.EnterUpgradeableReadLock();
                 return block();
             }
             finally
             {
-                rwLock.ExitUpgradeableReadLock();
+                ReaderWriterLockSlim.ExitUpgradeableReadLock();
             }
         }
 
@@ -129,13 +142,15 @@ namespace ObservableHelpers.Utilities
 
             try
             {
-                rwLock.EnterWriteLock();
+                ReaderWriterLockSlim.EnterWriteLock();
                 return block();
             }
             finally
             {
-                rwLock.ExitWriteLock();
+                ReaderWriterLockSlim.ExitWriteLock();
             }
         }
+
+        #endregion
     }
 }
