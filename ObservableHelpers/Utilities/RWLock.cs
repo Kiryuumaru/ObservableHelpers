@@ -13,7 +13,7 @@ namespace ObservableHelpers.Utilities
         /// <summary>
         /// Gets the wrapped <see cref="ReaderWriterLockSlim"/>.
         /// </summary>
-        public ReaderWriterLockSlim ReaderWriterLockSlim { get; }
+        protected ReaderWriterLockSlim ReaderWriterLockSlim { get; }
 
         #endregion
 
