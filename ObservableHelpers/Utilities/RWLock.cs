@@ -27,7 +27,7 @@ namespace ObservableHelpers.Utilities
         }
 
         /// <summary>
-        /// Locks read operations of the <see cref="ObservableCollection{T}"/> while executing the <paramref name="block"/> action.
+        /// Locks read operations while executing the <paramref name="block"/> action.
         /// </summary>
         /// <param name="block">
         /// The action to be executed inside the lock block.
@@ -50,7 +50,7 @@ namespace ObservableHelpers.Utilities
         }
 
         /// <summary>
-        /// Locks read operations of the <see cref="ObservableCollection{T}"/> while executing the <paramref name="block"/> function.
+        /// Locks read operations while executing the <paramref name="block"/> function.
         /// </summary>
         /// <typeparam name="TReturn">
         /// The object type returned by the <paramref name="block"/> function.
@@ -83,7 +83,7 @@ namespace ObservableHelpers.Utilities
         }
 
         /// <summary>
-        /// Locks write operations of the <see cref="ObservableCollection{T}"/> while executing the <paramref name="block"/> action.
+        /// Locks write operations while executing the <paramref name="block"/> action.
         /// </summary>
         /// <param name="block">
         /// The action to be executed inside the lock block.
@@ -106,7 +106,7 @@ namespace ObservableHelpers.Utilities
         }
 
         /// <summary>
-        /// Locks write operations of the <see cref="ObservableCollection{T}"/> while executing the <paramref name="block"/> function.
+        /// Locks write operations while executing the <paramref name="block"/> function.
         /// </summary>
         /// <typeparam name="TReturn">
         /// The object type returned by the <paramref name="block"/> function.
