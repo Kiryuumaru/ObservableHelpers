@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace ObservableHelpers
 {
@@ -19,7 +20,7 @@ namespace ObservableHelpers
 
         private readonly Dictionary<NamedPropertyKey, NamedProperty> namedProperties = new Dictionary<NamedPropertyKey, NamedProperty>();
 
-        private readonly RWLock rwLock = new RWLock();
+        private readonly RWLock rwLock = new RWLock(LockRecursionPolicy.SupportsRecursion);
 
         #endregion
 
