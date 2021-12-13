@@ -1,6 +1,7 @@
 ﻿using ObservableHelpers.Abstraction;
 using ObservableHelpers.Utilities;
 using System;
+using System.Threading;
 using System.ComponentModel;
 
 namespace ObservableHelpers
@@ -28,6 +29,11 @@ namespace ObservableHelpers
                 return GetObject();
             }
         }
+        
+        /// <summary>
+        /// Gets the read-write lock for concurrency.
+        /// </summary>
+        protected RWLock RWLock { get; } = new RWLock(LockRecursionPolicy.SupportsRecursion);
 
         private object valueHolder;
 
@@ -119,18 +125,24 @@ namespace ObservableHelpers
         /// </returns>
         protected virtual bool SetObject(object obj, Type type = null)
         {
-            if (!(valueHolder?.Equals(obj) ?? obj == null))
+            return RWLock.LockRead(() =>
             {
-                if (obj is ISyncObject sync)
+                if (!(valueHolder?.Equals(obj) ?? obj == null))
                 {
-                    sync.SyncOperation.SetContext(this);
-                }
+                    if (obj is ISyncObject sync)
+                    {
+                        sync.SyncOperation.SetContext(this);
+                    }
 
-                valueHolder = obj;
-                OnPropertyChanged(nameof(Value));
-                return true;
-            }
-            return false;
+                    RWLock.LockWrite(() =>
+                    {
+                        valueHolder = obj;
+                        OnPropertyChanged(nameof(Value));
+                    });
+                    return true;
+                }
+                return false;
+            });
         }
 
         /// <summary>
@@ -144,7 +156,7 @@ namespace ObservableHelpers
         /// </returns>
         protected virtual object GetObject(Type type = null)
         {
-            return valueHolder;
+            return RWLock.LockRead(() => valueHolder);
         }
 
         #endregion

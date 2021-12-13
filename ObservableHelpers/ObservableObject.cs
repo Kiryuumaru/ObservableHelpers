@@ -18,9 +18,12 @@ namespace ObservableHelpers
     {
         #region Properties
 
-        private readonly Dictionary<NamedPropertyKey, NamedProperty> namedProperties = new Dictionary<NamedPropertyKey, NamedProperty>();
+        /// <summary>
+        /// Gets the read-write lock for concurrency.
+        /// </summary>
+        protected RWLock RWLock { get; } = new RWLock(LockRecursionPolicy.SupportsRecursion);
 
-        private readonly RWLock rwLock = new RWLock(LockRecursionPolicy.SupportsRecursion);
+        private readonly Dictionary<NamedPropertyKey, NamedProperty> namedProperties = new Dictionary<NamedPropertyKey, NamedProperty>();
 
         #endregion
 
@@ -297,7 +300,7 @@ namespace ObservableHelpers
         /// </returns>
         protected IEnumerable<NamedProperty> GetRawProperties(string group = null)
         {
-            return rwLock.LockRead(() =>
+            return RWLock.LockRead(() =>
             {
                 return group == null ?
                     namedProperties.Values.ToList() :
@@ -367,7 +370,7 @@ namespace ObservableHelpers
 
             namedProperty = default;
             NamedProperty proxy = default;
-            var ret = rwLock.LockRead(() => namedProperties.TryGetValue(new NamedPropertyKey(key, propertyName), out proxy));
+            var ret = RWLock.LockRead(() => namedProperties.TryGetValue(new NamedPropertyKey(key, propertyName), out proxy));
             namedProperty = proxy;
             return ret;
         }
@@ -461,13 +464,13 @@ namespace ObservableHelpers
             T newValue = default;
             bool hasChanges = false;
             NamedPropertyKey namedPropertyKey = new NamedPropertyKey(key, propertyName);
-            return rwLock.LockRead(() =>
+            return RWLock.LockRead(() =>
             {
                 if (namedProperties.TryGetValue(namedPropertyKey, out NamedProperty namedProperty))
                 {
                     oldValue = namedProperty.Property.GetValue<T>();
                     newValue = oldValue;
-                    rwLock.LockWrite(() =>
+                    RWLock.LockWrite(() =>
                     {
                         if (key != null && namedProperty.Key != key)
                         {
@@ -507,7 +510,7 @@ namespace ObservableHelpers
                 }
                 else
                 {
-                    rwLock.LockWrite(() =>
+                    RWLock.LockWrite(() =>
                     {
                         namedProperty = NamedPropertyFactory(key, propertyName, group);
                         if (namedProperty != null)
@@ -713,12 +716,12 @@ namespace ObservableHelpers
                 throw new PropertyKeyAndNameNullException();
             }
 
-            return rwLock.LockRead(() =>
+            return RWLock.LockRead(() =>
             {
                 var namedPropertyKey = new NamedPropertyKey(key, propertyName);
                 if (namedProperties.TryGetValue(namedPropertyKey, out NamedProperty removedProperty))
                 {
-                    if (rwLock.LockWrite(() => namedProperties.Remove(namedPropertyKey)))
+                    if (RWLock.LockWrite(() => namedProperties.Remove(namedPropertyKey)))
                     {
                         OnPropertyChanged(removedProperty.Key, removedProperty.PropertyName, removedProperty.Group);
                         return true;
@@ -735,7 +738,7 @@ namespace ObservableHelpers
                 throw new PropertyKeyAndNameNullException();
             }
 
-            return rwLock.LockRead(() => namedProperties.ContainsKey(new NamedPropertyKey(key, propertyName)));
+            return RWLock.LockRead(() => namedProperties.ContainsKey(new NamedPropertyKey(key, propertyName)));
         }
 
         #endregion
