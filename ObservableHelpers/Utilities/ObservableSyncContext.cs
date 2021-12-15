@@ -1,5 +1,6 @@
 ﻿using ObservableHelpers.Abstraction;
 using System.ComponentModel;
+using System.Threading;
 
 namespace ObservableHelpers.Utilities
 {
@@ -10,6 +11,15 @@ namespace ObservableHelpers.Utilities
         SyncContext,
         IObservable
     {
+        #region Properties
+
+        /// <summary>
+        /// Gets the read-write lock for concurrency.
+        /// </summary>
+        protected RWLock RWLock { get; } = new RWLock(LockRecursionPolicy.SupportsRecursion);
+
+        #endregion
+
         #region Events
 
         /// <summary>

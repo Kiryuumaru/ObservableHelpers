@@ -18,11 +18,6 @@ namespace ObservableHelpers
     {
         #region Properties
 
-        /// <summary>
-        /// Gets the read-write lock for concurrency.
-        /// </summary>
-        protected RWLock RWLock { get; } = new RWLock(LockRecursionPolicy.SupportsRecursion);
-
         private readonly Dictionary<NamedPropertyKey, NamedProperty> namedProperties = new Dictionary<NamedPropertyKey, NamedProperty>();
 
         #endregion

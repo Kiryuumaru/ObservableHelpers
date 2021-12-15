@@ -24,11 +24,6 @@ namespace ObservableHelpers
             set => SetObject(value?.GetType(), value);
         }
 
-        /// <summary>
-        /// Gets the read-write lock for concurrency.
-        /// </summary>
-        protected RWLock RWLock { get; } = new RWLock(LockRecursionPolicy.SupportsRecursion);
-
         private object valueHolder;
 
         #endregion

@@ -75,11 +75,6 @@ namespace ObservableHelpers.Utilities
         public bool IsReadOnly { get; protected set; }
 
         /// <summary>
-        /// Gets the read-write lock for concurrency.
-        /// </summary>
-        protected RWLock RWLock { get; } = new RWLock(LockRecursionPolicy.SupportsRecursion);
-
-        /// <summary>
         /// Gets a <see cref="List{T}"/> wrapper around the <see cref="ObservableCollectionBase{T}"/>.
         /// </summary>
         protected virtual List<T> Items { get; set; }
@@ -339,15 +334,15 @@ namespace ObservableHelpers.Utilities
         /// <summary>
         /// Removes all elements from the <see cref="ObservableCollectionBase{T}"/> and notify the observers.
         /// </summary>
-        /// <param name="lastCount">
-        /// The last <see cref="Count"/> of the <see cref="ObservableCollectionBase{T}"/> before the operation.
+        /// <param name="oldItems">
+        /// The removed items of the <see cref="ObservableCollectionBase{T}"/>.
         /// </param>
         /// <returns>
         /// <c>true</c> if operation was executed; otherwise <c>false</c>.
         /// </returns>
-        protected bool ClearItems(out int lastCount)
+        protected bool ClearItems(out IEnumerable<T> oldItems)
         {
-            int proxy = default;
+            IEnumerable<T> proxy = default;
             bool ret = RWLock.LockRead(() =>
             {
                 return RWLock.LockWrite(() =>
@@ -362,7 +357,7 @@ namespace ObservableHelpers.Utilities
                     return false;
                 });
             });
-            lastCount = proxy;
+            oldItems = proxy;
             return ret;
         }
 
@@ -688,19 +683,19 @@ namespace ObservableHelpers.Utilities
         /// <summary>
         /// Provides an overridable internal operation for <see cref="ClearItems"/>.
         /// </summary>
-        /// <param name="lastCount">
-        /// The last <see cref="Count"/> of the <see cref="ObservableCollectionBase{T}"/> before the operation.
+        /// <param name="oldItems">
+        /// The removed items of the <see cref="ObservableCollectionBase{T}"/>.
         /// </param>
         /// <returns>
         /// <c>true</c> if operation was executed; otherwise <c>false</c>.
         /// </returns>
-        protected virtual bool InternalClearItems(out int lastCount)
+        protected virtual bool InternalClearItems(out IEnumerable<T> oldItems)
         {
-            lastCount = Items.Count;
+            oldItems = Items.ToList();
 
             Items.Clear();
 
-            return true;
+            return oldItems.Count() != 0;
         }
 
         /// <summary>
@@ -740,7 +735,6 @@ namespace ObservableHelpers.Utilities
             {
                 return false;
             }
-
         }
 
         /// <summary>
@@ -807,7 +801,6 @@ namespace ObservableHelpers.Utilities
 
                 return false;
             }
-
         }
 
         /// <summary>

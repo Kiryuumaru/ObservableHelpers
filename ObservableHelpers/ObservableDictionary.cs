@@ -1407,7 +1407,7 @@ namespace ObservableHelpers
 
         #endregion
 
-        #region ObservableCollection<T> Members
+        #region ObservableCollectionBase<T> Members
 
         /// <inheritdoc/>
         public override IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
@@ -1420,9 +1420,9 @@ namespace ObservableHelpers
             return new DictionaryEnumerator(this);
         }
         /// <inheritdoc/>
-        protected override bool InternalClearItems(out int lastCount)
+        protected override bool InternalClearItems(out IEnumerable<KeyValuePair<TKey, TValue>> oldItems)
         {
-            if (base.InternalClearItems(out lastCount))
+            if (base.InternalClearItems(out oldItems))
             {
                 dictionary.Clear();
                 return true;
@@ -1501,6 +1501,25 @@ namespace ObservableHelpers
                 }
             }
             return false;
+        }
+
+        #endregion
+
+        #region ObservableSyncContext Members
+
+        /// <inheritdoc/>
+        public override bool SetNull()
+        {
+            if (IsDisposed)
+            {
+                return default;
+            }
+
+            return RWLock.LockRead(() =>
+            {
+                ClearItems(out IEnumerable<KeyValuePair<TKey, TValue>> oldItems);
+                return oldItems.Count() != 0;
+            });
         }
 
         #endregion

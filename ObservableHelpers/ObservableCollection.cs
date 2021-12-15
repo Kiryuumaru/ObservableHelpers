@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ObservableHelpers
 {
@@ -404,8 +405,8 @@ namespace ObservableHelpers
 
             return RWLock.LockRead(() =>
             {
-                ClearItems(out int lastCount);
-                return Items.Count != lastCount;
+                ClearItems(out IEnumerable<T> oldItems);
+                return oldItems.Count() != 0;
             });
         }
 
