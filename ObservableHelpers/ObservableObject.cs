@@ -1,5 +1,4 @@
-﻿using ObservableHelpers.Abstraction;
-using ObservableHelpers.Exceptions;
+﻿using ObservableHelpers.Exceptions;
 using ObservableHelpers.Utilities;
 using System;
 using System.Collections.Generic;
@@ -315,7 +314,7 @@ namespace ObservableHelpers
         /// <param name="namedProperty">
         /// The <see cref="NamedProperty"/> to be wired.
         /// </param>
-        protected void WireNamedProperty<T>(NamedProperty<T> namedProperty)
+        protected void WireNamedProperty(NamedProperty namedProperty)
         {
             namedProperty.Property.SyncOperation.SetContext(this);
 
@@ -325,7 +324,7 @@ namespace ObservableHelpers
                 {
                     return;
                 }
-                if (e.PropertyName == nameof(ObservableProperty<T>.Value))
+                if (e.PropertyName == nameof(namedProperty.Property.Value))
                 {
                     OnPropertyChanged(namedProperty.Key, namedProperty.PropertyName, namedProperty.Group);
                 }
@@ -406,19 +405,19 @@ namespace ObservableHelpers
         /// <exception cref="PropertyKeyAndNameNullException">
         /// Throws when both <paramref name="key"/> and <paramref name="propertyName"/> are not provided.
         /// </exception>
-        protected NamedProperty<T> GetOrCreateNamedProperty<T>(
+        protected NamedProperty GetOrCreateNamedProperty<T>(
             T defaultValue,
             string key,
             string propertyName,
             string group,
-            Func<(NamedProperty<T> namedProperty, T oldValue), bool> createValidation = null,
-            Action<(NamedProperty<T> namedProperty, T oldValue, T newValue, bool hasChanges)> postAction = null)
+            Func<(NamedProperty namedProperty, T oldValue), bool> createValidation = null,
+            Action<(NamedProperty namedProperty, T oldValue, T newValue, bool hasChanges)> postAction = null)
         {
             return CreateOrUpdateNamedProperty(defaultValue, key, propertyName, group, createValidation, args => false, postAction);
         }
 
         /// <summary>
-        /// Adds or updates a property to the property collection.
+        /// The core implementation for creating the <see cref="NamedProperty"/> from the property collection with the provided <paramref name="key"/> and <paramref name="propertyName"/>, or updates a value to the collection by using the specified function if the property already exist.
         /// </summary>
         /// <param name="value">
         /// The value of the property to add or update.
@@ -447,14 +446,14 @@ namespace ObservableHelpers
         /// <exception cref="PropertyKeyAndNameNullException">
         /// Throws when both <paramref name="key"/> and <paramref name="propertyName"/> are not provided.
         /// </exception>
-        protected NamedProperty<T> CreateOrUpdateNamedProperty<T>(
+        protected NamedProperty CreateOrUpdateNamedProperty<T>(
             T value,
             string key,
             string propertyName,
             string group,
-            Func<(NamedProperty<T> namedProperty, T oldValue), bool> addValidate = null,
-            Func<(NamedProperty<T> namedProperty, T oldValue), bool> updateValidate = null,
-            Action<(NamedProperty<T> namedProperty, T oldValue, T newValue, bool hasChanges)> postAction = null)
+            Func<(NamedProperty namedProperty, T oldValue), bool> addValidate = null,
+            Func<(NamedProperty namedProperty, T oldValue), bool> updateValidate = null,
+            Action<(NamedProperty namedProperty, T oldValue, T newValue, bool hasChanges)> postAction = null)
         {
             if (key == null && propertyName == null)
             {
@@ -467,11 +466,9 @@ namespace ObservableHelpers
             NamedPropertyKey namedPropertyKey = new NamedPropertyKey(key, propertyName);
             return RWLock.LockRead(() =>
             {
-                namedProperties.TryGetValue(namedPropertyKey, out NamedProperty propHolder);
-
-                if (propHolder is NamedProperty<T> namedProperty)
+                if (namedProperties.TryGetValue(namedPropertyKey, out NamedProperty namedProperty))
                 {
-                    oldValue = namedProperty.Property.GetValue();
+                    oldValue = namedProperty.Property.GetValue<T>();
                     newValue = oldValue;
                     RWLock.LockWrite(() =>
                     {
@@ -513,10 +510,9 @@ namespace ObservableHelpers
                 }
                 else
                 {
-                    namedProperty = default;
                     RWLock.LockWrite(() =>
                     {
-                        namedProperty = NamedPropertyFactory<T>(key, propertyName, group);
+                        namedProperty = NamedPropertyFactory(key, propertyName, group);
                         if (namedProperty != null)
                         {
                             if (addValidate?.Invoke((namedProperty, oldValue)) ?? true)
@@ -620,11 +616,11 @@ namespace ObservableHelpers
         /// <returns>
         /// The created instance of <see cref="NamedProperty"/>.
         /// </returns>
-        protected virtual NamedProperty<T> NamedPropertyFactory<T>(string key, string propertyName, string group)
+        protected virtual NamedProperty NamedPropertyFactory(string key, string propertyName, string group)
         {
-            return new NamedProperty<T>()
+            return new NamedProperty()
             {
-                Property = new ObservableProperty<T>(),
+                Property = new ObservableProperty(),
                 Key = key,
                 PropertyName = propertyName,
                 Group = group
@@ -760,7 +756,7 @@ namespace ObservableHelpers
             bool hasChanges = false;
             foreach (NamedProperty propHolder in namedProperties.Values)
             {
-                if (propHolder.GetProperty()?.SetNull() ?? false)
+                if (propHolder.Property.SetNull())
                 {
                     hasChanges = true;
                 }
@@ -776,10 +772,7 @@ namespace ObservableHelpers
                 return default;
             }
 
-            return namedProperties.All(i =>
-            {
-                return i.Value.GetProperty()?.IsNull() ?? true;
-            });
+            return namedProperties.All(i => i.Value.Property.IsNull());
         }
 
         #endregion
@@ -789,22 +782,27 @@ namespace ObservableHelpers
         /// <summary>
         /// Provides the property with key, name and group.
         /// </summary>
-        public abstract class NamedProperty
+        public class NamedProperty
         {
             #region Properties
 
             /// <summary>
-            /// Gets or sets the key of the property
+            /// Gets or sets the <see cref="ObservableProperty"/> of the object.
+            /// </summary>
+            public ObservableProperty Property { get; set; }
+
+            /// <summary>
+            /// Gets or sets the key of the <see cref="Property"/>
             /// </summary>
             public string Key { get; set; }
 
             /// <summary>
-            /// Gets or sets the name of the property
+            /// Gets or sets the name of the <see cref="Property"/>
             /// </summary>
             public string PropertyName { get; set; }
 
             /// <summary>
-            /// Gets or sets the group of the property
+            /// Gets or sets the group of the <see cref="Property"/>
             /// </summary>
             public string Group { get; set; }
 
@@ -827,71 +825,12 @@ namespace ObservableHelpers
 
             #endregion
 
-            #region Methods
-
-            /// <summary>
-            /// Gets the value holder of the property.
-            /// </summary>
-            /// <returns>
-            /// The value holder of the property.
-            /// </returns>
-            public abstract ObservableSyncContext GetProperty();
-
-            #endregion
-
             #region Object Members
 
             /// <inheritdoc/>
             public override string ToString()
             {
-                return (Key ?? "null") + ", " + (PropertyName ?? "null") + ", " + (Group ?? "null");
-            }
-
-            #endregion
-        }
-
-        /// <summary>
-        /// Provides the property with key, name and group.
-        /// </summary>
-        public class NamedProperty<T> : NamedProperty
-        {
-            #region Properties
-
-            /// <summary>
-            /// Gets or sets the property.
-            /// </summary>
-            public ObservableProperty<T> Property { get; set; }
-
-            #endregion
-
-            #region Initializers
-
-            /// <summary>
-            /// Creates new instance for <see cref="NamedProperty"/>
-            /// </summary>
-            public NamedProperty()
-            {
-
-            }
-
-            #endregion
-
-            #region NamedProperty Members
-
-            /// <inheritdoc/>
-            public override ObservableSyncContext GetProperty()
-            {
-                return Property;
-            }
-
-            #endregion
-
-            #region Object Members
-
-            /// <inheritdoc/>
-            public override string ToString()
-            {
-                return "(" + (Key ?? "null") + ", " + (PropertyName ?? "null") + ", " + (Group ?? "null") + ") = " + (Property?.ToString() ?? "null");
+                return "(" + (Key ?? "null") + ", " + (PropertyName ?? "null") + ", " + (Group ?? "null") + ") = " + (Property?.Value?.ToString() ?? "null");
             }
 
             #endregion
