@@ -203,7 +203,7 @@ namespace ObservableHelpers
                 return default;
             }
 
-            return RWLock.LockRead(() =>
+            return RWLock.LockReadUpgradable(() =>
             {
                 if (GetObject(null) is INullableObject model)
                 {

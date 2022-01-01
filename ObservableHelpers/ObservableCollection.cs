@@ -107,7 +107,7 @@ namespace ObservableHelpers
                 throw ReadOnlyException(nameof(Add));
             }
 
-            RWLock.LockRead(() =>
+            RWLock.LockReadUpgradable(() =>
             {
                 int index = Items.Count;
                 InsertItem(index, item, out _);
@@ -158,7 +158,7 @@ namespace ObservableHelpers
                 throw ReadOnlyException(nameof(AddRange));
             }
 
-            RWLock.LockRead(() =>
+            RWLock.LockReadUpgradable(() =>
             {
                 int index = Items.Count;
                 InsertItems(index, items, out _);
@@ -319,7 +319,7 @@ namespace ObservableHelpers
                 throw ReadOnlyException(nameof(Remove));
             }
 
-            return RWLock.LockRead(() =>
+            return RWLock.LockReadUpgradable(() =>
             {
                 int index = Items.IndexOf(item);
                 if (index == -1)
@@ -403,7 +403,7 @@ namespace ObservableHelpers
                 return default;
             }
 
-            return RWLock.LockRead(() =>
+            return RWLock.LockReadUpgradable(() =>
             {
                 ClearItems(out IEnumerable<T> oldItems);
                 return oldItems.Count() != 0;
@@ -473,7 +473,7 @@ namespace ObservableHelpers
                 return default;
             }
 
-            return RWLock.LockRead(() =>
+            return RWLock.LockReadUpgradable(() =>
             {
                 int oldCount = Items.Count;
                 if (value is null)

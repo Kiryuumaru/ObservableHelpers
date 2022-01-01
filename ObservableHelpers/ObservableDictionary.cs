@@ -237,7 +237,7 @@ namespace ObservableHelpers
                 throw ReadOnlyException(nameof(Add));
             }
 
-            RWLock.LockRead(() =>
+            RWLock.LockReadUpgradable(() =>
             {
                 int index = Items.Count;
                 InsertItem(index, item, out _);
@@ -412,7 +412,7 @@ namespace ObservableHelpers
                 throw ReadOnlyException(nameof(AddOrUpdate));
             }
 
-            return RWLock.LockRead(() =>
+            return RWLock.LockReadUpgradable(() =>
             {
                 TValue value = default;
                 KeyValuePair<TKey, TValue> item;
@@ -484,7 +484,7 @@ namespace ObservableHelpers
                 throw ReadOnlyException(nameof(AddRange));
             }
 
-            RWLock.LockRead(() =>
+            RWLock.LockReadUpgradable(() =>
             {
                 int index = Items.Count;
                 InsertItems(index, items, out _);
@@ -597,7 +597,7 @@ namespace ObservableHelpers
                 throw ReadOnlyException(nameof(GetOrAdd));
             }
 
-            return RWLock.LockRead(() =>
+            return RWLock.LockReadUpgradable(() =>
             {
                 if (!dictionary.TryGetValue(key, out TValue value))
                 {
@@ -901,7 +901,7 @@ namespace ObservableHelpers
                 throw ReadOnlyException(nameof(TryAdd));
             }
 
-            return RWLock.LockRead(() =>
+            return RWLock.LockReadUpgradable(() =>
             {
                 if (!dictionary.ContainsKey(key))
                 {
@@ -1066,7 +1066,7 @@ namespace ObservableHelpers
             }
 
             TValue proxy = default;
-            bool exists = RWLock.LockRead(() =>
+            bool exists = RWLock.LockReadUpgradable(() =>
             {
                 if (dictionary.TryGetValue(key, out proxy))
                 {
@@ -1247,7 +1247,7 @@ namespace ObservableHelpers
                 throw ReadOnlyException(nameof(TryUpdate));
             }
 
-            return RWLock.LockRead(() =>
+            return RWLock.LockReadUpgradable(() =>
             {
                 if (dictionary.TryGetValue(key, out TValue oldValue))
                 {
@@ -1515,7 +1515,7 @@ namespace ObservableHelpers
                 return default;
             }
 
-            return RWLock.LockRead(() =>
+            return RWLock.LockReadUpgradable(() =>
             {
                 ClearItems(out IEnumerable<KeyValuePair<TKey, TValue>> oldItems);
                 return oldItems.Count() != 0;

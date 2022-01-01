@@ -343,19 +343,16 @@ namespace ObservableHelpers.Utilities
         protected bool ClearItems(out IEnumerable<T> oldItems)
         {
             IEnumerable<T> proxy = default;
-            bool ret = RWLock.LockRead(() =>
+            bool ret = RWLock.LockWrite(() =>
             {
-                return RWLock.LockWrite(() =>
+                if (InternalClearItems(out proxy))
                 {
-                    if (InternalClearItems(out proxy))
-                    {
-                        OnPropertyChanged(nameof(Count));
-                        OnPropertyChanged(IndexerName);
-                        OnCollectionReset();
-                        return true;
-                    }
-                    return false;
-                });
+                    OnPropertyChanged(nameof(Count));
+                    OnPropertyChanged(IndexerName);
+                    OnCollectionReset();
+                    return true;
+                }
+                return false;
             });
             oldItems = proxy;
             return ret;
@@ -382,7 +379,7 @@ namespace ObservableHelpers.Utilities
         protected bool InsertItem(int index, T item, out int lastCount)
         {
             int proxy = default;
-            bool ret = RWLock.LockRead(() =>
+            bool ret = RWLock.LockReadUpgradable(() =>
             {
                 if (index < 0 || index > Items.Count)
                 {
@@ -433,7 +430,7 @@ namespace ObservableHelpers.Utilities
         protected bool InsertItems(int index, IEnumerable<T> items, out int lastCount)
         {
             int proxy = default;
-            bool ret = RWLock.LockRead(() =>
+            bool ret = RWLock.LockReadUpgradable(() =>
             {
                 if (items == null)
                 {
@@ -495,7 +492,7 @@ namespace ObservableHelpers.Utilities
         protected bool MoveItem(int oldIndex, int newIndex, out T movedItem)
         {
             T proxy = default;
-            bool ret = RWLock.LockRead(() =>
+            bool ret = RWLock.LockReadUpgradable(() =>
             {
                 if (oldIndex < 0 || oldIndex >= Items.Count)
                 {
@@ -540,7 +537,7 @@ namespace ObservableHelpers.Utilities
         protected bool RemoveItem(int index, out T removedItem)
         {
             T proxy = default;
-            bool ret = RWLock.LockRead(() =>
+            bool ret = RWLock.LockReadUpgradable(() =>
             {
                 if (index < 0 || index >= Items.Count)
                 {
@@ -595,7 +592,7 @@ namespace ObservableHelpers.Utilities
         protected bool RemoveItems(int index, int count, out IEnumerable<T> removedItems)
         {
             IEnumerable<T> proxy = default;
-            bool ret = RWLock.LockRead(() =>
+            bool ret = RWLock.LockReadUpgradable(() =>
             {
                 if (index < 0)
                 {
@@ -654,7 +651,7 @@ namespace ObservableHelpers.Utilities
         protected bool SetItem(int index, T item, out T originalItem)
         {
             T proxy = default;
-            bool ret = RWLock.LockRead(() =>
+            bool ret = RWLock.LockReadUpgradable(() =>
             {
                 if (index < 0 || index >= Items.Count)
                 {

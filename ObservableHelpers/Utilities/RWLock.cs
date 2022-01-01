@@ -86,6 +86,62 @@ namespace ObservableHelpers.Utilities
 
             try
             {
+                ReaderWriterLockSlim.EnterReadLock();
+                return block();
+            }
+            finally
+            {
+                ReaderWriterLockSlim.ExitReadLock();
+            }
+        }
+
+        /// <summary>
+        /// Locks read operations while executing the <paramref name="block"/> action while having an option to upgrade to write mode.
+        /// </summary>
+        /// <param name="block">
+        /// The action to be executed inside the lock block.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="block"/> is a null reference.
+        /// </exception>
+        public void LockReadUpgradable(Action block)
+        {
+            if (block == null)
+            {
+                throw new ArgumentNullException(nameof(block));
+            }
+
+            LockReadUpgradable(() =>
+            {
+                block();
+                return 0;
+            });
+        }
+
+        /// <summary>
+        /// Locks read operations while executing the <paramref name="block"/> function while having an option to upgrade to write mode.
+        /// </summary>
+        /// <typeparam name="TReturn">
+        /// The object type returned by the <paramref name="block"/> function.
+        /// </typeparam>
+        /// <param name="block">
+        /// The function to be executed inside the lock block.
+        /// </param>
+        /// <returns>
+        /// The object returned by the <paramref name="block"/> function.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="block"/> is a null reference.
+        /// </exception>
+        public TReturn LockReadUpgradable<TReturn>(Func<TReturn> block)
+        {
+            if (block == null)
+            {
+                throw new ArgumentNullException(nameof(block));
+            }
+
+            try
+            {
                 ReaderWriterLockSlim.EnterUpgradeableReadLock();
                 return block();
             }

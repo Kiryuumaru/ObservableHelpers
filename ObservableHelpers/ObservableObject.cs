@@ -18,6 +18,7 @@ namespace ObservableHelpers
     {
         #region Properties
 
+        private string Magic = new Random().Next(1000, 9999999).ToString();
         private readonly Dictionary<NamedPropertyKey, NamedProperty> namedProperties = new Dictionary<NamedPropertyKey, NamedProperty>();
 
         #endregion
@@ -459,7 +460,7 @@ namespace ObservableHelpers
             T newValue = default;
             bool hasChanges = false;
             NamedPropertyKey namedPropertyKey = new NamedPropertyKey(key, propertyName);
-            return RWLock.LockRead(() =>
+            return RWLock.LockReadUpgradable(() =>
             {
                 if (namedProperties.TryGetValue(namedPropertyKey, out NamedProperty namedProperty))
                 {
@@ -711,9 +712,10 @@ namespace ObservableHelpers
                 throw new PropertyKeyAndNameNullException();
             }
 
-            return RWLock.LockRead(() =>
+            var namedPropertyKey = new NamedPropertyKey(key, propertyName);
+
+            return RWLock.LockReadUpgradable(() =>
             {
-                var namedPropertyKey = new NamedPropertyKey(key, propertyName);
                 if (namedProperties.TryGetValue(namedPropertyKey, out NamedProperty removedProperty))
                 {
                     if (RWLock.LockWrite(() => namedProperties.Remove(namedPropertyKey)))

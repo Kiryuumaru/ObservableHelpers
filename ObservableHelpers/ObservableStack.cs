@@ -131,7 +131,7 @@ namespace ObservableHelpers
                 throw ReadOnlyException(nameof(Pop));
             }
 
-            return RWLock.LockRead(() =>
+            return RWLock.LockReadUpgradable(() =>
             {
                 if (Count == 0)
                 {
@@ -344,7 +344,7 @@ namespace ObservableHelpers
             }
 
             T proxy = default;
-            bool ret = RWLock.LockRead(() =>
+            bool ret = RWLock.LockReadUpgradable(() =>
             {
                 if (Count == 0)
                 {
@@ -431,7 +431,7 @@ namespace ObservableHelpers
                 throw new ArgumentException(nameof(startIndex) + nameof(count) + "is greater than the length of " + nameof(items));
             }
 
-            return RWLock.LockRead(() =>
+            return RWLock.LockReadUpgradable(() =>
             {
                 if (Count == 0)
                 {
