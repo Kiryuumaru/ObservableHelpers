@@ -1608,4 +1608,39 @@ namespace ObservableObjectTest
             Assert.Contains(group, i => i.Key == "keySample2" && i.PropertyName == nameof(SampleKeyProp2) && i.Group == "group" && i.Property.GetValue<DateTime>() == date1);
         }
     }
+
+    public class AttachOnPropertyChangedTest : SampleObject
+    {
+        [Fact]
+        public void Normal()
+        {
+            var obj = new AttachOnPropertyChangedTest();
+
+            string SampleProp1 = null;
+            DateTime SampleProp2 = default;
+            string SampleProp3 = null;
+
+            obj.AttachOnPropertyChanged<string>(v => SampleProp1 = v, nameof(obj.SampleProp1));
+            obj.AttachOnPropertyChanged<DateTime>(v => SampleProp2 = v, nameof(obj.SampleProp2));
+            obj.AttachOnPropertyChanged<string>(v => SampleProp3 = v, nameof(obj.SampleProp3));
+
+            Assert.Equal(SampleProp1, obj.SampleProp1);
+            Assert.Equal(SampleProp2, obj.SampleProp2);
+            Assert.Equal(SampleProp3, obj.SampleProp3);
+
+            DateTime date1 = DateTime.UtcNow;
+
+            obj.SampleProp1 = "test1";
+            obj.SampleProp2 = date1;
+            obj.SampleProp3 = "test3";
+
+            Assert.Equal("test1", SampleProp1);
+            Assert.Equal(date1, SampleProp2);
+            Assert.Equal("test3", SampleProp3);
+
+            Assert.Equal(SampleProp1, obj.SampleProp1);
+            Assert.Equal(SampleProp2, obj.SampleProp2);
+            Assert.Equal(SampleProp3, obj.SampleProp3);
+        }
+    }
 }

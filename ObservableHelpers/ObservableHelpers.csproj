@@ -14,8 +14,8 @@
 
   <PropertyGroup>
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
-    <Version>1.4.0</Version>
-    <PackageReleaseNotes>* Removed ObservableObject.(Set)(Get)PropertyWithKey and unified separate method (with and without key method)</PackageReleaseNotes>
+    <Version>1.4.1</Version>
+    <PackageReleaseNotes>* Added ObservableObject.AttachOnPropertyChanged for easy attach on specific property changes</PackageReleaseNotes>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 

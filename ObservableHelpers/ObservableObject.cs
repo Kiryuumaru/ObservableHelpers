@@ -19,6 +19,7 @@ namespace ObservableHelpers
         #region Properties
 
         private readonly Dictionary<NamedPropertyKey, NamedProperty> namedProperties = new Dictionary<NamedPropertyKey, NamedProperty>();
+        private readonly Dictionary<NamedPropertyKey, Action<object>> referencedProperties = new Dictionary<NamedPropertyKey, Action<object>>();
 
         #endregion
 
@@ -519,67 +520,82 @@ namespace ObservableHelpers
         }
 
         /// <summary>
-        /// Invokes <see cref="INotifyPropertyChanged.PropertyChanged"/> into the current context.
+        /// 
         /// </summary>
-        /// <param name="key">
-        /// The key of the property changed.
+        /// <typeparam name="T">
+        /// </typeparam>
+        /// <param name="onPropertyChanged">
+        /// The action if the property has changed.
         /// </param>
         /// <param name="propertyName">
-        /// The name of the property changed.
+        /// The name of the property to attach the event.
         /// </param>
-        /// <param name="group">
-        /// The group of the property changed.
-        /// </param>
-        protected void OnPropertyChanged(string key, string propertyName, string group)
-        {
-            if (IsDisposed)
-            {
-                return;
-            }
-
-            OnPropertyChanged(new ObjectPropertyChangesEventArgs(key, propertyName, group));
-        }
-
-        /// <summary>
-        /// Invokes <see cref="INotifyPropertyChanged.PropertyChanged"/> into the current context if the provided <paramref name="key"/> is found in this object.
-        /// </summary>
         /// <param name="key">
-        /// The key of the property changed.
+        /// The key of the property to attach the event.
         /// </param>
-        protected void OnPropertyChangedWithKey(string key)
+        /// <returns>
+        /// The <see cref="IDisposable"/> to dispose the event.
+        /// </returns>
+        /// <exception cref="PropertyKeyAndNameNullException">
+        /// Throws when both <paramref name="key"/> and <paramref name="propertyName"/> are not provided.
+        /// </exception>
+        protected IDisposable AttachOnPropertyChanged<T>(
+            Action<T> onPropertyChanged,
+            string propertyName = null,
+            string key = null)
         {
-            if (IsDisposed)
+            if (key == null && propertyName == null)
             {
-                return;
+                throw new PropertyKeyAndNameNullException();
             }
 
-            if (namedProperties.TryGetValue(new NamedPropertyKey(key, null), out NamedProperty namedProperty))
-            {
-                OnPropertyChanged(namedProperty.Key, namedProperty.PropertyName, namedProperty.Group);
-            }
-        }
+            NamedPropertyKey namedPropertyKey = new NamedPropertyKey(key, propertyName);
 
-        /// <summary>
-        /// Invokes <see cref="INotifyPropertyChanged.PropertyChanged"/> into the current context if the provided <paramref name="name"/> is found in this object.
-        /// </summary>
-        /// <param name="name">
-        /// The name of the property changed.
-        /// </param>
-        protected void OnPropertyChangedWithName(string name)
-        {
-            if (IsDisposed)
+            void invoke()
             {
-                return;
+                RWLock.LockRead(() =>
+                {
+                    if (namedProperties.TryGetValue(namedPropertyKey, out NamedProperty namedProperty))
+                    {
+                        if (namedProperty.Property.Value is T value)
+                        {
+                            onPropertyChanged?.Invoke(value);
+                        }
+                        else if (namedProperty.Property.Value is null)
+                        {
+                            onPropertyChanged?.Invoke(default);
+                        }
+                    }
+                });
             }
 
-            if (namedProperties.TryGetValue(new NamedPropertyKey(null, name), out NamedProperty namedProperty))
+            void handler(object s, PropertyChangedEventArgs e)
             {
-                OnPropertyChanged(namedProperty.Key, namedProperty.PropertyName, namedProperty.Group);
+                if (e is ObjectPropertyChangesEventArgs objArgs)
+                {
+                    if (key != null || objArgs.Key != null)
+                    {
+                        if (objArgs.Key == key)
+                        {
+                            invoke();
+                        }
+                        return;
+                    }
+                }
+
+                if (propertyName == e.PropertyName)
+                {
+                    invoke();
+                }
             }
-            else
+            PropertyChanged += handler;
+
+            invoke();
+
+            return new AnonymousDisposable(delegate
             {
-                OnPropertyChanged(new PropertyChangedEventArgs(name));
-            }
+                PropertyChanged -= handler;
+            });
         }
 
         /// <summary>
@@ -639,6 +655,16 @@ namespace ObservableHelpers
             }
 
             return RWLock.LockRead(() => namedProperties.ContainsKey(new NamedPropertyKey(key, propertyName)));
+        }
+
+        private void OnPropertyChanged(string key, string propertyName, string group)
+        {
+            if (IsDisposed)
+            {
+                return;
+            }
+
+            OnPropertyChanged(new ObjectPropertyChangesEventArgs(key, propertyName, group));
         }
 
         #endregion
