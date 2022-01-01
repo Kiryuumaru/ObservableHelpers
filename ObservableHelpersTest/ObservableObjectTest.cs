@@ -40,20 +40,20 @@ namespace ObservableObjectTest
 
         public string SampleKeyProp1
         {
-            get => GetPropertyWithKey<string>("keySample1");
-            set => SetPropertyWithKey(value, "keySample1");
+            get => GetProperty<string>(default, "keySample1");
+            set => SetProperty(value, "keySample1");
         }
 
         public DateTime SampleKeyProp2
         {
-            get => GetPropertyWithKey<DateTime>("keySample2", group: "group");
-            set => SetPropertyWithKey(value, "keySample2");
+            get => GetProperty<DateTime>(default, "keySample2", group: "group");
+            set => SetProperty(value, "keySample2");
         }
 
         public string SampleKeyProp3
         {
-            get => GetPropertyWithKey("keySample3", "defaultValue");
-            set => SetPropertyWithKey(value, "keySample3");
+            get => GetProperty("defaultValue", "keySample3");
+            set => SetProperty(value, "keySample3");
         }
 
         public IEnumerable<NamedProperty> GetRawPropertiesExposed(string group = null) => base.GetRawProperties(group);
@@ -110,7 +110,7 @@ namespace ObservableObjectTest
 
             bool hasChanges = false;
 
-            Assert.Null(obj.GetProperty(default(string), "Sample1", null, args =>
+            Assert.Null(obj.GetProperty(default(string), null, "Sample1", null, args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Null(args.newValue);
@@ -124,7 +124,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.Null(obj.GetProperty("sampleDefault1", "Sample2", null, args =>
+            Assert.Null(obj.GetProperty("sampleDefault1", null, "Sample2", null, args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("sampleDefault1", args.newValue);
@@ -138,7 +138,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.Equal("sampleDefault2", obj.GetProperty("sampleDefault2", "Sample3", null, args =>
+            Assert.Equal("sampleDefault2", obj.GetProperty("sampleDefault2", null, "Sample3", null, args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("sampleDefault2", args.newValue);
@@ -154,7 +154,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.Equal("sampleDefault2", obj.GetProperty("sampleDefault3", "Sample3", null, args =>
+            Assert.Equal("sampleDefault2", obj.GetProperty("sampleDefault3", null, "Sample3", null, args =>
             {
                 Assert.True(false);
                 return true;
@@ -169,7 +169,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.Equal("groupDefault1", obj.GetProperty("groupDefault1", "Sample4", "group1", args =>
+            Assert.Equal("groupDefault1", obj.GetProperty("groupDefault1", null, "Sample4", "group1", args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("groupDefault1", args.newValue);
@@ -185,7 +185,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.Equal("groupDefault2", obj.GetProperty("groupDefault2", "Sample5", "group1", args =>
+            Assert.Equal("groupDefault2", obj.GetProperty("groupDefault2", null, "Sample5", "group1", args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("groupDefault2", args.newValue);
@@ -201,7 +201,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.Equal("groupDefault3", obj.GetProperty("groupDefault3", "Sample6", "group1", args =>
+            Assert.Equal("groupDefault3", obj.GetProperty("groupDefault3", null, "Sample6", "group1", args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("groupDefault3", args.newValue);
@@ -217,7 +217,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.Equal("groupDefault4", obj.GetProperty("groupDefault4", "Sample7", "group2", args =>
+            Assert.Equal("groupDefault4", obj.GetProperty("groupDefault4", null, "Sample7", "group2", args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("groupDefault4", args.newValue);
@@ -233,7 +233,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.Equal("groupDefault5", obj.GetProperty("groupDefault5", "Sample8", "group2", args =>
+            Assert.Equal("groupDefault5", obj.GetProperty("groupDefault5", null, "Sample8", "group2", args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("groupDefault5", args.newValue);
@@ -305,7 +305,7 @@ namespace ObservableObjectTest
 
             bool hasChanges = false;
 
-            Assert.Null(obj.GetPropertyWithKey("sample1", default(string), null, null, args =>
+            Assert.Null(obj.GetProperty(default(string), "sample1", null, null, args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Null(args.newValue);
@@ -319,7 +319,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.Null(obj.GetPropertyWithKey("sample2", "sampleDefault1", null, null, args =>
+            Assert.Null(obj.GetProperty("sampleDefault1", "sample2", null, null, args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("sampleDefault1", args.newValue);
@@ -333,7 +333,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.Equal("sampleDefault2", obj.GetPropertyWithKey("sample3", "sampleDefault2", null, null, args =>
+            Assert.Equal("sampleDefault2", obj.GetProperty("sampleDefault2", "sample3", null, null, args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("sampleDefault2", args.newValue);
@@ -349,7 +349,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.Equal("sampleDefault2", obj.GetPropertyWithKey("sample3", "sampleDefault3", null, null, args =>
+            Assert.Equal("sampleDefault2", obj.GetProperty("sampleDefault3", "sample3", null, null, args =>
             {
                 Assert.True(false);
                 return true;
@@ -364,7 +364,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.Equal("groupDefault1", obj.GetPropertyWithKey("sample4", "groupDefault1", null, "group1", args =>
+            Assert.Equal("groupDefault1", obj.GetProperty("groupDefault1", "sample4", null, "group1", args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("groupDefault1", args.newValue);
@@ -380,7 +380,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.Equal("groupDefault2", obj.GetPropertyWithKey("sample5", "groupDefault2", null, "group1", args =>
+            Assert.Equal("groupDefault2", obj.GetProperty("groupDefault2", "sample5", null, "group1", args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("groupDefault2", args.newValue);
@@ -396,7 +396,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.Equal("groupDefault3", obj.GetPropertyWithKey("sample6", "groupDefault3", null, "group1", args =>
+            Assert.Equal("groupDefault3", obj.GetProperty("groupDefault3", "sample6", null, "group1", args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("groupDefault3", args.newValue);
@@ -412,7 +412,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.Equal("groupDefault4", obj.GetPropertyWithKey("sample7", "groupDefault4", null, "group2", args =>
+            Assert.Equal("groupDefault4", obj.GetProperty("groupDefault4", "sample7", null, "group2", args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("groupDefault4", args.newValue);
@@ -428,7 +428,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.Equal("groupDefault5", obj.GetPropertyWithKey("sample8", "groupDefault5", null, "group2", args =>
+            Assert.Equal("groupDefault5", obj.GetProperty("groupDefault5", "sample8", null, "group2", args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("groupDefault5", args.newValue);
@@ -500,7 +500,7 @@ namespace ObservableObjectTest
 
             bool hasChanges = false;
 
-            Assert.Null(obj.GetPropertyWithKey("sample1", default(string), "Sample1", null, args =>
+            Assert.Null(obj.GetProperty(default(string), "sample1", "Sample1", null, args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Null(args.newValue);
@@ -514,7 +514,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.Null(obj.GetPropertyWithKey("sample2", "sampleDefault1", "Sample2", null, args =>
+            Assert.Null(obj.GetProperty("sampleDefault1", "sample2", "Sample2", null, args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("sampleDefault1", args.newValue);
@@ -528,7 +528,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.Equal("sampleDefault2", obj.GetPropertyWithKey("sample3", "sampleDefault2", "Sample3", null, args =>
+            Assert.Equal("sampleDefault2", obj.GetProperty("sampleDefault2", "sample3", "Sample3", null, args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("sampleDefault2", args.newValue);
@@ -544,7 +544,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.Equal("sampleDefault2", obj.GetPropertyWithKey("sample3", "sampleDefault3", "Sample3", null, args =>
+            Assert.Equal("sampleDefault2", obj.GetProperty("sampleDefault3", "sample3", "Sample3", null, args =>
             {
                 Assert.True(false);
                 return true;
@@ -559,7 +559,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.Equal("groupDefault1", obj.GetPropertyWithKey("sample4", "groupDefault1", "Sample4", "group1", args =>
+            Assert.Equal("groupDefault1", obj.GetProperty("groupDefault1", "sample4", "Sample4", "group1", args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("groupDefault1", args.newValue);
@@ -575,7 +575,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.Equal("groupDefault2", obj.GetPropertyWithKey("sample5", "groupDefault2", "Sample5", "group1", args =>
+            Assert.Equal("groupDefault2", obj.GetProperty("groupDefault2", "sample5", "Sample5", "group1", args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("groupDefault2", args.newValue);
@@ -591,7 +591,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.Equal("groupDefault3", obj.GetPropertyWithKey("sample6", "groupDefault3", "Sample6", "group1", args =>
+            Assert.Equal("groupDefault3", obj.GetProperty("groupDefault3", "sample6", "Sample6", "group1", args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("groupDefault3", args.newValue);
@@ -607,7 +607,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.Equal("groupDefault4", obj.GetPropertyWithKey("sample7", "groupDefault4", "Sample7", "group2", args =>
+            Assert.Equal("groupDefault4", obj.GetProperty("groupDefault4", "sample7", "Sample7", "group2", args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("groupDefault4", args.newValue);
@@ -623,7 +623,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.Equal("groupDefault5", obj.GetPropertyWithKey("sample8", "groupDefault5", "Sample8", "group2", args =>
+            Assert.Equal("groupDefault5", obj.GetProperty("groupDefault5", "sample8", "Sample8", "group2", args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("groupDefault5", args.newValue);
@@ -698,7 +698,7 @@ namespace ObservableObjectTest
 
             bool hasChanges = false;
 
-            Assert.False(obj.SetProperty(default(string), "Sample1", null, args =>
+            Assert.False(obj.SetProperty(default(string), null, "Sample1", null, args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Null(args.newValue);
@@ -712,7 +712,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.False(obj.SetProperty("sampleDefault1", "Sample2", null, args =>
+            Assert.False(obj.SetProperty("sampleDefault1", null, "Sample2", null, args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("sampleDefault1", args.newValue);
@@ -726,7 +726,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.True(obj.SetProperty("sampleDefault2", "Sample3", null, args =>
+            Assert.True(obj.SetProperty("sampleDefault2", null, "Sample3", null, args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("sampleDefault2", args.newValue);
@@ -742,7 +742,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.True(obj.SetProperty("sampleDefault3", "Sample3", null, args =>
+            Assert.True(obj.SetProperty("sampleDefault3", null, "Sample3", null, args =>
             {
                 Assert.Equal("sampleDefault2", args.oldValue);
                 Assert.Equal("sampleDefault3", args.newValue);
@@ -758,7 +758,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.False(obj.SetProperty("sampleDefault3", "Sample3", null, args =>
+            Assert.False(obj.SetProperty("sampleDefault3", null, "Sample3", null, args =>
             {
                 Assert.Equal("sampleDefault3", args.oldValue);
                 Assert.Equal("sampleDefault3", args.newValue);
@@ -774,7 +774,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.True(obj.SetProperty("groupDefault1", "Sample4", "group1", args =>
+            Assert.True(obj.SetProperty("groupDefault1", null, "Sample4", "group1", args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("groupDefault1", args.newValue);
@@ -790,7 +790,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.True(obj.SetProperty("groupDefault2", "Sample5", "group1", args =>
+            Assert.True(obj.SetProperty("groupDefault2", null, "Sample5", "group1", args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("groupDefault2", args.newValue);
@@ -806,7 +806,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.True(obj.SetProperty("groupDefault3", "Sample6", "group1", args =>
+            Assert.True(obj.SetProperty("groupDefault3", null, "Sample6", "group1", args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("groupDefault3", args.newValue);
@@ -822,7 +822,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.True(obj.SetProperty("groupDefault4", "Sample7", "group2", args =>
+            Assert.True(obj.SetProperty("groupDefault4", null, "Sample7", "group2", args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("groupDefault4", args.newValue);
@@ -838,7 +838,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.True(obj.SetProperty("groupDefault5", "Sample8", "group2", args =>
+            Assert.True(obj.SetProperty("groupDefault5", null, "Sample8", "group2", args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("groupDefault5", args.newValue);
@@ -913,7 +913,7 @@ namespace ObservableObjectTest
 
             bool hasChanges = false;
 
-            Assert.False(obj.SetPropertyWithKey(default(string), "sample1", null, null, args =>
+            Assert.False(obj.SetProperty(default(string), "sample1", null, null, args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Null(args.newValue);
@@ -927,7 +927,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.False(obj.SetPropertyWithKey("sampleDefault1", "sample2", null, null, args =>
+            Assert.False(obj.SetProperty("sampleDefault1", "sample2", null, null, args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("sampleDefault1", args.newValue);
@@ -941,7 +941,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.True(obj.SetPropertyWithKey("sampleDefault2", "sample3", null, null, args =>
+            Assert.True(obj.SetProperty("sampleDefault2", "sample3", null, null, args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("sampleDefault2", args.newValue);
@@ -957,7 +957,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.True(obj.SetPropertyWithKey("sampleDefault3", "sample3", null, null, args =>
+            Assert.True(obj.SetProperty("sampleDefault3", "sample3", null, null, args =>
             {
                 Assert.Equal("sampleDefault2", args.oldValue);
                 Assert.Equal("sampleDefault3", args.newValue);
@@ -973,7 +973,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.False(obj.SetPropertyWithKey("sampleDefault3", "sample3", null, null, args =>
+            Assert.False(obj.SetProperty("sampleDefault3", "sample3", null, null, args =>
             {
                 Assert.Equal("sampleDefault3", args.oldValue);
                 Assert.Equal("sampleDefault3", args.newValue);
@@ -989,7 +989,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.True(obj.SetPropertyWithKey("groupDefault1", "sample4", null, "group1", args =>
+            Assert.True(obj.SetProperty("groupDefault1", "sample4", null, "group1", args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("groupDefault1", args.newValue);
@@ -1005,7 +1005,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.True(obj.SetPropertyWithKey("groupDefault2", "sample5", null, "group1", args =>
+            Assert.True(obj.SetProperty("groupDefault2", "sample5", null, "group1", args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("groupDefault2", args.newValue);
@@ -1021,7 +1021,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.True(obj.SetPropertyWithKey("groupDefault3", "sample6", null, "group1", args =>
+            Assert.True(obj.SetProperty("groupDefault3", "sample6", null, "group1", args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("groupDefault3", args.newValue);
@@ -1037,7 +1037,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.True(obj.SetPropertyWithKey("groupDefault4", "sample7", null, "group2", args =>
+            Assert.True(obj.SetProperty("groupDefault4", "sample7", null, "group2", args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("groupDefault4", args.newValue);
@@ -1053,7 +1053,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.True(obj.SetPropertyWithKey("groupDefault5", "sample8", null, "group2", args =>
+            Assert.True(obj.SetProperty("groupDefault5", "sample8", null, "group2", args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("groupDefault5", args.newValue);
@@ -1128,7 +1128,7 @@ namespace ObservableObjectTest
 
             bool hasChanges = false;
 
-            Assert.False(obj.SetPropertyWithKey(default(string), "sample1", "Sample1", null, args =>
+            Assert.False(obj.SetProperty(default(string), "sample1", "Sample1", null, args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Null(args.newValue);
@@ -1142,7 +1142,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.False(obj.SetPropertyWithKey("sampleDefault1", "sample2", "Sample2", null, args =>
+            Assert.False(obj.SetProperty("sampleDefault1", "sample2", "Sample2", null, args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("sampleDefault1", args.newValue);
@@ -1156,7 +1156,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.True(obj.SetPropertyWithKey("sampleDefault2", "sample3", "Sample3", null, args =>
+            Assert.True(obj.SetProperty("sampleDefault2", "sample3", "Sample3", null, args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("sampleDefault2", args.newValue);
@@ -1172,7 +1172,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.True(obj.SetPropertyWithKey("sampleDefault3", "sample3", "Sample3", null, args =>
+            Assert.True(obj.SetProperty("sampleDefault3", "sample3", "Sample3", null, args =>
             {
                 Assert.Equal("sampleDefault2", args.oldValue);
                 Assert.Equal("sampleDefault3", args.newValue);
@@ -1188,7 +1188,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.False(obj.SetPropertyWithKey("sampleDefault3", "sample3", "Sample3", null, args =>
+            Assert.False(obj.SetProperty("sampleDefault3", "sample3", "Sample3", null, args =>
             {
                 Assert.Equal("sampleDefault3", args.oldValue);
                 Assert.Equal("sampleDefault3", args.newValue);
@@ -1204,7 +1204,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.True(obj.SetPropertyWithKey("groupDefault1", "sample4", "Sample4", "group1", args =>
+            Assert.True(obj.SetProperty("groupDefault1", "sample4", "Sample4", "group1", args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("groupDefault1", args.newValue);
@@ -1220,7 +1220,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.True(obj.SetPropertyWithKey("groupDefault2", "sample5", "Sample5", "group1", args =>
+            Assert.True(obj.SetProperty("groupDefault2", "sample5", "Sample5", "group1", args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("groupDefault2", args.newValue);
@@ -1236,7 +1236,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.True(obj.SetPropertyWithKey("groupDefault3", "sample6", "Sample6", "group1", args =>
+            Assert.True(obj.SetProperty("groupDefault3", "sample6", "Sample6", "group1", args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("groupDefault3", args.newValue);
@@ -1252,7 +1252,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.True(obj.SetPropertyWithKey("groupDefault4", "sample7", "Sample7", "group2", args =>
+            Assert.True(obj.SetProperty("groupDefault4", "sample7", "Sample7", "group2", args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("groupDefault4", args.newValue);
@@ -1268,7 +1268,7 @@ namespace ObservableObjectTest
 
             hasChanges = false;
 
-            Assert.True(obj.SetPropertyWithKey("groupDefault5", "sample8", "Sample8", "group2", args =>
+            Assert.True(obj.SetProperty("groupDefault5", "sample8", "Sample8", "group2", args =>
             {
                 Assert.Null(args.oldValue);
                 Assert.Equal("groupDefault5", args.newValue);

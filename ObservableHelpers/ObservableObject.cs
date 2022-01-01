@@ -18,7 +18,6 @@ namespace ObservableHelpers
     {
         #region Properties
 
-        private string Magic = new Random().Next(1000, 9999999).ToString();
         private readonly Dictionary<NamedPropertyKey, NamedProperty> namedProperties = new Dictionary<NamedPropertyKey, NamedProperty>();
 
         #endregion
@@ -70,45 +69,8 @@ namespace ObservableHelpers
         /// <param name="value">
         /// The value of the property to set.
         /// </param>
-        /// <param name="propertyName">
-        /// The name of the property to set.
-        /// </param>
-        /// <param name="group">
-        /// The group of the property to set.
-        /// </param>
-        /// <param name="setValidate">
-        /// The value set validator function.
-        /// </param>
-        /// <param name="postAction">
-        /// The callback after operation.
-        /// </param>
-        /// <returns>
-        /// <c>true</c> whether the property was set; otherwise <c>false</c>.
-        /// </returns>
-        /// <exception cref="PropertyKeyAndNameNullException">
-        /// Throws when <paramref name="propertyName"/> is not provided.
-        /// </exception>
-        protected bool SetProperty<T>(
-            T value,
-            [CallerMemberName] string propertyName = null,
-            string group = null,
-            Func<(T oldValue, T newValue), bool> setValidate = null,
-            Action<(string key, string propertyName, string group, T oldValue, T newValue, bool HasChanges)> postAction = null)
-        {
-            return SetProperty(value, null, propertyName, group, setValidate, postAction);
-        }
-
-        /// <summary>
-        /// Sets the property value with the provided <paramref name="key"/>.
-        /// </summary>
-        /// <typeparam name="T">
-        /// The underlying type of the property to set.
-        /// </typeparam>
         /// <param name="key">
         /// The key of the property value to set.
-        /// </param>
-        /// <param name="value">
-        /// The value of the property to set.
         /// </param>
         /// <param name="propertyName">
         /// The name of the property to set.
@@ -128,15 +90,50 @@ namespace ObservableHelpers
         /// <exception cref="PropertyKeyAndNameNullException">
         /// Throws when <paramref name="key"/> is not provided.
         /// </exception>
-        protected bool SetPropertyWithKey<T>(
+        protected bool SetProperty<T>(
             T value,
-            string key,
+            string key = null,
             [CallerMemberName] string propertyName = null,
             string group = null,
             Func<(T oldValue, T newValue), bool> setValidate = null,
             Action<(string key, string propertyName, string group, T oldValue, T newValue, bool HasChanges)> postAction = null)
         {
-            return SetProperty(value, key, propertyName, group, setValidate, postAction);
+            bool hasChanges = false;
+
+            CreateOrUpdateNamedProperty(value, key, propertyName, group,
+                args =>
+                {
+                    bool validated = setValidate?.Invoke((args.oldValue, value)) ?? true;
+                    if (validated && args.namedProperty.IsDefault)
+                    {
+                        args.namedProperty.IsDefault = false;
+                    }
+                    return validated;
+                },
+                args =>
+                {
+                    bool validated = setValidate?.Invoke((args.oldValue, value)) ?? true;
+                    if (validated && args.namedProperty.IsDefault)
+                    {
+                        args.namedProperty.IsDefault = false;
+                    }
+                    return validated;
+                },
+                subPostAction =>
+                {
+                    hasChanges = subPostAction.hasChanges;
+
+                    postAction?.Invoke((
+                        subPostAction.namedProperty.Key,
+                        subPostAction.namedProperty.PropertyName,
+                        subPostAction.namedProperty.Group,
+                        subPostAction.oldValue,
+                        subPostAction.newValue,
+                        subPostAction.hasChanges));
+                });
+
+
+            return hasChanges;
         }
 
         /// <summary>
@@ -148,45 +145,8 @@ namespace ObservableHelpers
         /// <param name="defaultValue">
         /// The default value sets and returned if the property is null.
         /// </param>
-        /// <param name="propertyName">
-        /// The name of the property value to get.
-        /// </param>
-        /// <param name="group">
-        /// The group of the property value to get.
-        /// </param>
-        /// <param name="setValidate">
-        /// The value set validator function.
-        /// </param>
-        /// <param name="postAction">
-        /// The callback after operation.
-        /// </param>
-        /// <returns>
-        /// The found <typeparamref name="T"/> property value.
-        /// </returns>
-        /// <exception cref="PropertyKeyAndNameNullException">
-        /// Throws when <paramref name="propertyName"/> is not provided.
-        /// </exception>
-        protected T GetProperty<T>(
-            T defaultValue = default,
-            [CallerMemberName] string propertyName = null,
-            string group = null,
-            Func<(T oldValue, T newValue), bool> setValidate = null,
-            Action<(string key, string propertyName, string group, T oldValue, T newValue, bool HasChanges)> postAction = null)
-        {
-            return GetProperty(defaultValue, null, propertyName, group, setValidate, postAction);
-        }
-
-        /// <summary>
-        /// Gets the property value with the provided <paramref name="key"/>.
-        /// </summary>
-        /// <typeparam name="T">
-        /// The underlying type of the property to get.
-        /// </typeparam>
         /// <param name="key">
         /// The key of the property value to get.
-        /// </param>
-        /// <param name="defaultValue">
-        /// The default value sets and returned if the property is null.
         /// </param>
         /// <param name="propertyName">
         /// The name of the property value to get.
@@ -206,15 +166,40 @@ namespace ObservableHelpers
         /// <exception cref="PropertyKeyAndNameNullException">
         /// Throws when <paramref name="key"/> is not provided.
         /// </exception>
-        protected T GetPropertyWithKey<T>(
-            string key,
+        protected T GetProperty<T>(
             T defaultValue = default,
+            string key = null,
             [CallerMemberName] string propertyName = null,
             string group = null,
             Func<(T oldValue, T newValue), bool> setValidate = null,
             Action<(string key, string propertyName, string group, T oldValue, T newValue, bool HasChanges)> postAction = null)
         {
-            return GetProperty(defaultValue, key, propertyName, group, setValidate, postAction);
+            T returnValue = default;
+
+            NamedProperty namedProperty = GetOrCreateNamedProperty(defaultValue, key, propertyName, group,
+                args =>
+                {
+                    bool validated = setValidate?.Invoke((args.oldValue, defaultValue)) ?? true;
+                    if (validated && !args.namedProperty.IsDefault)
+                    {
+                        args.namedProperty.IsDefault = true;
+                    }
+                    return validated;
+                },
+                subPostAction =>
+                {
+                    returnValue = subPostAction.newValue;
+
+                    postAction?.Invoke((
+                        subPostAction.namedProperty.Key,
+                        subPostAction.namedProperty.PropertyName,
+                        subPostAction.namedProperty.Group,
+                        subPostAction.oldValue,
+                        subPostAction.newValue,
+                        subPostAction.hasChanges));
+                });
+
+            return returnValue;
         }
 
         /// <summary>
@@ -621,88 +606,6 @@ namespace ObservableHelpers
                 PropertyName = propertyName,
                 Group = group
             };
-        }
-
-        private bool SetProperty<T>(
-            T value,
-            string key,
-            string propertyName,
-            string group,
-            Func<(T oldValue, T newValue), bool> setValidate,
-            Action<(string key, string propertyName, string group, T oldValue, T newValue, bool HasChanges)> postAction)
-        {
-            bool hasChanges = false;
-
-            CreateOrUpdateNamedProperty(value, key, propertyName, group,
-                args =>
-                {
-                    bool validated = setValidate?.Invoke((args.oldValue, value)) ?? true;
-                    if (validated && args.namedProperty.IsDefault)
-                    {
-                        args.namedProperty.IsDefault = false;
-                    }
-                    return validated;
-                },
-                args =>
-                {
-                    bool validated = setValidate?.Invoke((args.oldValue, value)) ?? true;
-                    if (validated && args.namedProperty.IsDefault)
-                    {
-                        args.namedProperty.IsDefault = false;
-                    }
-                    return validated;
-                },
-                subPostAction =>
-                {
-                    hasChanges = subPostAction.hasChanges;
-
-                    postAction?.Invoke((
-                        subPostAction.namedProperty.Key,
-                        subPostAction.namedProperty.PropertyName,
-                        subPostAction.namedProperty.Group,
-                        subPostAction.oldValue,
-                        subPostAction.newValue,
-                        subPostAction.hasChanges));
-                });
-
-
-            return hasChanges;
-        }
-
-        private T GetProperty<T>(
-            T defaultValue,
-            string key,
-            string propertyName,
-            string group,
-            Func<(T oldValue, T newValue), bool> setValidate,
-            Action<(string key, string propertyName, string group, T oldValue, T newValue, bool HasChanges)> postAction)
-        {
-            T returnValue = default;
-
-            NamedProperty namedProperty = GetOrCreateNamedProperty(defaultValue, key, propertyName, group,
-                args =>
-                {
-                    bool validated = setValidate?.Invoke((args.oldValue, defaultValue)) ?? true;
-                    if (validated && !args.namedProperty.IsDefault)
-                    {
-                        args.namedProperty.IsDefault = true;
-                    }
-                    return validated;
-                },
-                subPostAction =>
-                {
-                    returnValue = subPostAction.newValue;
-
-                    postAction?.Invoke((
-                        subPostAction.namedProperty.Key,
-                        subPostAction.namedProperty.PropertyName,
-                        subPostAction.namedProperty.Group,
-                        subPostAction.oldValue,
-                        subPostAction.newValue,
-                        subPostAction.hasChanges));
-                });
-
-            return returnValue;
         }
 
         private bool RemoveProperty(string key, string propertyName)
