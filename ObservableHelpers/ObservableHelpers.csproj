@@ -14,8 +14,8 @@
 
   <PropertyGroup>
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
-    <Version>1.4.1</Version>
-    <PackageReleaseNotes>* Added ObservableObject.AttachOnPropertyChanged for easy attach on specific property changes</PackageReleaseNotes>
+    <Version>1.4.2</Version>
+    <PackageReleaseNotes>* Performance fixes</PackageReleaseNotes>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
