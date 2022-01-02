@@ -23,16 +23,11 @@ namespace ObservableDictionaryTest
         public async void WithConcurrency1()
         {
             var raiseCount1 = 0;
-            var raiseCount2 = 0;
             var dict = new ObservableDictionary<string, string>();
 
             dict.ImmediateCollectionChanged += (s, e) =>
             {
                 Interlocked.Increment(ref raiseCount1);
-            };
-            dict.CollectionChanged += (s, e) =>
-            {
-                Interlocked.Increment(ref raiseCount2);
             };
 
             await Task.WhenAll(
@@ -52,7 +47,6 @@ namespace ObservableDictionaryTest
                 }));
 
             Assert.Equal(20000, raiseCount1);
-            Assert.Equal(20000, raiseCount2);
             Assert.Equal(20000, dict.Count);
 
             for (int i = 0; i < 20000; i++)
@@ -65,16 +59,11 @@ namespace ObservableDictionaryTest
         public async void WithConcurrency2()
         {
             var raiseCount1 = 0;
-            var raiseCount2 = 0;
             var dict = new ObservableDictionary<string, string>();
 
             dict.ImmediateCollectionChanged += (s, e) =>
             {
                 Interlocked.Increment(ref raiseCount1);
-            };
-            dict.CollectionChanged += (s, e) =>
-            {
-                Interlocked.Increment(ref raiseCount2);
             };
 
             await Task.WhenAll(
@@ -100,7 +89,6 @@ namespace ObservableDictionaryTest
                 }));
 
             Assert.Equal(20000, raiseCount1);
-            Assert.Equal(20000, raiseCount2);
             Assert.Equal(60000, dict.Count);
 
             for (int i = 0; i < 60000; i++)
@@ -113,16 +101,11 @@ namespace ObservableDictionaryTest
         public async void WithConcurrency3()
         {
             var raiseCount1 = 0;
-            var raiseCount2 = 0;
             var dict = new ObservableDictionary<string, string>();
 
             dict.ImmediateCollectionChanged += (s, e) =>
             {
                 Interlocked.Increment(ref raiseCount1);
-            };
-            dict.CollectionChanged += (s, e) =>
-            {
-                Interlocked.Increment(ref raiseCount2);
             };
 
             for (int i = 65000; i < 70000; i++)
@@ -192,7 +175,6 @@ namespace ObservableDictionaryTest
                 }));
 
             Assert.Equal(150000, raiseCount1);
-            Assert.Equal(150000, raiseCount2);
             Assert.Equal(120000, dict.Count);
 
             for (int i = 0; i < 10000; i++)
@@ -247,16 +229,11 @@ namespace ObservableDictionaryTest
         public async void WithConcurrency4()
         {
             var raiseCount1 = 0;
-            var raiseCount2 = 0;
             var dict = new ObservableDictionary<string, string>();
 
             dict.ImmediateCollectionChanged += (s, e) =>
             {
                 Interlocked.Increment(ref raiseCount1);
-            };
-            dict.CollectionChanged += (s, e) =>
-            {
-                Interlocked.Increment(ref raiseCount2);
             };
 
             await Task.WhenAll(
@@ -282,7 +259,6 @@ namespace ObservableDictionaryTest
                 }));
 
             Assert.Equal(20000, raiseCount1);
-            Assert.Equal(20000, raiseCount2);
             Assert.Equal(60000, dict.Count);
 
             for (int i = 0; i < 70000; i++)
@@ -312,7 +288,7 @@ namespace ObservableDictionaryTest
                 new KeyValuePair<string, string>("3", "three")
             });
 
-            dict.CollectionChanged += (s, e) =>
+            dict.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -383,7 +359,7 @@ namespace ObservableDictionaryTest
             var raiseCol = new List<NotifyCollectionChangedEventArgs>();
             var dict = new ObservableDictionary<string, string>();
 
-            dict.Keys.CollectionChanged += (s, e) =>
+            dict.Keys.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -447,7 +423,7 @@ namespace ObservableDictionaryTest
             var raiseCol = new List<NotifyCollectionChangedEventArgs>();
             var dict = new ObservableDictionary<string, string>();
 
-            dict.Values.CollectionChanged += (s, e) =>
+            dict.Values.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -585,7 +561,7 @@ namespace ObservableDictionaryTest
             var raiseCol = new List<NotifyCollectionChangedEventArgs>();
             var dict = new ObservableDictionary<string, string>();
 
-            dict.CollectionChanged += (s, e) =>
+            dict.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -645,7 +621,7 @@ namespace ObservableDictionaryTest
 
             Assert.Empty(dict);
 
-            dict.CollectionChanged += (s, e) =>
+            dict.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -704,7 +680,7 @@ namespace ObservableDictionaryTest
             var raiseCol = new List<NotifyCollectionChangedEventArgs>();
             var dict = new ObservableDictionary<string, string>();
 
-            dict.CollectionChanged += (s, e) =>
+            dict.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -766,7 +742,7 @@ namespace ObservableDictionaryTest
                 new KeyValuePair<string, string>("6", "six")
             });
 
-            dict.CollectionChanged += (s, e) =>
+            dict.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -837,7 +813,7 @@ namespace ObservableDictionaryTest
                 new KeyValuePair<string, string>("3", "three")
             });
 
-            dict.CollectionChanged += (s, e) =>
+            dict.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -1009,7 +985,7 @@ namespace ObservableDictionaryTest
                 new KeyValuePair<string, string>("4", "four")
             });
 
-            dict.CollectionChanged += (s, e) =>
+            dict.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -1039,7 +1015,7 @@ namespace ObservableDictionaryTest
                 new KeyValuePair<string, string>("4", "four")
             });
 
-            dict.CollectionChanged += (s, e) =>
+            dict.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -1077,7 +1053,7 @@ namespace ObservableDictionaryTest
                 new KeyValuePair<string, string>("4", "four")
             });
 
-            dict.CollectionChanged += (s, e) =>
+            dict.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -1128,7 +1104,7 @@ namespace ObservableDictionaryTest
             var raiseCol = new List<NotifyCollectionChangedEventArgs>();
             var dict = new ObservableDictionary<string, string>();
 
-            dict.CollectionChanged += (s, e) =>
+            dict.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -1170,7 +1146,7 @@ namespace ObservableDictionaryTest
             var raiseCol = new List<NotifyCollectionChangedEventArgs>();
             var dict = new ObservableDictionary<string, string>();
 
-            dict.CollectionChanged += (s, e) =>
+            dict.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -1216,7 +1192,7 @@ namespace ObservableDictionaryTest
                 new KeyValuePair<string, string>("4", "four")
             });
 
-            dict.CollectionChanged += (s, e) =>
+            dict.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -1271,7 +1247,7 @@ namespace ObservableDictionaryTest
             var raiseCol = new List<NotifyCollectionChangedEventArgs>();
             var dict = new ObservableDictionary<string, string>();
 
-            dict.CollectionChanged += (s, e) =>
+            dict.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -1305,7 +1281,7 @@ namespace ObservableDictionaryTest
             var raiseCol = new List<NotifyCollectionChangedEventArgs>();
             var dict = new ObservableDictionary<string, string>();
 
-            dict.CollectionChanged += (s, e) =>
+            dict.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -1343,7 +1319,7 @@ namespace ObservableDictionaryTest
                 new KeyValuePair<string, string>("4", "four")
             });
 
-            dict.CollectionChanged += (s, e) =>
+            dict.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -1411,7 +1387,7 @@ namespace ObservableDictionaryTest
                 new KeyValuePair<string, string>("4", "four")
             });
 
-            dict.CollectionChanged += (s, e) =>
+            dict.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -1449,7 +1425,7 @@ namespace ObservableDictionaryTest
                 new KeyValuePair<string, string>("4", "four")
             });
 
-            dict.CollectionChanged += (s, e) =>
+            dict.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -1514,7 +1490,7 @@ namespace ObservableDictionaryTest
                 new KeyValuePair<string, string>("4", "four")
             });
 
-            dict.CollectionChanged += (s, e) =>
+            dict.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -1620,7 +1596,7 @@ namespace ObservableDictionaryTest
                 new KeyValuePair<string, string>("6", "six")
             });
 
-            dict.CollectionChanged += (s, e) =>
+            dict.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -1672,7 +1648,7 @@ namespace ObservableDictionaryTest
                 new KeyValuePair<string, string>("6", "six")
             });
 
-            dict.CollectionChanged += (s, e) =>
+            dict.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -1770,7 +1746,7 @@ namespace ObservableDictionaryTest
                 new KeyValuePair<string, string>("8", "eight")
             });
 
-            dict.CollectionChanged += (s, e) =>
+            dict.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -1872,7 +1848,7 @@ namespace ObservableDictionaryTest
                 new KeyValuePair<string, string>("8", "eight")
             });
 
-            dict.CollectionChanged += (s, e) =>
+            dict.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -1938,7 +1914,7 @@ namespace ObservableDictionaryTest
                 new KeyValuePair<string, string>("8", "eight")
             });
 
-            dict.CollectionChanged += (s, e) =>
+            dict.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -2170,7 +2146,7 @@ namespace ObservableDictionaryTest
                 new KeyValuePair<string, string>("8", "eight")
             });
 
-            dict.CollectionChanged += (s, e) =>
+            dict.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -2272,7 +2248,7 @@ namespace ObservableDictionaryTest
                 new KeyValuePair<string, string>("8", "eight")
             });
 
-            dict.CollectionChanged += (s, e) =>
+            dict.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -2338,7 +2314,7 @@ namespace ObservableDictionaryTest
                 new KeyValuePair<string, string>("8", "eight")
             });
 
-            dict.CollectionChanged += (s, e) =>
+            dict.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };

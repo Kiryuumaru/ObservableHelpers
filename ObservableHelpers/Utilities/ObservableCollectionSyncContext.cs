@@ -205,7 +205,7 @@ namespace ObservableHelpers.Utilities
                 return;
             }
             ImmediateCollectionChanged?.Invoke(this, e);
-            ContextSend(delegate
+            ContextPost(delegate
             {
                 CollectionChanged?.Invoke(this, e);
             });

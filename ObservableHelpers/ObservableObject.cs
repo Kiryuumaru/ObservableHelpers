@@ -661,6 +661,81 @@ namespace ObservableHelpers
         }
 
         /// <summary>
+        /// Specifically attach <see cref="ObservableSyncContext.ImmediatePropertyChanged"/> event on single property.
+        /// </summary>
+        /// <typeparam name="T">
+        /// The type of the value of the property.
+        /// </typeparam>
+        /// <param name="onPropertyChanged">
+        /// The action if the property has changed.
+        /// </param>
+        /// <param name="propertyName">
+        /// The name of the property to attach the event.
+        /// </param>
+        /// <param name="key">
+        /// The key of the property to attach the event.
+        /// </param>
+        /// <returns>
+        /// The <see cref="IDisposable"/> to dispose the event.
+        /// </returns>
+        /// <exception cref="PropertyKeyAndNameNullException">
+        /// Throws when both <paramref name="key"/> and <paramref name="propertyName"/> are not provided.
+        /// </exception>
+        protected IDisposable AttachOnImmediatePropertyChanged<T>(
+            Action<T> onPropertyChanged,
+            string propertyName = null,
+            string key = null)
+        {
+            if (key == null && propertyName == null)
+            {
+                throw new PropertyKeyAndNameNullException();
+            }
+
+            void invoke()
+            {
+                RWLock.LockRead(() =>
+                {
+                    if (key != null && keyDictionary.TryGetValue(key, out int namedPropertyKey))
+                    {
+                        onPropertyChanged?.Invoke(namedProperties[namedPropertyKey].Property.GetValue<T>());
+                    }
+                    else if (propertyName != null && propertyNameDictionary.TryGetValue(propertyName, out namedPropertyKey))
+                    {
+                        onPropertyChanged?.Invoke(namedProperties[namedPropertyKey].Property.GetValue<T>());
+                    }
+                });
+            }
+
+            void handler(object s, PropertyChangedEventArgs e)
+            {
+                if (key != null)
+                {
+                    if (e is ObjectPropertyChangesEventArgs objArgs)
+                    {
+                        if (key == objArgs.Key)
+                        {
+                            invoke();
+                            return;
+                        }
+                    }
+                }
+
+                if (propertyName == e.PropertyName)
+                {
+                    invoke();
+                }
+            }
+            ImmediatePropertyChanged += handler;
+
+            invoke();
+
+            return new AnonymousDisposable(delegate
+            {
+                ImmediatePropertyChanged -= handler;
+            });
+        }
+
+        /// <summary>
         /// Virtual factory used to create all properties.
         /// </summary>
         /// <param name="key">

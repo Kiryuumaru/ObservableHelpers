@@ -28,7 +28,7 @@ namespace ObservableStackTest
             var raiseCol = new List<NotifyCollectionChangedEventArgs>();
             var col = new ObservableStack<int>(new int[] { 1, 2, 3 });
 
-            col.CollectionChanged += (s, e) =>
+            col.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -100,7 +100,7 @@ namespace ObservableStackTest
             var raiseCol = new List<NotifyCollectionChangedEventArgs>();
             var col = new ObservableStack<int>(new int[] { 1, 2, 3, 4, 5, 6 });
 
-            col.CollectionChanged += (s, e) =>
+            col.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -169,7 +169,7 @@ namespace ObservableStackTest
             var raiseCol = new List<NotifyCollectionChangedEventArgs>();
             var col = new ObservableStack<int>(new int[] { 1, 2, 3 });
 
-            col.CollectionChanged += (s, e) =>
+            col.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -218,7 +218,7 @@ namespace ObservableStackTest
             var raiseCol = new List<NotifyCollectionChangedEventArgs>();
             var col = new ObservableStack<int>();
 
-            col.CollectionChanged += (s, e) =>
+            col.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -275,12 +275,12 @@ namespace ObservableStackTest
             var col5 = new ObservableStack<int>(new int[] { 1, 2, 3 });
             var col6 = new ObservableStack<int>();
 
-            col1.CollectionChanged += (s, e) => raiseCol1.Add(e);
-            col2.CollectionChanged += (s, e) => raiseCol2.Add(e);
-            col3.CollectionChanged += (s, e) => raiseCol3.Add(e);
-            col4.CollectionChanged += (s, e) => raiseCol4.Add(e);
-            col5.CollectionChanged += (s, e) => raiseCol5.Add(e);
-            col6.CollectionChanged += (s, e) => raiseCol6.Add(e);
+            col1.ImmediateCollectionChanged += (s, e) => raiseCol1.Add(e);
+            col2.ImmediateCollectionChanged += (s, e) => raiseCol2.Add(e);
+            col3.ImmediateCollectionChanged += (s, e) => raiseCol3.Add(e);
+            col4.ImmediateCollectionChanged += (s, e) => raiseCol4.Add(e);
+            col5.ImmediateCollectionChanged += (s, e) => raiseCol5.Add(e);
+            col6.ImmediateCollectionChanged += (s, e) => raiseCol6.Add(e);
 
             col1.PushRange(new int[] { 1, 2 });
             col2.PushRange(new int[] { 1, 2, 3 });
@@ -375,7 +375,7 @@ namespace ObservableStackTest
             var raiseCol = new List<NotifyCollectionChangedEventArgs>();
             var col = new ObservableStack<int>();
 
-            col.CollectionChanged += (s, e) =>
+            col.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -478,7 +478,7 @@ namespace ObservableStackTest
             var raiseCol = new List<NotifyCollectionChangedEventArgs>();
             var col = new ObservableStack<int>(new int[] { 1, 2, 3 });
 
-            col.CollectionChanged += (s, e) =>
+            col.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -535,12 +535,12 @@ namespace ObservableStackTest
             var col5 = new ObservableStack<int>(new int[] { 1, 2, 3 });
             var col6 = new ObservableStack<int>(new int[] { 1, 2, 3 });
 
-            col1.CollectionChanged += (s, e) => raiseCol1.Add(e);
-            col2.CollectionChanged += (s, e) => raiseCol2.Add(e);
-            col3.CollectionChanged += (s, e) => raiseCol3.Add(e);
-            col4.CollectionChanged += (s, e) => raiseCol4.Add(e);
-            col5.CollectionChanged += (s, e) => raiseCol5.Add(e);
-            col6.CollectionChanged += (s, e) => raiseCol6.Add(e);
+            col1.ImmediateCollectionChanged += (s, e) => raiseCol1.Add(e);
+            col2.ImmediateCollectionChanged += (s, e) => raiseCol2.Add(e);
+            col3.ImmediateCollectionChanged += (s, e) => raiseCol3.Add(e);
+            col4.ImmediateCollectionChanged += (s, e) => raiseCol4.Add(e);
+            col5.ImmediateCollectionChanged += (s, e) => raiseCol5.Add(e);
+            col6.ImmediateCollectionChanged += (s, e) => raiseCol6.Add(e);
 
             int[] vals1 = new int[2];
             int[] vals2 = new int[3];

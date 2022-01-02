@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace ObservableObjectTest
@@ -103,7 +104,7 @@ namespace ObservableObjectTest
             var raiseCol = new List<ObjectPropertyChangesEventArgs>();
             var obj = new GetPropertyTest();
 
-            obj.PropertyChanged += (s, e) =>
+            obj.ImmediatePropertyChanged += (s, e) =>
             {
                 raiseCol.Add((ObjectPropertyChangesEventArgs)e);
             };
@@ -298,7 +299,7 @@ namespace ObservableObjectTest
             var raiseCol = new List<ObjectPropertyChangesEventArgs>();
             var obj = new GetPropertyTest();
 
-            obj.PropertyChanged += (s, e) =>
+            obj.ImmediatePropertyChanged += (s, e) =>
             {
                 raiseCol.Add((ObjectPropertyChangesEventArgs)e);
             };
@@ -493,7 +494,7 @@ namespace ObservableObjectTest
             var raiseCol = new List<ObjectPropertyChangesEventArgs>();
             var obj = new GetPropertyTest();
 
-            obj.PropertyChanged += (s, e) =>
+            obj.ImmediatePropertyChanged += (s, e) =>
             {
                 raiseCol.Add((ObjectPropertyChangesEventArgs)e);
             };
@@ -691,7 +692,7 @@ namespace ObservableObjectTest
             var raiseCol = new List<ObjectPropertyChangesEventArgs>();
             var obj = new SetPropertyTest();
 
-            obj.PropertyChanged += (s, e) =>
+            obj.ImmediatePropertyChanged += (s, e) =>
             {
                 raiseCol.Add((ObjectPropertyChangesEventArgs)e);
             };
@@ -906,7 +907,7 @@ namespace ObservableObjectTest
             var raiseCol = new List<ObjectPropertyChangesEventArgs>();
             var obj = new SetPropertyTest();
 
-            obj.PropertyChanged += (s, e) =>
+            obj.ImmediatePropertyChanged += (s, e) =>
             {
                 raiseCol.Add((ObjectPropertyChangesEventArgs)e);
             };
@@ -1121,7 +1122,7 @@ namespace ObservableObjectTest
             var raiseCol = new List<ObjectPropertyChangesEventArgs>();
             var obj = new SetPropertyTest();
 
-            obj.PropertyChanged += (s, e) =>
+            obj.ImmediatePropertyChanged += (s, e) =>
             {
                 raiseCol.Add((ObjectPropertyChangesEventArgs)e);
             };
@@ -1339,7 +1340,7 @@ namespace ObservableObjectTest
             var raiseCol = new List<ObjectPropertyChangesEventArgs>();
             var obj = new RemoveTest();
 
-            obj.PropertyChanged += (s, e) =>
+            obj.ImmediatePropertyChanged += (s, e) =>
             {
                 raiseCol.Add((ObjectPropertyChangesEventArgs)e);
             };
@@ -1399,7 +1400,7 @@ namespace ObservableObjectTest
             var raiseCol = new List<ObjectPropertyChangesEventArgs>();
             var obj = new RemoveTest();
 
-            obj.PropertyChanged += (s, e) =>
+            obj.ImmediatePropertyChanged += (s, e) =>
             {
                 raiseCol.Add((ObjectPropertyChangesEventArgs)e);
             };
@@ -1459,7 +1460,7 @@ namespace ObservableObjectTest
             var raiseCol = new List<ObjectPropertyChangesEventArgs>();
             var obj = new RemoveTest();
 
-            obj.PropertyChanged += (s, e) =>
+            obj.ImmediatePropertyChanged += (s, e) =>
             {
                 raiseCol.Add((ObjectPropertyChangesEventArgs)e);
             };
@@ -1612,7 +1613,7 @@ namespace ObservableObjectTest
     public class AttachOnPropertyChangedTest : SampleObject
     {
         [Fact]
-        public void Normal()
+        public async void Normal()
         {
             var obj = new AttachOnPropertyChangedTest();
 
@@ -1623,6 +1624,43 @@ namespace ObservableObjectTest
             obj.AttachOnPropertyChanged<string>(v => SampleProp1 = v, nameof(obj.SampleProp1));
             obj.AttachOnPropertyChanged<DateTime>(v => SampleProp2 = v, nameof(obj.SampleProp2));
             obj.AttachOnPropertyChanged<string>(v => SampleProp3 = v, nameof(obj.SampleProp3));
+
+            Assert.Equal(SampleProp1, obj.SampleProp1);
+            Assert.Equal(SampleProp2, obj.SampleProp2);
+            Assert.Equal(SampleProp3, obj.SampleProp3);
+
+            DateTime date1 = DateTime.UtcNow;
+
+            obj.SampleProp1 = "test1";
+            obj.SampleProp2 = date1;
+            obj.SampleProp3 = "test3";
+
+            await Task.Delay(1000);
+
+            Assert.Equal("test1", SampleProp1);
+            Assert.Equal(date1, SampleProp2);
+            Assert.Equal("test3", SampleProp3);
+
+            Assert.Equal(SampleProp1, obj.SampleProp1);
+            Assert.Equal(SampleProp2, obj.SampleProp2);
+            Assert.Equal(SampleProp3, obj.SampleProp3);
+        }
+    }
+
+    public class AttachImmediateOnPropertyChangedTest : SampleObject
+    {
+        [Fact]
+        public void Normal()
+        {
+            var obj = new AttachImmediateOnPropertyChangedTest();
+
+            string SampleProp1 = null;
+            DateTime SampleProp2 = default;
+            string SampleProp3 = null;
+
+            obj.AttachOnImmediatePropertyChanged<string>(v => SampleProp1 = v, nameof(obj.SampleProp1));
+            obj.AttachOnImmediatePropertyChanged<DateTime>(v => SampleProp2 = v, nameof(obj.SampleProp2));
+            obj.AttachOnImmediatePropertyChanged<string>(v => SampleProp3 = v, nameof(obj.SampleProp3));
 
             Assert.Equal(SampleProp1, obj.SampleProp1);
             Assert.Equal(SampleProp2, obj.SampleProp2);

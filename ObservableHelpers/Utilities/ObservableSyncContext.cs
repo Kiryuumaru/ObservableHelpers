@@ -68,7 +68,7 @@ namespace ObservableHelpers.Utilities
                 return;
             }
             ImmediatePropertyChanged?.Invoke(this, args);
-            ContextSend(delegate
+            ContextPost(delegate
             {
                 PropertyChanged?.Invoke(this, args);
             });

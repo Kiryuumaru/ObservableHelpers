@@ -28,11 +28,11 @@ namespace ObservablePropertyTest
             var prop1 = new ObservableProperty();
             var prop2 = new ObservableProperty<string>();
 
-            prop1.PropertyChanged += (s, e) =>
+            prop1.ImmediatePropertyChanged += (s, e) =>
             {
                 raiseCol1.Add(e);
             };
-            prop2.PropertyChanged += (s, e) =>
+            prop2.ImmediatePropertyChanged += (s, e) =>
             {
                 raiseCol2.Add(e);
             };
@@ -72,7 +72,7 @@ namespace ObservablePropertyTest
             var raiseCol1 = new List<PropertyChangedEventArgs>();
             var prop1 = new ObservableProperty();
 
-            prop1.PropertyChanged += (s, e) =>
+            prop1.ImmediatePropertyChanged += (s, e) =>
             {
                 raiseCol1.Add(e);
             };
@@ -104,11 +104,11 @@ namespace ObservablePropertyTest
             var prop1 = new ObservableProperty();
             var prop2 = new ObservableProperty<string>();
 
-            prop1.PropertyChanged += (s, e) =>
+            prop1.ImmediatePropertyChanged += (s, e) =>
             {
                 raiseCol1.Add(e);
             };
-            prop2.PropertyChanged += (s, e) =>
+            prop2.ImmediatePropertyChanged += (s, e) =>
             {
                 raiseCol2.Add(e);
             };
@@ -145,11 +145,11 @@ namespace ObservablePropertyTest
             var prop1 = new ObservableProperty();
             var prop2 = new ObservableProperty<string>();
 
-            prop1.PropertyChanged += (s, e) =>
+            prop1.ImmediatePropertyChanged += (s, e) =>
             {
                 raiseCol1.Add(e);
             };
-            prop2.PropertyChanged += (s, e) =>
+            prop2.ImmediatePropertyChanged += (s, e) =>
             {
                 raiseCol2.Add(e);
             };
@@ -189,11 +189,11 @@ namespace ObservablePropertyTest
             var prop1 = new ObservableProperty();
             var prop2 = new ObservableProperty<string>();
 
-            prop1.PropertyChanged += (s, e) =>
+            prop1.ImmediatePropertyChanged += (s, e) =>
             {
                 raiseCol1.Add(e);
             };
-            prop2.PropertyChanged += (s, e) =>
+            prop2.ImmediatePropertyChanged += (s, e) =>
             {
                 raiseCol2.Add(e);
             };
@@ -233,11 +233,11 @@ namespace ObservablePropertyTest
             var prop1 = new ObservableProperty();
             var prop2 = new ObservableProperty<string>();
 
-            prop1.PropertyChanged += (s, e) =>
+            prop1.ImmediatePropertyChanged += (s, e) =>
             {
                 raiseCol1.Add(e);
             };
-            prop2.PropertyChanged += (s, e) =>
+            prop2.ImmediatePropertyChanged += (s, e) =>
             {
                 raiseCol2.Add(e);
             };

@@ -29,7 +29,6 @@ namespace ObservableCollectionTest
         public async void WithConcurrency1()
         {
             var raiseCount1 = 0;
-            var raiseCount2 = 0;
             var col = new ObservableCollection<int>();
 
             Assert.Empty(col);
@@ -37,10 +36,6 @@ namespace ObservableCollectionTest
             col.ImmediateCollectionChanged += (s, e) =>
             {
                 Interlocked.Increment(ref raiseCount1);
-            };
-            col.CollectionChanged += (s, e) =>
-            {
-                Interlocked.Increment(ref raiseCount2);
             };
 
             await Task.WhenAll(
@@ -60,7 +55,6 @@ namespace ObservableCollectionTest
                 }));
 
             Assert.Equal(20000, raiseCount1);
-            Assert.Equal(20000, raiseCount2);
             Assert.Equal(20000, col.Count);
 
             for (int i = 0; i < 20000; i++)
@@ -73,16 +67,11 @@ namespace ObservableCollectionTest
         public async void WithConcurrency2()
         {
             var raiseCount1 = 0;
-            var raiseCount2 = 0;
             var col = new ObservableCollection<int>();
 
             col.ImmediateCollectionChanged += (s, e) =>
             {
                 Interlocked.Increment(ref raiseCount1);
-            };
-            col.CollectionChanged += (s, e) =>
-            {
-                Interlocked.Increment(ref raiseCount2);
             };
 
             await Task.WhenAll(
@@ -102,7 +91,6 @@ namespace ObservableCollectionTest
                 }));
 
             Assert.Equal(20000, raiseCount1);
-            Assert.Equal(20000, raiseCount2);
             Assert.Equal(60000, col.Count);
 
             for (int i = 0; i < 60000; i++)
@@ -116,16 +104,11 @@ namespace ObservableCollectionTest
         public async void WithConcurrency3()
         {
             var raiseCount1 = 0;
-            var raiseCount2 = 0;
             var col = new ObservableCollection<int>();
 
             col.ImmediateCollectionChanged += (s, e) =>
             {
                 Interlocked.Increment(ref raiseCount1);
-            };
-            col.CollectionChanged += (s, e) =>
-            {
-                Interlocked.Increment(ref raiseCount2);
             };
 
             await Task.WhenAll(
@@ -152,7 +135,6 @@ namespace ObservableCollectionTest
             col.Clear();
 
             Assert.Equal(20001, raiseCount1);
-            Assert.Equal(20001, raiseCount2);
             Assert.Empty(col);
         }
 
@@ -160,16 +142,11 @@ namespace ObservableCollectionTest
         public async void WithConcurrency4()
         {
             var raiseCount1 = 0;
-            var raiseCount2 = 0;
             var col = new ObservableCollection<int>();
 
             col.ImmediateCollectionChanged += (s, e) =>
             {
                 Interlocked.Increment(ref raiseCount1);
-            };
-            col.CollectionChanged += (s, e) =>
-            {
-                Interlocked.Increment(ref raiseCount2);
             };
 
             await Task.WhenAll(
@@ -189,7 +166,6 @@ namespace ObservableCollectionTest
                 }));
 
             Assert.Equal(20000, raiseCount1);
-            Assert.Equal(20000, raiseCount2);
             Assert.Equal(60000, col.Count);
 
             for (int i = 0; i < 70000; i++)
@@ -214,7 +190,7 @@ namespace ObservableCollectionTest
             var raiseCol = new List<NotifyCollectionChangedEventArgs>();
             var col = new ObservableCollection<int>(new int[] { 1, 2, 3 });
 
-            col.CollectionChanged += (s, e) =>
+            col.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -335,7 +311,7 @@ namespace ObservableCollectionTest
             var raiseCol = new List<NotifyCollectionChangedEventArgs>();
             var col = new ObservableCollection<int>();
 
-            col.CollectionChanged += (s, e) =>
+            col.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -382,7 +358,7 @@ namespace ObservableCollectionTest
             var raiseCol = new List<NotifyCollectionChangedEventArgs>();
             var col = new ObservableCollection<int>();
 
-            col.CollectionChanged += (s, e) =>
+            col.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -432,7 +408,7 @@ namespace ObservableCollectionTest
             var raiseCol = new List<NotifyCollectionChangedEventArgs>();
             var col = new ObservableCollection<int>(new int[] { 1, 2, 3, 4, 5, 6 });
 
-            col.CollectionChanged += (s, e) =>
+            col.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -573,7 +549,7 @@ namespace ObservableCollectionTest
             var raiseCol = new List<NotifyCollectionChangedEventArgs>();
             var col = new ObservableCollection<int>();
 
-            col.CollectionChanged += (s, e) =>
+            col.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -614,7 +590,7 @@ namespace ObservableCollectionTest
             var raiseCol = new List<NotifyCollectionChangedEventArgs>();
             var col = new ObservableCollection<int>();
 
-            col.CollectionChanged += (s, e) =>
+            col.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -656,7 +632,7 @@ namespace ObservableCollectionTest
             var raiseCol = new List<NotifyCollectionChangedEventArgs>();
             var col = new ObservableCollection<int>(new int[] { 2, 4 });
 
-            col.CollectionChanged += (s, e) =>
+            col.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -704,7 +680,7 @@ namespace ObservableCollectionTest
             var raiseCol = new List<NotifyCollectionChangedEventArgs>();
             var col = new ObservableCollection<int>();
 
-            col.CollectionChanged += (s, e) =>
+            col.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -737,7 +713,7 @@ namespace ObservableCollectionTest
             var raiseCol = new List<NotifyCollectionChangedEventArgs>();
             var col = new ObservableCollection<int>();
 
-            col.CollectionChanged += (s, e) =>
+            col.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -789,7 +765,7 @@ namespace ObservableCollectionTest
             var raiseCol = new List<NotifyCollectionChangedEventArgs>();
             var col = new ObservableCollection<int>(new int[] { 1, 2, 3, 4 });
 
-            col.CollectionChanged += (s, e) =>
+            col.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -875,7 +851,7 @@ namespace ObservableCollectionTest
             var raiseCol = new List<NotifyCollectionChangedEventArgs>();
             var col = new ObservableCollection<int>(new int[] { 1, 2, 3, 4 });
 
-            col.CollectionChanged += (s, e) =>
+            col.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -905,7 +881,7 @@ namespace ObservableCollectionTest
             var raiseCol = new List<NotifyCollectionChangedEventArgs>();
             var col = new ObservableCollection<int>(new int[] { 1, 2, 3, 4 });
 
-            col.CollectionChanged += (s, e) =>
+            col.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -952,7 +928,7 @@ namespace ObservableCollectionTest
             var raiseCol = new List<NotifyCollectionChangedEventArgs>();
             var col = new ObservableCollection<int>(new int[] { 1, 2, 3, 4 });
 
-            col.CollectionChanged += (s, e) =>
+            col.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -982,7 +958,7 @@ namespace ObservableCollectionTest
             var raiseCol = new List<NotifyCollectionChangedEventArgs>();
             var col = new ObservableCollection<int>(new int[] { 1, 2, 3, 4 });
 
-            col.CollectionChanged += (s, e) =>
+            col.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -1038,7 +1014,7 @@ namespace ObservableCollectionTest
             var raiseCol = new List<NotifyCollectionChangedEventArgs>();
             var col = new ObservableCollection<int>(new int[] { 1, 2, 3, 4 });
 
-            col.CollectionChanged += (s, e) =>
+            col.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
@@ -1064,7 +1040,7 @@ namespace ObservableCollectionTest
             var raiseCol = new List<NotifyCollectionChangedEventArgs>();
             var col = new ObservableCollection<int>(new int[] { 1, 2, 3, 4 });
 
-            col.CollectionChanged += (s, e) =>
+            col.ImmediateCollectionChanged += (s, e) =>
             {
                 raiseCol.Add(e);
             };
