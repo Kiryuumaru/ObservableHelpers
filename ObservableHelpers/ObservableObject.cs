@@ -18,8 +18,10 @@ namespace ObservableHelpers
     {
         #region Properties
 
-        private readonly Dictionary<NamedPropertyKey, NamedProperty> namedProperties = new Dictionary<NamedPropertyKey, NamedProperty>();
-        private readonly Dictionary<NamedPropertyKey, Action<object>> referencedProperties = new Dictionary<NamedPropertyKey, Action<object>>();
+        private readonly Dictionary<int, NamedProperty> namedProperties = new Dictionary<int, NamedProperty>();
+        private readonly Dictionary<string, int> keyDictionary = new Dictionary<string, int>();
+        private readonly Dictionary<string, int> propertyNameDictionary = new Dictionary<string, int>();
+        private readonly Random random = new Random();
 
         #endregion
 
@@ -352,7 +354,21 @@ namespace ObservableHelpers
 
             namedProperty = default;
             NamedProperty proxy = default;
-            var ret = RWLock.LockRead(() => namedProperties.TryGetValue(new NamedPropertyKey(key, propertyName), out proxy));
+            var ret = RWLock.LockRead(() =>
+            {
+                if (key != null && keyDictionary.TryGetValue(key, out int namedPropertyKey))
+                {
+                    proxy = namedProperties[namedPropertyKey];
+                    return true;
+                }
+                else if (propertyName != null && propertyNameDictionary.TryGetValue(propertyName, out namedPropertyKey))
+                {
+                    proxy = namedProperties[namedPropertyKey];
+                    return true;
+                }
+
+                return false;
+            });
             namedProperty = proxy;
             return ret;
         }
@@ -445,25 +461,60 @@ namespace ObservableHelpers
             T oldValue = default;
             T newValue = default;
             bool hasChanges = false;
-            NamedPropertyKey namedPropertyKey = new NamedPropertyKey(key, propertyName);
+
             return RWLock.LockReadUpgradable(() =>
             {
-                if (namedProperties.TryGetValue(namedPropertyKey, out NamedProperty namedProperty))
+                NamedProperty namedProperty = default;
+                int namedPropertyKey = default;
+                bool fromKey = false;
+
+                if (key != null && keyDictionary.TryGetValue(key, out namedPropertyKey))
+                {
+                    namedProperty = namedProperties[namedPropertyKey];
+                    fromKey = true;
+                }
+                else if (propertyName != null && propertyNameDictionary.TryGetValue(propertyName, out namedPropertyKey))
+                {
+                    namedProperty = namedProperties[namedPropertyKey];
+                }
+
+                if (namedProperty != null)
                 {
                     oldValue = namedProperty.Property.GetValue<T>();
                     newValue = oldValue;
                     RWLock.LockWrite(() =>
                     {
-                        if (key != null && namedProperty.Key != key)
+                        if (fromKey)
                         {
-                            namedProperty.Key = key;
-                            hasChanges = true;
+                            if (propertyName != null)
+                            {
+                                if (namedProperty.PropertyName != propertyName)
+                                {
+                                    if (namedProperty.PropertyName != null)
+                                    {
+                                        propertyNameDictionary.Remove(namedProperty.PropertyName);
+                                    }
+                                    propertyNameDictionary[propertyName] = namedPropertyKey;
+                                    namedProperty.PropertyName = propertyName;
+                                    hasChanges = true;
+                                }
+                            }
                         }
-
-                        if (propertyName != null && namedProperty.PropertyName != propertyName)
+                        else
                         {
-                            namedProperty.PropertyName = propertyName;
-                            hasChanges = true;
+                            if (key != null)
+                            {
+                                if (namedProperty.Key != key)
+                                {
+                                    if (namedProperty.Key != null)
+                                    {
+                                        keyDictionary.Remove(namedProperty.Key);
+                                    }
+                                    keyDictionary[key] = namedPropertyKey;
+                                    namedProperty.Key = key;
+                                    hasChanges = true;
+                                }
+                            }
                         }
 
                         if (group != null && namedProperty.Group != group)
@@ -499,8 +550,23 @@ namespace ObservableHelpers
                         {
                             if (addValidate?.Invoke((namedProperty, oldValue)) ?? true)
                             {
-                                namedPropertyKey.Update(namedProperty);
+                                while (true)
+                                {
+                                    namedPropertyKey = random.Next(int.MinValue, int.MaxValue);
+                                    if (!namedProperties.ContainsKey(namedPropertyKey))
+                                    {
+                                        break;
+                                    }
+                                }
                                 namedProperties[namedPropertyKey] = namedProperty;
+                                if (key != null)
+                                {
+                                    keyDictionary[key] = namedPropertyKey;
+                                }
+                                if (propertyName != null)
+                                {
+                                    propertyNameDictionary[propertyName] = namedPropertyKey;
+                                }
                                 WireNamedProperty(namedProperty);
                                 if (!namedProperty.Property.SetValue(value))
                                 {
@@ -520,9 +586,10 @@ namespace ObservableHelpers
         }
 
         /// <summary>
-        /// 
+        /// Specifically attach <see cref="ObservableSyncContext.PropertyChanged"/> event on single property.
         /// </summary>
         /// <typeparam name="T">
+        /// The type of the value of the property.
         /// </typeparam>
         /// <param name="onPropertyChanged">
         /// The action if the property has changed.
@@ -549,37 +616,32 @@ namespace ObservableHelpers
                 throw new PropertyKeyAndNameNullException();
             }
 
-            NamedPropertyKey namedPropertyKey = new NamedPropertyKey(key, propertyName);
-
             void invoke()
             {
                 RWLock.LockRead(() =>
                 {
-                    if (namedProperties.TryGetValue(namedPropertyKey, out NamedProperty namedProperty))
+                    if (key != null && keyDictionary.TryGetValue(key, out int namedPropertyKey))
                     {
-                        if (namedProperty.Property.Value is T value)
-                        {
-                            onPropertyChanged?.Invoke(value);
-                        }
-                        else if (namedProperty.Property.Value is null)
-                        {
-                            onPropertyChanged?.Invoke(default);
-                        }
+                        onPropertyChanged?.Invoke(namedProperties[namedPropertyKey].Property.GetValue<T>());
+                    }
+                    else if (propertyName != null && propertyNameDictionary.TryGetValue(propertyName, out namedPropertyKey))
+                    {
+                        onPropertyChanged?.Invoke(namedProperties[namedPropertyKey].Property.GetValue<T>());
                     }
                 });
             }
 
             void handler(object s, PropertyChangedEventArgs e)
             {
-                if (e is ObjectPropertyChangesEventArgs objArgs)
+                if (key != null)
                 {
-                    if (key != null || objArgs.Key != null)
+                    if (e is ObjectPropertyChangesEventArgs objArgs)
                     {
-                        if (objArgs.Key == key)
+                        if (key == objArgs.Key)
                         {
                             invoke();
+                            return;
                         }
-                        return;
                     }
                 }
 
@@ -615,13 +677,7 @@ namespace ObservableHelpers
         /// </returns>
         protected virtual NamedProperty NamedPropertyFactory(string key, string propertyName, string group)
         {
-            return new NamedProperty()
-            {
-                Property = new ObservableProperty(),
-                Key = key,
-                PropertyName = propertyName,
-                Group = group
-            };
+            return new NamedProperty(new ObservableProperty(), key, propertyName, group);
         }
 
         private bool RemoveProperty(string key, string propertyName)
@@ -631,17 +687,39 @@ namespace ObservableHelpers
                 throw new PropertyKeyAndNameNullException();
             }
 
-            var namedPropertyKey = new NamedPropertyKey(key, propertyName);
-
             return RWLock.LockReadUpgradable(() =>
             {
-                if (namedProperties.TryGetValue(namedPropertyKey, out NamedProperty removedProperty))
+                NamedProperty namedProperty = default;
+                int namedPropertyKey = default;
+
+                if (key != null && keyDictionary.TryGetValue(key, out namedPropertyKey))
                 {
-                    if (RWLock.LockWrite(() => namedProperties.Remove(namedPropertyKey)))
+                    namedProperty = namedProperties[namedPropertyKey];
+                }
+                else if (propertyName != null && propertyNameDictionary.TryGetValue(propertyName, out namedPropertyKey))
+                {
+                    namedProperty = namedProperties[namedPropertyKey];
+                }
+
+                if (namedProperty != null)
+                {
+                    return RWLock.LockWrite(() =>
                     {
-                        OnPropertyChanged(removedProperty.Key, removedProperty.PropertyName, removedProperty.Group);
-                        return true;
-                    }
+                        if (namedProperty.Key != null)
+                        {
+                            keyDictionary.Remove(namedProperty.Key);
+                        }
+                        if (namedProperty.PropertyName != null)
+                        {
+                            propertyNameDictionary.Remove(namedProperty.PropertyName);
+                        }
+                        if (namedProperties.Remove(namedPropertyKey))
+                        {
+                            OnPropertyChanged(namedProperty.Key, namedProperty.PropertyName, namedProperty.Group);
+                            return true;
+                        }
+                        return false;
+                    });
                 }
                 return false;
             });
@@ -654,7 +732,19 @@ namespace ObservableHelpers
                 throw new PropertyKeyAndNameNullException();
             }
 
-            return RWLock.LockRead(() => namedProperties.ContainsKey(new NamedPropertyKey(key, propertyName)));
+            return RWLock.LockRead(() =>
+            {
+                if (key != null && keyDictionary.TryGetValue(key, out int namedPropertyKey))
+                {
+                    return true;
+                }
+                else if (propertyName != null && propertyNameDictionary.TryGetValue(propertyName, out namedPropertyKey))
+                {
+                    return true;
+                }
+
+                return false;
+            });
         }
 
         private void OnPropertyChanged(string key, string propertyName, string group)
@@ -715,27 +805,27 @@ namespace ObservableHelpers
             /// <summary>
             /// Gets or sets the <see cref="ObservableProperty"/> of the object.
             /// </summary>
-            public ObservableProperty Property { get; set; }
+            public ObservableProperty Property { get; internal set; }
 
             /// <summary>
             /// Gets or sets the key of the <see cref="Property"/>
             /// </summary>
-            public string Key { get; set; }
+            public string Key { get; internal set; }
 
             /// <summary>
             /// Gets or sets the name of the <see cref="Property"/>
             /// </summary>
-            public string PropertyName { get; set; }
+            public string PropertyName { get; internal set; }
 
             /// <summary>
             /// Gets or sets the group of the <see cref="Property"/>
             /// </summary>
-            public string Group { get; set; }
+            public string Group { get; internal set; }
 
             /// <summary>
             /// Gets or sets <c>true</c> if the property is from default value; otherwise <c>false</c>.
             /// </summary>
-            public bool IsDefault { get; set; }
+            public bool IsDefault { get; internal set; }
 
             #endregion
 
@@ -744,9 +834,16 @@ namespace ObservableHelpers
             /// <summary>
             /// Creates new instance for <see cref="NamedProperty"/>
             /// </summary>
-            public NamedProperty()
+            public NamedProperty(
+                ObservableProperty property,
+                string key,
+                string propertyName,
+                string group)
             {
-
+                Property = property;
+                Key = key;
+                PropertyName = propertyName;
+                Group = group;
             }
 
             #endregion
@@ -757,68 +854,6 @@ namespace ObservableHelpers
             public override string ToString()
             {
                 return "(" + (Key ?? "null") + ", " + (PropertyName ?? "null") + ", " + (Group ?? "null") + ") = " + (Property?.Value?.ToString() ?? "null");
-            }
-
-            #endregion
-        }
-
-        private class NamedPropertyKey
-        {
-            #region Properties
-
-            public string Key => property == null ? key : property.Key;
-
-            public string PropertyName => property == null ? propertyName : property.PropertyName;
-
-            private readonly string key;
-            private readonly string propertyName;
-            private NamedProperty property;
-
-            #endregion
-
-            #region Initializers
-
-            public NamedPropertyKey(string key, string propertyName)
-            {
-                this.key = key;
-                this.propertyName = propertyName;
-                property = null;
-            }
-
-            public NamedPropertyKey(NamedProperty property)
-            {
-                key = null;
-                propertyName = null;
-                this.property = property;
-            }
-
-            #endregion
-
-            #region Methods
-
-            internal void Update(NamedProperty property)
-            {
-                this.property = property;
-            }
-
-            #endregion
-
-            #region Object Members
-
-            public override bool Equals(object obj)
-            {
-                if (obj is NamedPropertyKey namedPropertyKey)
-                {
-                    return Key == null && namedPropertyKey.Key == null ?
-                        PropertyName == namedPropertyKey.PropertyName :
-                        Key == namedPropertyKey.Key;
-                }
-                return false;
-            }
-
-            public override int GetHashCode()
-            {
-                return 990326508 + (Key == null ? 0 : EqualityComparer<string>.Default.GetHashCode(Key));
             }
 
             #endregion
