@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace ObservableHelpers.Utilities
 {
@@ -63,6 +66,40 @@ namespace ObservableHelpers.Utilities
         }
 
         /// <summary>
+        /// Locks read operations while executing the <paramref name="block"/> action.
+        /// </summary>
+        /// <param name="block">
+        /// The action to be executed inside the lock block.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="block"/> is a null reference.
+        /// </exception>
+        public void LockReadAndForget(Action block)
+        {
+            if (block == null)
+            {
+                throw new ArgumentNullException(nameof(block));
+            }
+
+            bool isLocked = false;
+
+            Task.Run(() =>
+            {
+                LockRead(() =>
+                {
+                    isLocked = true;
+                    block();
+                    return 0;
+                });
+            });
+
+            while (!isLocked)
+            {
+                Thread.Sleep(1);
+            }
+        }
+
+        /// <summary>
         /// Locks read operations while executing the <paramref name="block"/> function.
         /// </summary>
         /// <typeparam name="TReturn">
@@ -119,6 +156,37 @@ namespace ObservableHelpers.Utilities
         }
 
         /// <summary>
+        /// Locks read operations while executing the <paramref name="block"/> action while having an option to upgrade to write mode.
+        /// </summary>
+        /// <param name="block">
+        /// The action to be executed inside the lock block.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="block"/> is a null reference.
+        /// </exception>
+        public void LockReadUpgradableAndForget(Action block)
+        {
+            if (block == null)
+            {
+                throw new ArgumentNullException(nameof(block));
+            }
+
+            bool isLocked = false;
+
+            LockReadUpgradable(() =>
+            {
+                isLocked = true;
+                block();
+                return 0;
+            });
+
+            while (!isLocked)
+            {
+                Thread.Sleep(1);
+            }
+        }
+
+        /// <summary>
         /// Locks read operations while executing the <paramref name="block"/> function while having an option to upgrade to write mode.
         /// </summary>
         /// <typeparam name="TReturn">
@@ -172,6 +240,37 @@ namespace ObservableHelpers.Utilities
                 block();
                 return 0;
             });
+        }
+
+        /// <summary>
+        /// Locks write operations while executing the <paramref name="block"/> action.
+        /// </summary>
+        /// <param name="block">
+        /// The action to be executed inside the lock block.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="block"/> is a null reference.
+        /// </exception>
+        public void LockWriteAndForget(Action block)
+        {
+            if (block == null)
+            {
+                throw new ArgumentNullException(nameof(block));
+            }
+
+            bool isLocked = false;
+
+            LockWrite(() =>
+            {
+                isLocked = true;
+                block();
+                return 0;
+            });
+
+            while (!isLocked)
+            {
+                Thread.Sleep(1);
+            }
         }
 
         /// <summary>
