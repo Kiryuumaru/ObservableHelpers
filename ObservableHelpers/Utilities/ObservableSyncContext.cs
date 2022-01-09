@@ -16,7 +16,7 @@ namespace ObservableHelpers.Utilities
         /// <summary>
         /// Gets the read-write lock for concurrency.
         /// </summary>
-        protected RWLock RWLock { get; } = new RWLock(LockRecursionPolicy.SupportsRecursion);
+        public RWLock RWLock { get; } = new RWLock(LockRecursionPolicy.SupportsRecursion);
 
         #endregion
 

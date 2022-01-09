@@ -14,8 +14,8 @@
 
   <PropertyGroup>
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
-    <Version>1.4.4</Version>
-    <PackageReleaseNotes>* Fixed possible deadlocks</PackageReleaseNotes>
+    <Version>1.4.5</Version>
+    <PackageReleaseNotes>* Exposed observable RWLock for outside lock control</PackageReleaseNotes>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
