@@ -319,7 +319,7 @@ namespace ObservableHelpers.Utilities
                 filter.RWLock.LockWrite(() =>
                 {
                     filter.Items = Items.Where(i => predicate.Invoke(i)).ToList();
-                    filter.OnCollectionReset();
+                    filter.RWLock.InvokeOnLockExit(() => filter.OnCollectionReset());
                 });
             }
 
@@ -342,20 +342,49 @@ namespace ObservableHelpers.Utilities
         /// </returns>
         protected bool ClearItems(out IEnumerable<T> oldItems)
         {
+            if (ClearItemsOperationInvoke(out oldItems))
+            {
+                ClearItemsObservableInvoke();
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Removes all elements from the <see cref="ObservableCollectionBase{T}"/>.
+        /// </summary>
+        /// <param name="oldItems">
+        /// The removed items of the <see cref="ObservableCollectionBase{T}"/>.
+        /// </param>
+        /// <returns>
+        /// <c>true</c> if operation was executed; otherwise <c>false</c>.
+        /// </returns>
+        protected bool ClearItemsOperationInvoke(out IEnumerable<T> oldItems)
+        {
             IEnumerable<T> proxy = default;
             bool ret = RWLock.LockWrite(() =>
             {
                 if (InternalClearItems(out proxy))
                 {
-                    OnPropertyChanged(nameof(Count));
-                    OnPropertyChanged(IndexerName);
-                    OnCollectionReset();
                     return true;
                 }
                 return false;
             });
             oldItems = proxy;
             return ret;
+        }
+
+        /// <summary>
+        /// Notify the observers with clear items operation.
+        /// </summary>
+        protected void ClearItemsObservableInvoke()
+        {
+            RWLock.InvokeOnLockExit(() =>
+            {
+                OnPropertyChanged(nameof(Count));
+                OnPropertyChanged(IndexerName);
+                OnCollectionReset();
+            });
         }
 
         /// <summary>
@@ -378,8 +407,36 @@ namespace ObservableHelpers.Utilities
         /// </exception>
         protected bool InsertItem(int index, T item, out int lastCount)
         {
+            if (InsertItemOperationInvoke(index, item, out lastCount))
+            {
+                InsertItemObservableInvoke(index, item);
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Inserts an element into the <see cref="ObservableCollectionBase{T}"/> at the specified <paramref name="index"/>.
+        /// </summary>
+        /// <param name="index">
+        /// The zero-based index at which item should be inserted.
+        /// </param>
+        /// <param name="item">
+        /// The element to insert. The value can be null for reference types.
+        /// </param>
+        /// <param name="lastCount">
+        /// The last <see cref="Count"/> of the <see cref="ObservableCollectionBase{T}"/> before the operation.
+        /// </param>
+        /// <returns>
+        /// <c>true</c> if operation was executed; otherwise <c>false</c>.
+        /// </returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="index"/> is less than zero. -or- index is greater than <see cref="ObservableCollectionBase{T}.Count"/>.
+        /// </exception>
+        protected bool InsertItemOperationInvoke(int index, T item, out int lastCount)
+        {
             int proxy = default;
-            bool ret = RWLock.LockReadUpgradable(() =>
+            bool ret = RWLock.LockUpgradeableRead(() =>
             {
                 if (index < 0 || index > Items.Count)
                 {
@@ -394,9 +451,6 @@ namespace ObservableHelpers.Utilities
                         {
                             sync.SyncOperation.SetContext(this);
                         }
-                        OnPropertyChanged(nameof(Count));
-                        OnPropertyChanged(IndexerName);
-                        OnCollectionAdd(item, index);
                         return true;
                     }
                     return false;
@@ -404,6 +458,25 @@ namespace ObservableHelpers.Utilities
             });
             lastCount = proxy;
             return ret;
+        }
+
+        /// <summary>
+        /// Notify the observers with insert item operation.
+        /// </summary>
+        /// <param name="index">
+        /// The zero-based index at which item should be inserted.
+        /// </param>
+        /// <param name="item">
+        /// The element to insert. The value can be null for reference types.
+        /// </param>
+        protected void InsertItemObservableInvoke(int index, T item)
+        {
+            RWLock.InvokeOnLockExit(() =>
+            {
+                OnPropertyChanged(nameof(Count));
+                OnPropertyChanged(IndexerName);
+                OnCollectionAdd(item, index);
+            });
         }
 
         /// <summary>
@@ -429,8 +502,39 @@ namespace ObservableHelpers.Utilities
         /// </exception>
         protected bool InsertItems(int index, IEnumerable<T> items, out int lastCount)
         {
+            if (InsertItemsOperationInvoke(index, items, out lastCount))
+            {
+                InsertItemsObservableInvoke(index, items);
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Inserts an elements into the <see cref="ObservableCollectionBase{T}"/> at the specified <paramref name="index"/>.
+        /// </summary>
+        /// <param name="index">
+        /// The zero-based index at which item should be inserted.
+        /// </param>
+        /// <param name="items">
+        /// The elements to insert. The value can be null for reference types.
+        /// </param>
+        /// <param name="lastCount">
+        /// The last <see cref="Count"/> of the <see cref="ObservableCollectionBase{T}"/> before the operation.
+        /// </param>
+        /// <returns>
+        /// <c>true</c> if operation was executed; otherwise <c>false</c>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="items"/> is a null reference.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="index"/> is less than zero. -or- index is greater than <see cref="ObservableCollectionBase{T}.Count"/>.
+        /// </exception>
+        protected bool InsertItemsOperationInvoke(int index, IEnumerable<T> items, out int lastCount)
+        {
             int proxy = default;
-            bool ret = RWLock.LockReadUpgradable(() =>
+            bool ret = RWLock.LockUpgradeableRead(() =>
             {
                 if (items == null)
                 {
@@ -452,16 +556,6 @@ namespace ObservableHelpers.Utilities
                                 sync.SyncOperation.SetContext(this);
                             }
                         }
-                        OnPropertyChanged(nameof(Count));
-                        OnPropertyChanged(IndexerName);
-                        if (items is IList list)
-                        {
-                            OnCollectionAdd(list, index);
-                        }
-                        else
-                        {
-                            OnCollectionAdd(items.ToList(), index);
-                        }
                         return true;
                     }
                     return false;
@@ -469,6 +563,32 @@ namespace ObservableHelpers.Utilities
             });
             lastCount = proxy;
             return ret;
+        }
+
+        /// <summary>
+        /// Notify the observers with insert items operation.
+        /// </summary>
+        /// <param name="index">
+        /// The zero-based index at which item should be inserted.
+        /// </param>
+        /// <param name="items">
+        /// The elements to insert. The value can be null for reference types.
+        /// </param>
+        protected void InsertItemsObservableInvoke(int index, IEnumerable<T> items)
+        {
+            RWLock.InvokeOnLockExit(() =>
+            {
+                OnPropertyChanged(nameof(Count));
+                OnPropertyChanged(IndexerName);
+                if (items is IList list)
+                {
+                    OnCollectionAdd(list, index);
+                }
+                else
+                {
+                    OnCollectionAdd(items.ToList(), index);
+                }
+            });
         }
 
         /// <summary>
@@ -491,8 +611,36 @@ namespace ObservableHelpers.Utilities
         /// </exception>
         protected bool MoveItem(int oldIndex, int newIndex, out T movedItem)
         {
+            if (MoveItemOperationInvoke(oldIndex, newIndex, out movedItem))
+            {
+                MoveItemObservableInvoke(oldIndex, newIndex, movedItem);
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Moves an element at the specified <paramref name="oldIndex"/> to the specified <paramref name="newIndex"/> of the <see cref="ObservableCollectionBase{T}"/>.
+        /// </summary>
+        /// <param name="oldIndex">
+        /// The index of the element to be moved.
+        /// </param>
+        /// <param name="newIndex">
+        /// The new index of the element to move to.
+        /// </param>
+        /// <param name="movedItem">
+        /// The moved element at the specified <paramref name="oldIndex"/> to the specified <paramref name="newIndex"/> from the <see cref="ObservableCollectionBase{T}"/>.
+        /// </param>
+        /// <returns>
+        /// <c>true</c> if operation was executed; otherwise <c>false</c>.
+        /// </returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="oldIndex"/> or <paramref name="newIndex"/> is less than zero. -or- is greater than or equal to <see cref="ObservableCollectionBase{T}.Count"/>.
+        /// </exception>
+        protected bool MoveItemOperationInvoke(int oldIndex, int newIndex, out T movedItem)
+        {
             T proxy = default;
-            bool ret = RWLock.LockReadUpgradable(() =>
+            bool ret = RWLock.LockUpgradeableRead(() =>
             {
                 if (oldIndex < 0 || oldIndex >= Items.Count)
                 {
@@ -508,8 +656,6 @@ namespace ObservableHelpers.Utilities
                 {
                     if (InternalMoveItem(oldIndex, newIndex, out proxy))
                     {
-                        OnPropertyChanged(IndexerName);
-                        OnCollectionMove(proxy, oldIndex, newIndex);
                         return true;
                     }
                     return false;
@@ -517,6 +663,27 @@ namespace ObservableHelpers.Utilities
             });
             movedItem = proxy;
             return ret;
+        }
+
+        /// <summary>
+        /// Notify the observers with move item operation.
+        /// </summary>
+        /// <param name="oldIndex">
+        /// The index of the element to be moved.
+        /// </param>
+        /// <param name="newIndex">
+        /// The new index of the element to move to.
+        /// </param>
+        /// <param name="movedItem">
+        /// The moved element at the specified <paramref name="oldIndex"/> to the specified <paramref name="newIndex"/> from the <see cref="ObservableCollectionBase{T}"/>.
+        /// </param>
+        protected void MoveItemObservableInvoke(int oldIndex, int newIndex, T movedItem)
+        {
+            RWLock.InvokeOnLockExit(() =>
+            {
+                OnPropertyChanged(IndexerName);
+                OnCollectionMove(movedItem, oldIndex, newIndex);
+            });
         }
 
         /// <summary>
@@ -536,8 +703,33 @@ namespace ObservableHelpers.Utilities
         /// </exception>
         protected bool RemoveItem(int index, out T removedItem)
         {
+            if (RemoveItemOperationInvoke(index, out removedItem))
+            {
+                RemoveItemObservableInvoke(index, removedItem);
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Removes the element at the specified <paramref name="index"/> of the <see cref="ObservableCollectionBase{T}"/>.
+        /// </summary>
+        /// <param name="index">
+        /// The zero-based index of the element to remove.
+        /// </param>
+        /// <param name="removedItem">
+        /// The removed element at the specified <paramref name="index"/> from the <see cref="ObservableCollectionBase{T}"/>.
+        /// </param>
+        /// <returns>
+        /// <c>true</c> if operation was executed; otherwise <c>false</c>.
+        /// </returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="index"/> is less than zero. -or- is greater than <see cref="ObservableCollectionBase{T}.Count"/>.
+        /// </exception>
+        protected bool RemoveItemOperationInvoke(int index, out T removedItem)
+        {
             T proxy = default;
-            bool ret = RWLock.LockReadUpgradable(() =>
+            bool ret = RWLock.LockUpgradeableRead(() =>
             {
                 if (index < 0 || index >= Items.Count)
                 {
@@ -549,16 +741,6 @@ namespace ObservableHelpers.Utilities
                     if (InternalRemoveItems(index, 1, out IEnumerable<T> removedItems))
                     {
                         proxy = removedItems.FirstOrDefault();
-                        OnPropertyChanged(nameof(Count));
-                        OnPropertyChanged(IndexerName);
-                        if (removedItems is IList list)
-                        {
-                            OnCollectionRemove(list, index);
-                        }
-                        else
-                        {
-                            OnCollectionRemove(removedItems.ToList(), index);
-                        }
                         return true;
                     }
                     return false;
@@ -566,6 +748,25 @@ namespace ObservableHelpers.Utilities
             });
             removedItem = proxy;
             return ret;
+        }
+
+        /// <summary>
+        /// Notify observers with remove item operation.
+        /// </summary>
+        /// <param name="index">
+        /// The zero-based index of the element to remove.
+        /// </param>
+        /// <param name="removedItem">
+        /// The removed element at the specified <paramref name="index"/> from the <see cref="ObservableCollectionBase{T}"/>.
+        /// </param>
+        protected void RemoveItemObservableInvoke(int index, T removedItem)
+        {
+            RWLock.InvokeOnLockExit(() =>
+            {
+                OnPropertyChanged(nameof(Count));
+                OnPropertyChanged(IndexerName);
+                OnCollectionRemove(removedItem, index);
+            });
         }
 
         /// <summary>
@@ -591,8 +792,39 @@ namespace ObservableHelpers.Utilities
         /// </exception>
         protected bool RemoveItems(int index, int count, out IEnumerable<T> removedItems)
         {
+            if (RemoveItemsOperationInvoke(index, count, out removedItems))
+            {
+                RemoveItemsObservableInvoke(index, removedItems);
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Removes the elements at the specified <paramref name="index"/> of the <see cref="ObservableCollectionBase{T}"/>.
+        /// </summary>
+        /// <param name="index">
+        /// The zero-based starting index of the elements to remove.
+        /// </param>
+        /// <param name="count">
+        /// The count of elements to remove.
+        /// </param>
+        /// <param name="removedItems">
+        /// The removed elements at the specified <paramref name="index"/> from the <see cref="ObservableCollectionBase{T}"/>.
+        /// </param>
+        /// <returns>
+        /// <c>true</c> if operation was executed; otherwise <c>false</c>.
+        /// </returns>
+        /// <exception cref="ArgumentException">
+        /// <paramref name="index"/> and <paramref name="count"/> do not denote a valid range of elements in the <see cref="ObservableCollectionBase{T}"/>.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="index"/> or <paramref name="count"/> is less than zero.
+        /// </exception>
+        protected bool RemoveItemsOperationInvoke(int index, int count, out IEnumerable<T> removedItems)
+        {
             IEnumerable<T> proxy = default;
-            bool ret = RWLock.LockReadUpgradable(() =>
+            bool ret = RWLock.LockUpgradeableRead(() =>
             {
                 if (index < 0)
                 {
@@ -611,16 +843,6 @@ namespace ObservableHelpers.Utilities
                 {
                     if (InternalRemoveItems(index, count, out proxy))
                     {
-                        OnPropertyChanged(nameof(Count));
-                        OnPropertyChanged(IndexerName);
-                        if (proxy is IList list)
-                        {
-                            OnCollectionRemove(list, index);
-                        }
-                        else
-                        {
-                            OnCollectionRemove(proxy.ToList(), index);
-                        }
                         return true;
                     }
                     return false;
@@ -631,7 +853,33 @@ namespace ObservableHelpers.Utilities
         }
 
         /// <summary>
-        /// Replaces the element at the specified index and notify the observers.
+        /// Notify observers with remove items operation.
+        /// </summary>
+        /// <param name="index">
+        /// The zero-based starting index of the elements to remove.
+        /// </param>
+        /// <param name="removedItems">
+        /// The removed elements at the specified <paramref name="index"/> from the <see cref="ObservableCollectionBase{T}"/>.
+        /// </param>
+        protected void RemoveItemsObservableInvoke(int index, IEnumerable<T> removedItems)
+        {
+            RWLock.InvokeOnLockExit(() =>
+            {
+                OnPropertyChanged(nameof(Count));
+                OnPropertyChanged(IndexerName);
+                if (removedItems is IList list)
+                {
+                    OnCollectionRemove(list, index);
+                }
+                else
+                {
+                    OnCollectionRemove(removedItems.ToList(), index);
+                }
+            });
+        }
+
+        /// <summary>
+        /// Replaces the element at the specified <paramref name="index"/> and notify the observers.
         /// </summary>
         /// <param name="index">
         /// The zero-based index of the element to replace.
@@ -650,8 +898,36 @@ namespace ObservableHelpers.Utilities
         /// </exception>
         protected bool SetItem(int index, T item, out T originalItem)
         {
+            if (SetItemOperationInvoke(index, item, out originalItem))
+            {
+                SetItemObservableInvoke(index, item, originalItem);
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Replaces the element at the specified <paramref name="index"/>.
+        /// </summary>
+        /// <param name="index">
+        /// The zero-based index of the element to replace.
+        /// </param>
+        /// <param name="item">
+        /// The new value for the element at the specified <paramref name="index"/>. The value can be <c>null</c> for reference types.
+        /// </param>
+        /// <param name="originalItem">
+        /// The replaced original element at the specified <paramref name="index"/> from the <see cref="ObservableCollectionBase{T}"/>.
+        /// </param>
+        /// <returns>
+        /// <c>true</c> if operation was executed; otherwise <c>false</c>.
+        /// </returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="index"/> is less than zero. -or- is greater than or equal to <see cref="ObservableCollectionBase{T}.Count"/>.
+        /// </exception>
+        protected bool SetItemOperationInvoke(int index, T item, out T originalItem)
+        {
             T proxy = default;
-            bool ret = RWLock.LockReadUpgradable(() =>
+            bool ret = RWLock.LockUpgradeableRead(() =>
             {
                 if (index < 0 || index >= Items.Count)
                 {
@@ -666,8 +942,6 @@ namespace ObservableHelpers.Utilities
                         {
                             sync.SyncOperation.SetContext(this);
                         }
-                        OnPropertyChanged(IndexerName);
-                        OnCollectionReplace(proxy, item, index);
                         return true;
                     }
                     return false;
@@ -675,6 +949,27 @@ namespace ObservableHelpers.Utilities
             });
             originalItem = proxy;
             return ret;
+        }
+
+        /// <summary>
+        /// Notify observers with set item operation.
+        /// </summary>
+        /// <param name="index">
+        /// The zero-based index of the element to replace.
+        /// </param>
+        /// <param name="item">
+        /// The new value for the element at the specified <paramref name="index"/>. The value can be <c>null</c> for reference types.
+        /// </param>
+        /// <param name="originalItem">
+        /// The replaced original element at the specified <paramref name="index"/> from the <see cref="ObservableCollectionBase{T}"/>.
+        /// </param>
+        protected void SetItemObservableInvoke(int index, T item, T originalItem)
+        {
+            RWLock.InvokeOnLockExit(() =>
+            {
+                OnPropertyChanged(IndexerName);
+                OnCollectionReplace(originalItem, item, index);
+            });
         }
 
         /// <summary>

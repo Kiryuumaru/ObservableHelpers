@@ -89,7 +89,7 @@ namespace ObservableHelpers
                 return default;
             }
 
-            return RWLock.LockWrite(() =>
+            if (RWLock.LockWrite(() =>
             {
                 if (InternalSetObject(type, value))
                 {
@@ -98,12 +98,15 @@ namespace ObservableHelpers
                         sync.SyncOperation.SetContext(this);
                     }
 
-                    OnPropertyChanged(nameof(Value));
-
                     return true;
                 }
                 return false;
-            });
+            }))
+            {
+                RWLock.InvokeOnLockExit(() => OnPropertyChanged(nameof(Value)));
+                return true;
+            }
+            return false;
         }
 
         /// <summary>
@@ -203,7 +206,7 @@ namespace ObservableHelpers
                 return default;
             }
 
-            return RWLock.LockReadUpgradable(() =>
+            return RWLock.LockUpgradeableRead(() =>
             {
                 if (GetObject(null) is INullableObject model)
                 {

@@ -18,6 +18,13 @@ namespace ObservableHelpers.Utilities
         /// </summary>
         protected ReaderWriterLockSlim ReaderWriterLockSlim { get; }
 
+        private readonly ReaderWriterLockSlim lockLocker = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
+
+        private event Action OnLockFree;
+        private event Action OnWriteLockFree;
+        private event Action OnReadLockFree;
+        private event Action OnUpgradeableReadLockFree;
+
         #endregion
 
         #region Initializers
@@ -129,6 +136,8 @@ namespace ObservableHelpers.Utilities
             finally
             {
                 ReaderWriterLockSlim.ExitReadLock();
+                TryInvokeOnReadLockExit();
+                TryInvokeOnLockExit();
             }
         }
 
@@ -141,14 +150,14 @@ namespace ObservableHelpers.Utilities
         /// <exception cref="ArgumentNullException">
         /// <paramref name="block"/> is a null reference.
         /// </exception>
-        public void LockReadUpgradable(Action block)
+        public void LockUpgradeableRead(Action block)
         {
             if (block == null)
             {
                 throw new ArgumentNullException(nameof(block));
             }
 
-            LockReadUpgradable(() =>
+            LockUpgradeableRead(() =>
             {
                 block();
                 return 0;
@@ -164,7 +173,7 @@ namespace ObservableHelpers.Utilities
         /// <exception cref="ArgumentNullException">
         /// <paramref name="block"/> is a null reference.
         /// </exception>
-        public void LockReadUpgradableAndForget(Action block)
+        public void LockUpgradeableReadAndForget(Action block)
         {
             if (block == null)
             {
@@ -173,7 +182,7 @@ namespace ObservableHelpers.Utilities
 
             bool isLocked = false;
 
-            LockReadUpgradable(() =>
+            LockUpgradeableRead(() =>
             {
                 isLocked = true;
                 block();
@@ -201,7 +210,7 @@ namespace ObservableHelpers.Utilities
         /// <exception cref="ArgumentNullException">
         /// <paramref name="block"/> is a null reference.
         /// </exception>
-        public TReturn LockReadUpgradable<TReturn>(Func<TReturn> block)
+        public TReturn LockUpgradeableRead<TReturn>(Func<TReturn> block)
         {
             if (block == null)
             {
@@ -216,6 +225,8 @@ namespace ObservableHelpers.Utilities
             finally
             {
                 ReaderWriterLockSlim.ExitUpgradeableReadLock();
+                TryInvokeOnUpgradeableReadLockExit();
+                TryInvokeOnLockExit();
             }
         }
 
@@ -303,6 +314,337 @@ namespace ObservableHelpers.Utilities
             finally
             {
                 ReaderWriterLockSlim.ExitWriteLock();
+                TryInvokeOnWriteLockExit();
+                TryInvokeOnLockExit();
+            }
+        }
+
+        /// <summary>
+        /// Invoke <see cref="Action"/> on read lock exit.
+        /// </summary>
+        /// <param name="action">
+        /// The <see cref="Action"/> to invoke on read lock exit.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="action"/> is a null reference.
+        /// </exception>
+        public void InvokeOnReadLockExit(Action action)
+        {
+            if (action == null)
+            {
+                throw new ArgumentNullException(nameof(action));
+            }
+
+            bool isFree = true;
+
+            try
+            {
+                lockLocker.EnterUpgradeableReadLock();
+                if (ReaderWriterLockSlim.IsReadLockHeld)
+                {
+                    try
+                    {
+                        lockLocker.EnterWriteLock();
+                        OnReadLockFree += action;
+                    }
+                    finally
+                    {
+                        lockLocker.ExitWriteLock();
+                    }
+                    isFree = false;
+                }
+            }
+            finally
+            {
+                lockLocker.ExitUpgradeableReadLock();
+            }
+
+            if (isFree)
+            {
+                action.Invoke();
+            }
+        }
+
+        /// <summary>
+        /// Invoke <see cref="Action"/> on upgradeable read lock exit.
+        /// </summary>
+        /// <param name="action">
+        /// The <see cref="Action"/> to invoke on upgradeable read lock exit.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="action"/> is a null reference.
+        /// </exception>
+        public void InvokeOnUpgradeableReadLockExit(Action action)
+        {
+            if (action == null)
+            {
+                throw new ArgumentNullException(nameof(action));
+            }
+
+            bool isFree = true;
+
+            try
+            {
+                lockLocker.EnterUpgradeableReadLock();
+                if (ReaderWriterLockSlim.IsUpgradeableReadLockHeld)
+                {
+                    try
+                    {
+                        lockLocker.EnterWriteLock();
+                        OnUpgradeableReadLockFree += action;
+                    }
+                    finally
+                    {
+                        lockLocker.ExitWriteLock();
+                    }
+                    isFree = false;
+                }
+            }
+            finally
+            {
+                lockLocker.ExitUpgradeableReadLock();
+            }
+
+            if (isFree)
+            {
+                action.Invoke();
+            }
+        }
+
+        /// <summary>
+        /// Invoke <see cref="Action"/> on write lock exit.
+        /// </summary>
+        /// <param name="action">
+        /// The <see cref="Action"/> to invoke on write lock exit.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="action"/> is a null reference.
+        /// </exception>
+        public void InvokeOnWriteLockExit(Action action)
+        {
+            if (action == null)
+            {
+                throw new ArgumentNullException(nameof(action));
+            }
+
+            bool isFree = true;
+
+            try
+            {
+                lockLocker.EnterUpgradeableReadLock();
+                if (ReaderWriterLockSlim.IsWriteLockHeld)
+                {
+                    try
+                    {
+                        lockLocker.EnterWriteLock();
+                        OnWriteLockFree += action;
+                    }
+                    finally
+                    {
+                        lockLocker.ExitWriteLock();
+                    }
+                    isFree = false;
+                }
+            }
+            finally
+            {
+                lockLocker.ExitUpgradeableReadLock();
+            }
+
+            if (isFree)
+            {
+                action.Invoke();
+            }
+        }
+
+        /// <summary>
+        /// Invoke <see cref="Action"/> on lock exit.
+        /// </summary>
+        /// <param name="action">
+        /// The <see cref="Action"/> to invoke on lock exit.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="action"/> is a null reference.
+        /// </exception>
+        public void InvokeOnLockExit(Action action)
+        {
+            if (action == null)
+            {
+                throw new ArgumentNullException(nameof(action));
+            }
+
+            bool isFree = true;
+
+            try
+            {
+                lockLocker.EnterUpgradeableReadLock();
+                if (ReaderWriterLockSlim.IsReadLockHeld ||
+                    ReaderWriterLockSlim.IsUpgradeableReadLockHeld ||
+                    ReaderWriterLockSlim.IsWriteLockHeld)
+                    
+                {
+                    try
+                    {
+                        lockLocker.EnterWriteLock();
+                        OnLockFree += action;
+                    }
+                    finally
+                    {
+                        lockLocker.ExitWriteLock();
+                    }
+                    isFree = false;
+                }
+            }
+            finally
+            {
+                lockLocker.ExitUpgradeableReadLock();
+            }
+
+            if (isFree)
+            {
+                action.Invoke();
+            }
+        }
+
+        private void TryInvokeOnReadLockExit()
+        {
+            Action action = null;
+
+            try
+            {
+                lockLocker.EnterUpgradeableReadLock();
+                if (!ReaderWriterLockSlim.IsReadLockHeld)
+                {
+                    action = OnReadLockFree;
+                    if (action != null)
+                    {
+                        try
+                        {
+                            lockLocker.EnterWriteLock();
+                            OnReadLockFree = null;
+                        }
+                        finally
+                        {
+                            lockLocker.ExitWriteLock();
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                lockLocker.ExitUpgradeableReadLock();
+            }
+
+            if (action != null)
+            {
+                action.Invoke();
+            }
+        }
+
+        private void TryInvokeOnUpgradeableReadLockExit()
+        {
+            Action action = null;
+
+            try
+            {
+                lockLocker.EnterUpgradeableReadLock();
+                if (!ReaderWriterLockSlim.IsUpgradeableReadLockHeld)
+                {
+                    action = OnUpgradeableReadLockFree;
+                    if (action != null)
+                    {
+                        try
+                        {
+                            lockLocker.EnterWriteLock();
+                            OnUpgradeableReadLockFree = null;
+                        }
+                        finally
+                        {
+                            lockLocker.ExitWriteLock();
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                lockLocker.ExitUpgradeableReadLock();
+            }
+
+            if (action != null)
+            {
+                action.Invoke();
+            }
+        }
+
+        private void TryInvokeOnWriteLockExit()
+        {
+            Action action = null;
+
+            try
+            {
+                lockLocker.EnterUpgradeableReadLock();
+                if (!ReaderWriterLockSlim.IsWriteLockHeld)
+                {
+                    action = OnWriteLockFree;
+                    if (action != null)
+                    {
+                        try
+                        {
+                            lockLocker.EnterWriteLock();
+                            OnWriteLockFree = null;
+                        }
+                        finally
+                        {
+                            lockLocker.ExitWriteLock();
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                lockLocker.ExitUpgradeableReadLock();
+            }
+
+            if (action != null)
+            {
+                action.Invoke();
+            }
+        }
+
+        private void TryInvokeOnLockExit()
+        {
+            Action action = null;
+
+            try
+            {
+                lockLocker.EnterUpgradeableReadLock();
+                if (!ReaderWriterLockSlim.IsReadLockHeld &&
+                    !ReaderWriterLockSlim.IsUpgradeableReadLockHeld &&
+                    !ReaderWriterLockSlim.IsWriteLockHeld)
+                {
+                    action = OnLockFree;
+                    if (action != null)
+                    {
+                        try
+                        {
+                            lockLocker.EnterWriteLock();
+                            OnLockFree = null;
+                        }
+                        finally
+                        {
+                            lockLocker.ExitWriteLock();
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                lockLocker.ExitUpgradeableReadLock();
+            }
+
+            if (action != null)
+            {
+                action.Invoke();
             }
         }
 

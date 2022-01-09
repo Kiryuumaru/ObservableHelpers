@@ -1,8 +1,10 @@
-﻿using ObservableHelpers.Utilities;
+﻿using ObservableHelpers.Abstraction;
+using ObservableHelpers.Utilities;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Linq;
 
 namespace ObservableHelpers
@@ -98,8 +100,8 @@ namespace ObservableHelpers
             : base(_ => new List<KeyValuePair<TKey, TValue>>())
         {
             dictionary = new Dictionary<TKey, TValue>();
-            Keys = new DictionaryKeys(this);
-            Values = new DictionaryValues(this);
+            Keys = new DictionaryKeys();
+            Values = new DictionaryValues();
         }
 
         /// <summary>
@@ -119,9 +121,9 @@ namespace ObservableHelpers
                 throw new ArgumentNullException(nameof(items));
             }
             dictionary = new Dictionary<TKey, TValue>();
+            Keys = new DictionaryKeys();
+            Values = new DictionaryValues();
             Populate(items);
-            Keys = new DictionaryKeys(this);
-            Values = new DictionaryValues(this);
         }
 
         /// <summary>
@@ -141,8 +143,8 @@ namespace ObservableHelpers
                 throw new ArgumentNullException(nameof(comparer));
             }
             dictionary = new Dictionary<TKey, TValue>(comparer);
-            Keys = new DictionaryKeys(this);
-            Values = new DictionaryValues(this);
+            Keys = new DictionaryKeys();
+            Values = new DictionaryValues();
         }
 
         /// <summary>
@@ -169,15 +171,15 @@ namespace ObservableHelpers
                 throw new ArgumentNullException(nameof(comparer));
             }
             dictionary = new Dictionary<TKey, TValue>(comparer);
+            Keys = new DictionaryKeys();
+            Values = new DictionaryValues();
             Populate(items);
-            Keys = new DictionaryKeys(this);
-            Values = new DictionaryValues(this);
         }
 
         private void Populate(IEnumerable<KeyValuePair<TKey, TValue>> items)
         {
             int index = 0;
-            InternalInsertItems(index++, items, out _);
+            InsertItems(index++, items, out _);
         }
 
         #endregion
@@ -237,7 +239,7 @@ namespace ObservableHelpers
                 throw ReadOnlyException(nameof(Add));
             }
 
-            RWLock.LockReadUpgradable(() =>
+            RWLock.LockUpgradeableRead(() =>
             {
                 int index = Items.Count;
                 InsertItem(index, item, out _);
@@ -412,7 +414,7 @@ namespace ObservableHelpers
                 throw ReadOnlyException(nameof(AddOrUpdate));
             }
 
-            return RWLock.LockReadUpgradable(() =>
+            return RWLock.LockUpgradeableRead(() =>
             {
                 TValue value = default;
                 KeyValuePair<TKey, TValue> item;
@@ -484,7 +486,7 @@ namespace ObservableHelpers
                 throw ReadOnlyException(nameof(AddRange));
             }
 
-            RWLock.LockReadUpgradable(() =>
+            RWLock.LockUpgradeableRead(() =>
             {
                 int index = Items.Count;
                 InsertItems(index, items, out _);
@@ -597,7 +599,7 @@ namespace ObservableHelpers
                 throw ReadOnlyException(nameof(GetOrAdd));
             }
 
-            return RWLock.LockReadUpgradable(() =>
+            return RWLock.LockUpgradeableRead(() =>
             {
                 if (!dictionary.TryGetValue(key, out TValue value))
                 {
@@ -901,7 +903,7 @@ namespace ObservableHelpers
                 throw ReadOnlyException(nameof(TryAdd));
             }
 
-            return RWLock.LockReadUpgradable(() =>
+            return RWLock.LockUpgradeableRead(() =>
             {
                 if (!dictionary.ContainsKey(key))
                 {
@@ -1066,7 +1068,7 @@ namespace ObservableHelpers
             }
 
             TValue proxy = default;
-            bool exists = RWLock.LockReadUpgradable(() =>
+            bool exists = RWLock.LockUpgradeableRead(() =>
             {
                 if (dictionary.TryGetValue(key, out proxy))
                 {
@@ -1247,7 +1249,7 @@ namespace ObservableHelpers
                 throw ReadOnlyException(nameof(TryUpdate));
             }
 
-            return RWLock.LockReadUpgradable(() =>
+            return RWLock.LockUpgradeableRead(() =>
             {
                 if (dictionary.TryGetValue(key, out TValue oldValue))
                 {
@@ -1425,6 +1427,13 @@ namespace ObservableHelpers
             if (base.InternalClearItems(out oldItems))
             {
                 dictionary.Clear();
+                Keys.ExposedClearItemsOperationInvoke(out _);
+                Values.ExposedClearItemsOperationInvoke(out _);
+                RWLock.InvokeOnLockExit(() =>
+                {
+                    Keys.ExposedClearItemsObservableInvoke();
+                    Values.ExposedClearItemsObservableInvoke();
+                });
                 return true;
             }
             return false;
@@ -1451,12 +1460,38 @@ namespace ObservableHelpers
                     {
                         dictionary.Add(item.Key, item.Value);
                     }
+                    IEnumerable<TKey> insertedKeys = items.Select(i => i.Key);
+                    IEnumerable<TValue> insertedValues = items.Select(i => i.Value);
+                    Keys.ExposedInsertItemsOperationInvoke(index, insertedKeys, out _);
+                    Values.ExposedInsertItemsOperationInvoke(index, insertedValues, out _);
+                    RWLock.InvokeOnLockExit(() =>
+                    {
+                        Keys.ExposedInsertItemsObservableInvoke(index, insertedKeys);
+                        Values.ExposedInsertItemsObservableInvoke(index, insertedValues);
+                    });
                     return true;
                 }
             }
             else
             {
                 throw new ArgumentException("An element with the same key already exists in the " + GetType().FullName);
+            }
+            return false;
+        }
+
+        /// <inheritdoc/>
+        protected override bool InternalMoveItem(int oldIndex, int newIndex, out KeyValuePair<TKey, TValue> movedItem)
+        {
+            if (base.InternalMoveItem(oldIndex, newIndex, out movedItem))
+            {
+                Keys.ExposedMoveItemOperationInvoke(oldIndex, newIndex, out TKey movedKey);
+                Values.ExposedMoveItemOperationInvoke(oldIndex, newIndex, out TValue movedValue);
+                RWLock.InvokeOnLockExit(() =>
+                {
+                    Keys.ExposedMoveItemObservableInvoke(oldIndex, newIndex, movedKey);
+                    Values.ExposedMoveItemObservableInvoke(oldIndex, newIndex, movedValue);
+                });
+                return true;
             }
             return false;
         }
@@ -1483,6 +1518,13 @@ namespace ObservableHelpers
                     {
                         dictionary.Remove(item.Key);
                     }
+                    Keys.ExposedRemoveItemsOperationInvoke(index, count, out IEnumerable<TKey> removedKeys);
+                    Values.ExposedRemoveItemsOperationInvoke(index, count, out IEnumerable<TValue> removedValues);
+                    RWLock.InvokeOnLockExit(() =>
+                    {
+                        Keys.ExposedRemoveItemsObservableInvoke(index, removedKeys);
+                        Values.ExposedRemoveItemsObservableInvoke(index, removedValues);
+                    });
                     return true;
                 }
             }
@@ -1497,6 +1539,13 @@ namespace ObservableHelpers
                 if (base.InternalSetItem(index, item, out originalItem))
                 {
                     dictionary[item.Key] = item.Value;
+                    Keys.ExposedSetItemOperationInvoke(index, item.Key, out TKey originalKey);
+                    Values.ExposedSetItemOperationInvoke(index, item.Value, out TValue originaValue);
+                    RWLock.InvokeOnLockExit(() =>
+                    {
+                        Keys.ExposedSetItemObservableInvoke(index, item.Key, originalKey);
+                        Values.ExposedSetItemObservableInvoke(index, item.Value, originaValue);
+                    });
                     return true;
                 }
             }
@@ -1515,7 +1564,7 @@ namespace ObservableHelpers
                 return default;
             }
 
-            return RWLock.LockReadUpgradable(() =>
+            return RWLock.LockUpgradeableRead(() =>
             {
                 ClearItems(out IEnumerable<KeyValuePair<TKey, TValue>> oldItems);
                 return oldItems.Count() != 0;
@@ -1747,139 +1796,84 @@ namespace ObservableHelpers
         #region Helper Classes
 
         /// <summary>
-        /// Provides the keys of the <see cref="ObservableDictionary{TKey, TValue}"/>.
+        /// Provides the implementations for dictionary observables.
         /// </summary>
-        public class DictionaryKeys : ObservableCollection<TKey>
+        public class DictionaryObservables<T> : ObservableCollection<T>
         {
-            #region Properties
+            #region Initializers
 
-            /// <inheritdoc/>
-            protected override List<TKey> Items
+            internal DictionaryObservables()
             {
-                get
-                {
-                    if (isItemsOutdated)
-                    {
-                        items = dictionary.Items.Select(i => i.Key).ToList();
-                        isItemsOutdated = false;
-                    }
-                    return items;
-                }
+                IsReadOnly = true;
             }
-
-            private readonly ObservableDictionary<TKey, TValue> dictionary;
-            private List<TKey> items = new List<TKey>();
-            private bool isItemsOutdated = true;
 
             #endregion
 
+            #region Methods
+
+            internal bool ExposedClearItemsOperationInvoke(out IEnumerable<T> oldItems)
+            {
+                return ClearItemsOperationInvoke(out oldItems);
+            }
+
+            internal void ExposedClearItemsObservableInvoke()
+            {
+                ClearItemsObservableInvoke();
+            }
+
+            internal bool ExposedInsertItemsOperationInvoke(int index, IEnumerable<T> items, out int lastCount)
+            {
+                return InsertItemsOperationInvoke(index, items, out lastCount);
+            }
+
+            internal void ExposedInsertItemsObservableInvoke(int index, IEnumerable<T> items)
+            {
+                InsertItemsObservableInvoke(index, items);
+            }
+
+            internal bool ExposedMoveItemOperationInvoke(int oldIndex, int newIndex, out T movedItem)
+            {
+                return MoveItemOperationInvoke(oldIndex, newIndex, out movedItem);
+            }
+
+            internal void ExposedMoveItemObservableInvoke(int oldIndex, int newIndex, T movedItem)
+            {
+                MoveItemObservableInvoke(oldIndex, newIndex, movedItem);
+            }
+
+            internal bool ExposedRemoveItemsOperationInvoke(int index, int count, out IEnumerable<T> removedItems)
+            {
+                return RemoveItemsOperationInvoke(index, count, out removedItems);
+            }
+
+            internal void ExposedRemoveItemsObservableInvoke(int index, IEnumerable<T> removedItems)
+            {
+                RemoveItemsObservableInvoke(index, removedItems);
+            }
+
+            internal bool ExposedSetItemOperationInvoke(int index, T item, out T originalItem)
+            {
+                return SetItemOperationInvoke(index, item, out originalItem);
+            }
+
+            internal void ExposedSetItemObservableInvoke(int index, T item, T originalItem)
+            {
+                SetItemObservableInvoke(index, item, originalItem);
+            }
+
+            #endregion
+        }
+
+        /// <summary>
+        /// Provides the keys of the <see cref="ObservableDictionary{TKey, TValue}"/>.
+        /// </summary>
+        public class DictionaryKeys : DictionaryObservables<TKey>
+        {
             #region Initializers
 
-            internal DictionaryKeys(ObservableDictionary<TKey, TValue> dictionary)
+            internal DictionaryKeys()
             {
-                this.dictionary = dictionary;
                 IsReadOnly = true;
-                dictionary.ImmediatePropertyChanged += (s, e) =>
-                {
-                    if (e.PropertyName == nameof(IndexerName))
-                    {
-                        isItemsOutdated = true;
-                    }
-                    if (e.PropertyName == nameof(Count) ||
-                        e.PropertyName == nameof(IndexerName))
-                    {
-                        OnPropertyChanged(e.PropertyName);
-                    }
-                };
-                dictionary.ImmediateCollectionChanged += (s, e) =>
-                {
-                    switch (e.Action)
-                    {
-                        case NotifyCollectionChangedAction.Add:
-                            if (e.NewItems?.Count == 0 || e.NewItems?.Count == 1)
-                            {
-                                OnCollectionAdd(
-                                    (e.NewItems?[0] as KeyValuePair<TKey, TValue>?).Value.Key,
-                                    e.NewStartingIndex);
-                            }
-                            else
-                            {
-                                OnCollectionAdd(
-                                    e.NewItems.Cast<KeyValuePair<TKey, TValue>>().Select(i => i.Key).ToList(),
-                                    e.NewStartingIndex);
-                            }
-                            break;
-                        case NotifyCollectionChangedAction.Remove:
-                            if (e.OldItems?.Count == 0 || e.OldItems?.Count == 1)
-                            {
-                                OnCollectionRemove(
-                                    (e.OldItems?[0] as KeyValuePair<TKey, TValue>?).Value.Key,
-                                    e.OldStartingIndex);
-                            }
-                            else
-                            {
-                                OnCollectionRemove(
-                                    e.OldItems?.Cast<KeyValuePair<TKey, TValue>>().Select(i => i.Key).ToList(),
-                                    e.OldStartingIndex);
-                            }
-                            break;
-                        case NotifyCollectionChangedAction.Replace:
-                            if (e.OldItems?.Count == 0 || e.OldItems?.Count == 1)
-                            {
-                                if (e.NewItems?.Count == 0 || e.NewItems?.Count == 1)
-                                {
-                                    OnCollectionReplace(
-                                        (e.OldItems?[0] as KeyValuePair<TKey, TValue>?).Value.Key,
-                                        (e.NewItems?[0] as KeyValuePair<TKey, TValue>?).Value.Key,
-                                        e.NewStartingIndex);
-                                }
-                                else
-                                {
-                                    OnCollectionReplace(
-                                        (e.OldItems?[0] as KeyValuePair<TKey, TValue>?).Value.Key,
-                                        e.NewItems?.Cast<KeyValuePair<TKey, TValue>>().Select(i => i.Key).ToList(),
-                                        e.NewStartingIndex);
-                                }
-                            }
-                            else
-                            {
-                                if (e.NewItems?.Count == 0 || e.NewItems?.Count == 1)
-                                {
-                                    OnCollectionReplace(
-                                        e.OldItems?.Cast<KeyValuePair<TKey, TValue>>().Select(i => i.Key).ToList(),
-                                        (e.NewItems?[0] as KeyValuePair<TKey, TValue>?).Value.Key,
-                                        e.NewStartingIndex);
-                                }
-                                else
-                                {
-                                    OnCollectionReplace(
-                                        e.OldItems?.Cast<KeyValuePair<TKey, TValue>>().Select(i => i.Key).ToList(),
-                                        e.NewItems?.Cast<KeyValuePair<TKey, TValue>>().Select(i => i.Key).ToList(),
-                                        e.NewStartingIndex);
-                                }
-                            }
-                            break;
-                        case NotifyCollectionChangedAction.Move:
-                            if (e.NewItems?.Count == 0 || e.NewItems?.Count == 1)
-                            {
-                                OnCollectionMove(
-                                    (e.NewItems?[0] as KeyValuePair<TKey, TValue>?).Value.Key,
-                                    e.OldStartingIndex,
-                                    e.NewStartingIndex);
-                            }
-                            else
-                            {
-                                OnCollectionMove(
-                                    e.NewItems?.Cast<KeyValuePair<TKey, TValue>>().Select(i => i.Key).ToList(),
-                                    e.OldStartingIndex,
-                                    e.NewStartingIndex);
-                            }
-                            break;
-                        case NotifyCollectionChangedAction.Reset:
-                            OnCollectionReset();
-                            break;
-                    }
-                };
             }
 
             #endregion
@@ -1888,137 +1882,13 @@ namespace ObservableHelpers
         /// <summary>
         /// Provides the values of the <see cref="ObservableDictionary{TKey, TValue}"/>.
         /// </summary>
-        public class DictionaryValues : ObservableCollection<TValue>
+        public class DictionaryValues : DictionaryObservables<TValue>
         {
-            #region Properties
-
-            /// <inheritdoc/>
-            protected override List<TValue> Items
-            {
-                get
-                {
-                    if (isItemsOutdated)
-                    {
-                        items = dictionary.Items.Select(i => i.Value).ToList();
-                        isItemsOutdated = false;
-                    }
-                    return items;
-                }
-            }
-
-            private readonly ObservableDictionary<TKey, TValue> dictionary;
-            private List<TValue> items = new List<TValue>();
-            private bool isItemsOutdated = true;
-
-            #endregion
-
             #region Initializers
 
-            internal DictionaryValues(ObservableDictionary<TKey, TValue> dictionary)
+            internal DictionaryValues()
             {
-                this.dictionary = dictionary;
                 IsReadOnly = true;
-                dictionary.ImmediatePropertyChanged += (s, e) =>
-                {
-                    if (e.PropertyName == nameof(IndexerName))
-                    {
-                        isItemsOutdated = true;
-                    }
-                    if (e.PropertyName == nameof(Count) ||
-                        e.PropertyName == nameof(IndexerName))
-                    {
-                        OnPropertyChanged(e.PropertyName);
-                    }
-                };
-                dictionary.ImmediateCollectionChanged += (s, e) =>
-                {
-                    switch (e.Action)
-                    {
-                        case NotifyCollectionChangedAction.Add:
-                            if (e.NewItems?.Count == 0 || e.NewItems?.Count == 1)
-                            {
-                                OnCollectionAdd(
-                                    (e.NewItems?[0] as KeyValuePair<TKey, TValue>?).Value.Value,
-                                    e.NewStartingIndex);
-                            }
-                            else
-                            {
-                                OnCollectionAdd(
-                                    e.NewItems.Cast<KeyValuePair<TKey, TValue>>().Select(i => i.Value).ToList(),
-                                    e.NewStartingIndex);
-                            }
-                            break;
-                        case NotifyCollectionChangedAction.Remove:
-                            if (e.OldItems?.Count == 0 || e.OldItems?.Count == 1)
-                            {
-                                OnCollectionRemove(
-                                    (e.OldItems?[0] as KeyValuePair<TKey, TValue>?).Value.Value,
-                                    e.OldStartingIndex);
-                            }
-                            else
-                            {
-                                OnCollectionRemove(
-                                    e.OldItems?.Cast<KeyValuePair<TKey, TValue>>().Select(i => i.Value).ToList(),
-                                    e.OldStartingIndex);
-                            }
-                            break;
-                        case NotifyCollectionChangedAction.Replace:
-                            if (e.OldItems?.Count == 0 || e.OldItems?.Count == 1)
-                            {
-                                if (e.NewItems?.Count == 0 || e.NewItems?.Count == 1)
-                                {
-                                    OnCollectionReplace(
-                                        (e.OldItems?[0] as KeyValuePair<TKey, TValue>?).Value.Value,
-                                        (e.NewItems?[0] as KeyValuePair<TKey, TValue>?).Value.Value,
-                                        e.NewStartingIndex);
-                                }
-                                else
-                                {
-                                    OnCollectionReplace(
-                                        (e.OldItems?[0] as KeyValuePair<TKey, TValue>?).Value.Value,
-                                        e.NewItems?.Cast<KeyValuePair<TKey, TValue>>().Select(i => i.Value).ToList(),
-                                        e.NewStartingIndex);
-                                }
-                            }
-                            else
-                            {
-                                if (e.NewItems?.Count == 0 || e.NewItems?.Count == 1)
-                                {
-                                    OnCollectionReplace(
-                                        e.OldItems?.Cast<KeyValuePair<TKey, TValue>>().Select(i => i.Value).ToList(),
-                                        (e.NewItems?[0] as KeyValuePair<TKey, TValue>?).Value.Value,
-                                        e.NewStartingIndex);
-                                }
-                                else
-                                {
-                                    OnCollectionReplace(
-                                        e.OldItems?.Cast<KeyValuePair<TKey, TValue>>().Select(i => i.Value).ToList(),
-                                        e.NewItems?.Cast<KeyValuePair<TKey, TValue>>().Select(i => i.Value).ToList(),
-                                        e.NewStartingIndex);
-                                }
-                            }
-                            break;
-                        case NotifyCollectionChangedAction.Move:
-                            if (e.NewItems?.Count == 0 || e.NewItems?.Count == 1)
-                            {
-                                OnCollectionMove(
-                                    (e.NewItems?[0] as KeyValuePair<TKey, TValue>?).Value.Value,
-                                    e.OldStartingIndex,
-                                    e.NewStartingIndex);
-                            }
-                            else
-                            {
-                                OnCollectionMove(
-                                    e.NewItems?.Cast<KeyValuePair<TKey, TValue>>().Select(i => i.Value).ToList(),
-                                    e.OldStartingIndex,
-                                    e.NewStartingIndex);
-                            }
-                            break;
-                        case NotifyCollectionChangedAction.Reset:
-                            OnCollectionReset();
-                            break;
-                    }
-                };
             }
 
             #endregion

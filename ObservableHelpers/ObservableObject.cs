@@ -461,8 +461,9 @@ namespace ObservableHelpers
             T oldValue = default;
             T newValue = default;
             bool hasChanges = false;
+            bool invokePropertyChanged = false;
 
-            return RWLock.LockReadUpgradable(() =>
+            NamedProperty ret = RWLock.LockUpgradeableRead(() =>
             {
                 NamedProperty namedProperty = default;
                 int namedPropertyKey = default;
@@ -532,12 +533,12 @@ namespace ObservableHelpers
                             }
                             else if (hasChanges)
                             {
-                                OnPropertyChanged(namedProperty.Key, namedProperty.PropertyName, namedProperty.Group);
+                                invokePropertyChanged = true;
                             }
                         }
                         else if (hasChanges)
                         {
-                            OnPropertyChanged(namedProperty.Key, namedProperty.PropertyName, namedProperty.Group);
+                            invokePropertyChanged = true;
                         }
                     });
                 }
@@ -570,7 +571,7 @@ namespace ObservableHelpers
                                 WireNamedProperty(namedProperty);
                                 if (!namedProperty.Property.SetValue(value))
                                 {
-                                    OnPropertyChanged(namedProperty.Key, namedProperty.PropertyName, namedProperty.Group);
+                                    invokePropertyChanged = true;
                                 }
                                 newValue = value;
                                 hasChanges = true;
@@ -583,6 +584,13 @@ namespace ObservableHelpers
 
                 return namedProperty;
             });
+
+            if (invokePropertyChanged)
+            {
+                RWLock.InvokeOnLockExit(() => OnPropertyChanged(ret.Key, ret.PropertyName, ret.Group));
+            }
+
+            return ret;
         }
 
         /// <summary>
@@ -762,9 +770,9 @@ namespace ObservableHelpers
                 throw new PropertyKeyAndNameNullException();
             }
 
-            return RWLock.LockReadUpgradable(() =>
+            NamedProperty namedProperty = default;
+            if (RWLock.LockUpgradeableRead(() =>
             {
-                NamedProperty namedProperty = default;
                 int namedPropertyKey = default;
 
                 if (key != null && keyDictionary.TryGetValue(key, out namedPropertyKey))
@@ -790,14 +798,18 @@ namespace ObservableHelpers
                         }
                         if (namedProperties.Remove(namedPropertyKey))
                         {
-                            OnPropertyChanged(namedProperty.Key, namedProperty.PropertyName, namedProperty.Group);
                             return true;
                         }
                         return false;
                     });
                 }
                 return false;
-            });
+            }))
+            {
+                RWLock.InvokeOnLockExit(() => OnPropertyChanged(namedProperty.Key, namedProperty.PropertyName, namedProperty.Group));
+                return true;
+            }
+            return false;
         }
 
         private bool ContainsProperty(string key, string propertyName)

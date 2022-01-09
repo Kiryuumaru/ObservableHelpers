@@ -131,7 +131,7 @@ namespace ObservableHelpers
                 throw ReadOnlyException(nameof(Pop));
             }
 
-            return RWLock.LockReadUpgradable(() =>
+            return RWLock.LockUpgradeableRead(() =>
             {
                 if (Count == 0)
                 {
@@ -139,11 +139,8 @@ namespace ObservableHelpers
                 }
                 else
                 {
-                    return RWLock.LockWrite(() =>
-                    {
-                        RemoveItem(0, out T item);
-                        return item;
-                    });
+                    RemoveItem(0, out T item);
+                    return item;
                 }
             });
         }
@@ -168,7 +165,7 @@ namespace ObservableHelpers
                 throw ReadOnlyException(nameof(Push));
             }
 
-            RWLock.LockWrite(() => InsertItem(0, item, out _));
+            InsertItem(0, item, out _);
         }
 
         /// <summary>
@@ -194,7 +191,7 @@ namespace ObservableHelpers
                 throw ReadOnlyException(nameof(PushRange));
             }
 
-            RWLock.LockWrite(() => InsertItems(0, items.Reverse(), out _));
+            InsertItems(0, items.Reverse(), out _);
         }
 
         /// <summary>
@@ -252,7 +249,7 @@ namespace ObservableHelpers
 
             Array.Copy(items, startIndex, ranged, 0, count);
 
-            RWLock.LockWrite(() => InsertItems(0, ranged.Reverse(), out _));
+            InsertItems(0, ranged.Reverse(), out _);
         }
 
         /// <summary>
@@ -344,7 +341,7 @@ namespace ObservableHelpers
             }
 
             T proxy = default;
-            bool ret = RWLock.LockReadUpgradable(() =>
+            bool ret = RWLock.LockUpgradeableRead(() =>
             {
                 if (Count == 0)
                 {
@@ -352,7 +349,7 @@ namespace ObservableHelpers
                 }
                 else
                 {
-                    return RWLock.LockWrite(() => RemoveItem(0, out proxy));
+                    return RemoveItem(0, out proxy);
                 }
             });
             result = proxy;
@@ -431,7 +428,7 @@ namespace ObservableHelpers
                 throw new ArgumentException(nameof(startIndex) + nameof(count) + "is greater than the length of " + nameof(items));
             }
 
-            return RWLock.LockReadUpgradable(() =>
+            return RWLock.LockUpgradeableRead(() =>
             {
                 if (Count == 0)
                 {
@@ -439,28 +436,22 @@ namespace ObservableHelpers
                 }
                 else if (Count <= count)
                 {
-                    return RWLock.LockWrite(() =>
+                    int lastCount = Count;
+                    RemoveItems(0, lastCount, out IEnumerable<T> removedItems);
+                    foreach (T item in removedItems)
                     {
-                        int lastCount = Count;
-                        RemoveItems(0, lastCount, out IEnumerable<T> removedItems);
-                        foreach (T item in removedItems)
-                        {
-                            items[startIndex++] = item;
-                        }
-                        return lastCount;
-                    });
+                        items[startIndex++] = item;
+                    }
+                    return lastCount;
                 }
                 else
                 {
-                    return RWLock.LockWrite(() =>
+                    RemoveItems(0, count, out IEnumerable<T> removedItems);
+                    foreach (T item in removedItems)
                     {
-                        RemoveItems(0, count, out IEnumerable<T> removedItems);
-                        foreach (T item in removedItems)
-                        {
-                            items[startIndex++] = item;
-                        }
-                        return count;
-                    });
+                        items[startIndex++] = item;
+                    }
+                    return count;
                 }
             });
         }
