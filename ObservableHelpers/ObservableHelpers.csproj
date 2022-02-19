@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>10.0</LangVersion>
+    <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Company>Kiryuumaru</Company>
@@ -10,22 +12,23 @@
     <RepositoryUrl>https://github.com/Kiryuumaru/ObservableHelpers</RepositoryUrl>
     <PackageTags>MVVM, Observable, Model, Helper</PackageTags>
     <PackageProjectUrl>https://github.com/Kiryuumaru/ObservableHelpers</PackageProjectUrl>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
-    <Version>1.4.5</Version>
-    <PackageReleaseNotes>* Exposed observable RWLock for outside lock control</PackageReleaseNotes>
+    <Version>1.4.6</Version>
+    <PackageReleaseNotes>* Enabled nullable language feature</PackageReleaseNotes>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\.editorconfig" Link=".editorconfig" />
     <None Include="..\LICENSE.md" Pack="true" PackagePath="" />
     <None Include="..\README.md">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DisposableHelpers" Version="1.0.0" />
+    <PackageReference Include="SynchronizationContextHelpers" Version="1.0.0" />
   </ItemGroup>
 
 </Project>

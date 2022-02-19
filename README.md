@@ -18,7 +18,7 @@ Install-Package ObservableHelpers -pre
 ```
 
 ## Supported frameworks
-.NET Standard 2.0 - see https://github.com/dotnet/standard/blob/master/docs/versions.md for compatibility matrix
+.NET Standard 2.0 and above - see https://github.com/dotnet/standard/blob/master/docs/versions.md for compatibility matrix
 
 ## Get Started
 

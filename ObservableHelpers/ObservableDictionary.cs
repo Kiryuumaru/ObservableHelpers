@@ -47,10 +47,6 @@ namespace ObservableHelpers
         {
             get
             {
-                if (IsDisposed)
-                {
-                    return default;
-                }
                 if (key == null)
                 {
                     throw new ArgumentNullException(nameof(key));
@@ -60,10 +56,6 @@ namespace ObservableHelpers
             }
             set
             {
-                if (IsDisposed)
-                {
-                    return;
-                }
                 if (key == null)
                 {
                     throw new ArgumentNullException(nameof(key));
@@ -226,10 +218,6 @@ namespace ObservableHelpers
         /// </exception>
         public void Add(KeyValuePair<TKey, TValue> item)
         {
-            if (IsDisposed)
-            {
-                return;
-            }
             if (item.Key == null)
             {
                 throw new ArgumentNullException(nameof(item.Key));
@@ -393,10 +381,6 @@ namespace ObservableHelpers
         /// </exception>
         public TValue AddOrUpdate(TKey key, Func<TKey, TValue> addValueFactory, Func<(TKey key, TValue oldValue), TValue> updateValueFactory)
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
             if (key == null)
             {
                 throw new ArgumentNullException(nameof(key));
@@ -416,7 +400,7 @@ namespace ObservableHelpers
 
             return RWLock.LockUpgradeableRead(() =>
             {
-                TValue value = default;
+                TValue value;
                 KeyValuePair<TKey, TValue> item;
                 if (dictionary.TryGetValue(key, out TValue oldValue))
                 {
@@ -473,10 +457,6 @@ namespace ObservableHelpers
         /// </exception>
         public void AddRange(IEnumerable<KeyValuePair<TKey, TValue>> items)
         {
-            if (IsDisposed)
-            {
-                return;
-            }
             if (items == null)
             {
                 throw new ArgumentNullException(nameof(items));
@@ -501,10 +481,6 @@ namespace ObservableHelpers
         /// </exception>
         public void Clear()
         {
-            if (IsDisposed)
-            {
-                return;
-            }
             if (IsReadOnly)
             {
                 throw ReadOnlyException(nameof(Clear));
@@ -527,10 +503,6 @@ namespace ObservableHelpers
         /// </exception>
         public bool ContainsKey(TKey key)
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
             if (key == null)
             {
                 throw new ArgumentNullException(nameof(key));
@@ -582,10 +554,6 @@ namespace ObservableHelpers
         /// </exception>
         public TValue GetOrAdd(TKey key, Func<TKey, TValue> valueFactory)
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
             if (key == null)
             {
                 throw new ArgumentNullException(nameof(key));
@@ -631,10 +599,6 @@ namespace ObservableHelpers
         /// </exception>
         public void Insert(int index, KeyValuePair<TKey, TValue> item)
         {
-            if (IsDisposed)
-            {
-                return;
-            }
             if (IsReadOnly)
             {
                 throw ReadOnlyException(nameof(Insert));
@@ -692,10 +656,6 @@ namespace ObservableHelpers
         /// </exception>
         public void InsertRange(int index, IEnumerable<KeyValuePair<TKey, TValue>> items)
         {
-            if (IsDisposed)
-            {
-                return;
-            }
             if (items == null)
             {
                 throw new ArgumentNullException(nameof(items));
@@ -719,10 +679,6 @@ namespace ObservableHelpers
         /// </exception>
         public void Move(int oldIndex, int newIndex)
         {
-            if (IsDisposed)
-            {
-                return;
-            }
             if (IsReadOnly)
             {
                 throw ReadOnlyException(nameof(Move));
@@ -785,10 +741,6 @@ namespace ObservableHelpers
         /// </exception>
         public void RemoveAt(int index)
         {
-            if (IsDisposed)
-            {
-                return;
-            }
             if (IsReadOnly)
             {
                 throw ReadOnlyException(nameof(RemoveAt));
@@ -820,10 +772,6 @@ namespace ObservableHelpers
         /// </exception>
         public bool RemoveRange(int index, int count)
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
             if (IsReadOnly)
             {
                 throw ReadOnlyException(nameof(RemoveRange));
@@ -886,10 +834,6 @@ namespace ObservableHelpers
         /// </exception>
         public bool TryAdd(TKey key, Func<TKey, TValue> valueFactory)
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
             if (key == null)
             {
                 throw new ArgumentNullException(nameof(key));
@@ -948,20 +892,16 @@ namespace ObservableHelpers
         /// <exception cref="ArgumentNullException">
         /// <paramref name="key"/> is a null reference.
         /// </exception>
-        public bool TryGetValue(TKey key, out TValue value)
+        public bool TryGetValue(TKey key, out TValue? value)
         {
             value = default;
 
-            if (IsDisposed)
-            {
-                return default;
-            }
             if (key == null)
             {
                 throw new ArgumentNullException(nameof(key));
             }
 
-            TValue proxy = default;
+            TValue? proxy = default;
             bool exists = RWLock.LockRead(() => dictionary.TryGetValue(key, out proxy));
             value = proxy;
             return exists;
@@ -1005,10 +945,10 @@ namespace ObservableHelpers
         /// <exception cref="NotSupportedException">
         /// The <see cref="ObservableDictionary{TKey, TValue}"/> is read-only.
         /// </exception>
-        public bool TryRemove(KeyValuePair<TKey, TValue> item, out KeyValuePair<TKey, TValue> removed)
+        public bool TryRemove(KeyValuePair<TKey, TValue> item, out KeyValuePair<TKey, TValue?> removed)
         {
-            bool isRemoved = TryRemove(item.Key, out TValue value);
-            removed = new KeyValuePair<TKey, TValue>(item.Key, value);
+            bool isRemoved = TryRemove(item.Key, out TValue? value);
+            removed = new KeyValuePair<TKey, TValue?>(item.Key, value);
             return isRemoved;
         }
 
@@ -1050,14 +990,10 @@ namespace ObservableHelpers
         /// <exception cref="NotSupportedException">
         /// The <see cref="ObservableDictionary{TKey, TValue}"/> is read-only.
         /// </exception>
-        public bool TryRemove(TKey key, out TValue value)
+        public bool TryRemove(TKey key, out TValue? value)
         {
             value = default;
 
-            if (IsDisposed)
-            {
-                return default;
-            }
             if (key == null)
             {
                 throw new ArgumentNullException(nameof(key));
@@ -1067,7 +1003,7 @@ namespace ObservableHelpers
                 throw ReadOnlyException(nameof(TryRemove));
             }
 
-            TValue proxy = default;
+            TValue? proxy = default;
             bool exists = RWLock.LockUpgradeableRead(() =>
             {
                 if (dictionary.TryGetValue(key, out proxy))
@@ -1228,10 +1164,6 @@ namespace ObservableHelpers
         /// </exception>
         public bool TryUpdate(TKey key, Func<TKey, TValue> newValueFactory, Func<(TKey key, TValue newValue, TValue oldValue), bool> validation)
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
             if (key == null)
             {
                 throw new ArgumentNullException(nameof(key));
@@ -1397,14 +1329,14 @@ namespace ObservableHelpers
             TryUpdate(key, newValueFactory, validation);
         }
 
-        private ArgumentException WrongKeyTypeException(string propertyName, Type providedType)
+        private ArgumentException WrongKeyTypeException(string propertyName, Type? providedType)
         {
-            return new ArgumentException("Expected key type is \"" + typeof(TKey).FullName + "\" but dictionary was provided with \"" + providedType.FullName + "\" key type.", propertyName);
+            return new ArgumentException("Expected key type is \"" + typeof(TKey).FullName + "\" but dictionary was provided with \"" + (providedType?.FullName ?? "unknown") + "\" key type.", propertyName);
         }
 
-        private ArgumentException WrongValueTypeException(string propertyName, Type providedType)
+        private ArgumentException WrongValueTypeException(string propertyName, Type? providedType)
         {
-            return new ArgumentException("Expected value type is \"" + typeof(TValue).FullName + "\" but dictionary was provided with \"" + providedType.FullName + "\" value type.", propertyName);
+            return new ArgumentException("Expected value type is \"" + typeof(TValue).FullName + "\" but dictionary was provided with \"" + (providedType?.FullName ?? "unknown") + "\" value type.", propertyName);
         }
 
         #endregion
@@ -1414,13 +1346,9 @@ namespace ObservableHelpers
         /// <inheritdoc/>
         public override IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
             return new DictionaryEnumerator(this);
         }
+
         /// <inheritdoc/>
         protected override bool InternalClearItems(out IEnumerable<KeyValuePair<TKey, TValue>> oldItems)
         {
@@ -1484,8 +1412,8 @@ namespace ObservableHelpers
         {
             if (base.InternalMoveItem(oldIndex, newIndex, out movedItem))
             {
-                Keys.ExposedMoveItemOperationInvoke(oldIndex, newIndex, out TKey movedKey);
-                Values.ExposedMoveItemOperationInvoke(oldIndex, newIndex, out TValue movedValue);
+                Keys.ExposedMoveItemOperationInvoke(oldIndex, newIndex, out TKey? movedKey);
+                Values.ExposedMoveItemOperationInvoke(oldIndex, newIndex, out TValue? movedValue);
                 RWLock.InvokeOnLockExit(() =>
                 {
                     Keys.ExposedMoveItemObservableInvoke(oldIndex, newIndex, movedKey);
@@ -1499,7 +1427,7 @@ namespace ObservableHelpers
         /// <inheritdoc/>
         protected override bool InternalRemoveItems(int index, int count, out IEnumerable<KeyValuePair<TKey, TValue>> oldItems)
         {
-            oldItems = default;
+            IEnumerable<KeyValuePair<TKey, TValue>>? proxy = default;
             bool isAllExists = true;
             for (int i = 0; i < count; i++)
             {
@@ -1512,9 +1440,9 @@ namespace ObservableHelpers
             }
             if (isAllExists)
             {
-                if (base.InternalRemoveItems(index, count, out oldItems))
+                if (base.InternalRemoveItems(index, count, out proxy))
                 {
-                    foreach (KeyValuePair<TKey, TValue> item in oldItems)
+                    foreach (KeyValuePair<TKey, TValue> item in proxy)
                     {
                         dictionary.Remove(item.Key);
                     }
@@ -1525,9 +1453,11 @@ namespace ObservableHelpers
                         Keys.ExposedRemoveItemsObservableInvoke(index, removedKeys);
                         Values.ExposedRemoveItemsObservableInvoke(index, removedValues);
                     });
+                    oldItems = proxy;
                     return true;
                 }
             }
+            oldItems = proxy ?? new KeyValuePair<TKey, TValue>[0];
             return false;
         }
 
@@ -1539,8 +1469,8 @@ namespace ObservableHelpers
                 if (base.InternalSetItem(index, item, out originalItem))
                 {
                     dictionary[item.Key] = item.Value;
-                    Keys.ExposedSetItemOperationInvoke(index, item.Key, out TKey originalKey);
-                    Values.ExposedSetItemOperationInvoke(index, item.Value, out TValue originaValue);
+                    Keys.ExposedSetItemOperationInvoke(index, item.Key, out TKey? originalKey);
+                    Values.ExposedSetItemOperationInvoke(index, item.Value, out TValue? originaValue);
                     RWLock.InvokeOnLockExit(() =>
                     {
                         Keys.ExposedSetItemObservableInvoke(index, item.Key, originalKey);
@@ -1559,11 +1489,6 @@ namespace ObservableHelpers
         /// <inheritdoc/>
         public override bool SetNull()
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
             return RWLock.LockUpgradeableRead(() =>
             {
                 ClearItems(out IEnumerable<KeyValuePair<TKey, TValue>> oldItems);
@@ -1583,7 +1508,9 @@ namespace ObservableHelpers
 
         bool IReadOnlyDictionary<TKey, TValue>.ContainsKey(TKey key) => ContainsKey(key);
 
-        bool IReadOnlyDictionary<TKey, TValue>.TryGetValue(TKey key, out TValue value) => TryGetValue(key, out value);
+#pragma warning disable CS8769 // Nullability of reference types in type of parameter doesn't match implemented member (possibly because of nullability attributes).
+        bool IReadOnlyDictionary<TKey, TValue>.TryGetValue(TKey key, out TValue? value) => TryGetValue(key, out value);
+#pragma warning restore CS8769 // Nullability of reference types in type of parameter doesn't match implemented member (possibly because of nullability attributes).
 
         #endregion
 
@@ -1605,17 +1532,21 @@ namespace ObservableHelpers
 
         bool IDictionary<TKey, TValue>.Remove(TKey key) => Remove(key);
 
-        bool IDictionary<TKey, TValue>.TryGetValue(TKey key, out TValue value) => TryGetValue(key, out value);
+#pragma warning disable CS8769 // Nullability of reference types in type of parameter doesn't match implemented member (possibly because of nullability attributes).
+        bool IDictionary<TKey, TValue>.TryGetValue(TKey key, out TValue? value) => TryGetValue(key, out value);
+#pragma warning restore CS8769 // Nullability of reference types in type of parameter doesn't match implemented member (possibly because of nullability attributes).
 
         #endregion
 
         #region IDictionary Members
 
-        object IDictionary.this[object key]
+#pragma warning disable CS8601 // Possible null reference assignment.
+#pragma warning disable CS8604 // Possible null reference argument.
+        object? IDictionary.this[object? key]
         {
             get
             {
-                TKey tKey;
+                TKey? tKey;
                 if (key is null)
                 {
                     if (default(TKey) == null)
@@ -1640,8 +1571,8 @@ namespace ObservableHelpers
             }
             set
             {
-                TKey tKey;
-                TValue tValue;
+                TKey? tKey;
+                TValue? tValue;
                 if (key is null)
                 {
                     if (default(TKey) == null)
@@ -1694,10 +1625,10 @@ namespace ObservableHelpers
 
         bool IDictionary.IsFixedSize => false;
 
-        void IDictionary.Add(object key, object value)
+        void IDictionary.Add(object? key, object? value)
         {
-            TKey tKey;
-            TValue tValue;
+            TKey? tKey;
+            TValue? tValue;
             if (key is null)
             {
                 if (default(TKey) == null)
@@ -1743,7 +1674,7 @@ namespace ObservableHelpers
 
         void IDictionary.Clear() => Clear();
 
-        bool IDictionary.Contains(object key)
+        bool IDictionary.Contains(object? key)
         {
             if (key is null)
             {
@@ -1766,9 +1697,9 @@ namespace ObservableHelpers
             }
         }
 
-        IDictionaryEnumerator IDictionary.GetEnumerator() => GetEnumerator() as IDictionaryEnumerator;
+        IDictionaryEnumerator IDictionary.GetEnumerator() => (GetEnumerator() as IDictionaryEnumerator) ?? new DictionaryEnumerator(this);
 
-        void IDictionary.Remove(object key)
+        void IDictionary.Remove(object? key)
         {
             if (key is null)
             {
@@ -1790,6 +1721,8 @@ namespace ObservableHelpers
                 throw WrongKeyTypeException(nameof(key), key?.GetType());
             }
         }
+#pragma warning restore CS8604 // Possible null reference argument.
+#pragma warning restore CS8601 // Possible null reference assignment.
 
         #endregion
 
@@ -1831,12 +1764,12 @@ namespace ObservableHelpers
                 InsertItemsObservableInvoke(index, items);
             }
 
-            internal bool ExposedMoveItemOperationInvoke(int oldIndex, int newIndex, out T movedItem)
+            internal bool ExposedMoveItemOperationInvoke(int oldIndex, int newIndex, out T? movedItem)
             {
                 return MoveItemOperationInvoke(oldIndex, newIndex, out movedItem);
             }
 
-            internal void ExposedMoveItemObservableInvoke(int oldIndex, int newIndex, T movedItem)
+            internal void ExposedMoveItemObservableInvoke(int oldIndex, int newIndex, T? movedItem)
             {
                 MoveItemObservableInvoke(oldIndex, newIndex, movedItem);
             }
@@ -1851,12 +1784,12 @@ namespace ObservableHelpers
                 RemoveItemsObservableInvoke(index, removedItems);
             }
 
-            internal bool ExposedSetItemOperationInvoke(int index, T item, out T originalItem)
+            internal bool ExposedSetItemOperationInvoke(int index, T item, out T? originalItem)
             {
                 return SetItemOperationInvoke(index, item, out originalItem);
             }
 
-            internal void ExposedSetItemObservableInvoke(int index, T item, T originalItem)
+            internal void ExposedSetItemObservableInvoke(int index, T item, T? originalItem)
             {
                 SetItemObservableInvoke(index, item, originalItem);
             }
@@ -1905,13 +1838,13 @@ namespace ObservableHelpers
             public KeyValuePair<TKey, TValue> Current => enumerator.Current;
 
             /// <inheritdoc/>
-            public object Key => enumerator.Current.Key;
+            public object? Key => enumerator.Current.Key;
 
             /// <inheritdoc/>
-            public object Value => enumerator.Current.Value;
+            public object? Value => enumerator.Current.Value;
 
             /// <inheritdoc/>
-            public DictionaryEntry Entry => new DictionaryEntry(Key, Value);
+            public DictionaryEntry Entry => new(Key, Value);
 
             private readonly IEnumerator<KeyValuePair<TKey, TValue>> enumerator;
 

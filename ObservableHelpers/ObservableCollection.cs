@@ -39,10 +39,6 @@ namespace ObservableHelpers
             get => base[index];
             set
             {
-                if (IsDisposed)
-                {
-                    return;
-                }
                 if (IsReadOnly)
                 {
                     throw ReadOnlyException(nameof(IndexerName));
@@ -98,10 +94,6 @@ namespace ObservableHelpers
         /// </exception>
         public void Add(T item)
         {
-            if (IsDisposed)
-            {
-                return;
-            }
             if (IsReadOnly)
             {
                 throw ReadOnlyException(nameof(Add));
@@ -145,10 +137,6 @@ namespace ObservableHelpers
         /// </exception>
         public void AddRange(IEnumerable<T> items)
         {
-            if (IsDisposed)
-            {
-                return;
-            }
             if (items == null)
             {
                 throw new ArgumentNullException(nameof(items));
@@ -173,10 +161,6 @@ namespace ObservableHelpers
         /// </exception>
         public void Clear()
         {
-            if (IsDisposed)
-            {
-                return;
-            }
             if (IsReadOnly)
             {
                 throw ReadOnlyException(nameof(Clear));
@@ -202,10 +186,6 @@ namespace ObservableHelpers
         /// </exception>
         public void Insert(int index, T item)
         {
-            if (IsDisposed)
-            {
-                return;
-            }
             if (IsReadOnly)
             {
                 throw ReadOnlyException(nameof(Insert));
@@ -257,10 +237,6 @@ namespace ObservableHelpers
         /// </exception>
         public void InsertRange(int index, IEnumerable<T> items)
         {
-            if (IsDisposed)
-            {
-                return;
-            }
             if (items == null)
             {
                 throw new ArgumentNullException(nameof(items));
@@ -284,10 +260,6 @@ namespace ObservableHelpers
         /// </exception>
         public void Move(int oldIndex, int newIndex)
         {
-            if (IsDisposed)
-            {
-                return;
-            }
             if (IsReadOnly)
             {
                 throw ReadOnlyException(nameof(Move));
@@ -310,10 +282,6 @@ namespace ObservableHelpers
         /// </exception>
         public bool Remove(T item)
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
             if (IsReadOnly)
             {
                 throw ReadOnlyException(nameof(Remove));
@@ -344,10 +312,6 @@ namespace ObservableHelpers
         /// </exception>
         public void RemoveAt(int index)
         {
-            if (IsDisposed)
-            {
-                return;
-            }
             if (IsReadOnly)
             {
                 throw ReadOnlyException(nameof(RemoveAt));
@@ -379,10 +343,6 @@ namespace ObservableHelpers
         /// </exception>
         public bool RemoveRange(int index, int count)
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
             if (IsReadOnly)
             {
                 throw ReadOnlyException(nameof(RemoveRange));
@@ -398,11 +358,6 @@ namespace ObservableHelpers
         /// <inheritdoc/>
         public override bool SetNull()
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
             return RWLock.LockUpgradeableRead(() =>
             {
                 ClearItems(out IEnumerable<T> oldItems);
@@ -430,16 +385,14 @@ namespace ObservableHelpers
 
         #region IList Members
 
-        object IList.this[int index]
+#pragma warning disable CS8601 // Possible null reference assignment.
+#pragma warning disable CS8604 // Possible null reference argument.
+
+        object? IList.this[int index]
         {
             get => this[index];
             set
             {
-                if (IsDisposed)
-                {
-                    return;
-                }
-
                 if (value is null)
                 {
                     if (default(T) == null)
@@ -468,11 +421,6 @@ namespace ObservableHelpers
 
         int IList.Add(object value)
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
             return RWLock.LockUpgradeableRead(() =>
             {
                 int oldCount = Items.Count;
@@ -502,13 +450,8 @@ namespace ObservableHelpers
 
         void IList.Clear() => Clear();
 
-        bool IList.Contains(object value)
+        bool IList.Contains(object? value)
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
             if (value is null)
             {
                 if (default(T) == null)
@@ -530,13 +473,8 @@ namespace ObservableHelpers
             }
         }
 
-        int IList.IndexOf(object value)
+        int IList.IndexOf(object? value)
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
             if (value is null)
             {
                 if (default(T) == null)
@@ -558,13 +496,8 @@ namespace ObservableHelpers
             }
         }
 
-        void IList.Insert(int index, object value)
+        void IList.Insert(int index, object? value)
         {
-            if (IsDisposed)
-            {
-                return;
-            }
-
             if (value is null)
             {
                 if (default(T) == null)
@@ -586,13 +519,8 @@ namespace ObservableHelpers
             }
         }
 
-        void IList.Remove(object value)
+        void IList.Remove(object? value)
         {
-            if (IsDisposed)
-            {
-                return;
-            }
-
             if (value is null)
             {
                 if (default(T) == null)
@@ -615,6 +543,9 @@ namespace ObservableHelpers
         }
 
         void IList.RemoveAt(int index) => RemoveAt(index);
+
+#pragma warning restore CS8604 // Possible null reference argument.
+#pragma warning restore CS8601 // Possible null reference assignment.
 
         #endregion
 

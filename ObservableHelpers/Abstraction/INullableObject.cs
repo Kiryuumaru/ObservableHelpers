@@ -1,25 +1,26 @@
-﻿namespace ObservableHelpers.Abstraction
+﻿using System;
+
+namespace ObservableHelpers.Abstraction;
+
+/// <summary>
+/// Contains declarations for implicit nullable object.
+/// </summary>
+public interface INullableObject :
+    IDisposable
 {
     /// <summary>
-    /// Contains declarations for implicit nullable object.
+    /// Sets this object to null.
     /// </summary>
-    public interface INullableObject :
-        IDisposableObject
-    {
-        /// <summary>
-        /// Sets this object to null.
-        /// </summary>
-        /// <returns>
-        /// <c>true</c> if this object sets to null; otherwise, <c>false</c>.
-        /// </returns>
-        bool SetNull();
+    /// <returns>
+    /// <c>true</c> if this object sets to null; otherwise, <c>false</c>.
+    /// </returns>
+    bool SetNull();
 
-        /// <summary>
-        /// Check if object is null.
-        /// </summary>
-        /// <returns>
-        /// <c>true</c> if this object is null; otherwise, <c>false</c>.
-        /// </returns>
-        bool IsNull();
-    }
+    /// <summary>
+    /// Check if object is null.
+    /// </summary>
+    /// <returns>
+    /// <c>true</c> if this object is null; otherwise, <c>false</c>.
+    /// </returns>
+    bool IsNull();
 }

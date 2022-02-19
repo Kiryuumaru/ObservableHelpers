@@ -94,10 +94,6 @@ namespace ObservableHelpers
         /// </exception>
         public T Dequeue()
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
             if (IsReadOnly)
             {
                 throw ReadOnlyException(nameof(Dequeue));
@@ -111,7 +107,10 @@ namespace ObservableHelpers
                 }
                 else
                 {
-                    RemoveItem(0, out T item);
+                    if (!RemoveItem(0, out T? item) || item == null)
+                    {
+                        throw new InvalidOperationException("The stack is empty");
+                    }
                     return item;
                 }
             });
@@ -235,11 +234,6 @@ namespace ObservableHelpers
         /// </exception>
         public T Peek()
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
             return RWLock.LockRead(() =>
             {
                 if (Count == 0)
@@ -261,11 +255,6 @@ namespace ObservableHelpers
         /// </returns>
         public T[] ToArray()
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
             return RWLock.LockRead(() => Items.ToArray());
         }
 
@@ -294,20 +283,16 @@ namespace ObservableHelpers
         /// <exception cref="NotSupportedException">
         /// The <see cref="ObservableQueue{T}"/> is read-only.
         /// </exception>
-        public bool TryDequeue(out T result)
+        public bool TryDequeue(out T? result)
         {
             result = default;
 
-            if (IsDisposed)
-            {
-                return default;
-            }
             if (IsReadOnly)
             {
                 throw ReadOnlyException(nameof(TryDequeue));
             }
 
-            T proxy = default;
+            T? proxy = default;
             bool ret = RWLock.LockUpgradeableRead(() =>
             {
                 if (Count == 0)
@@ -370,10 +355,6 @@ namespace ObservableHelpers
         /// </exception>
         public int TryDequeueRange(T[] items, int startIndex, int count)
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
             if (IsReadOnly)
             {
                 throw ReadOnlyException(nameof(TryDequeueRange));
@@ -432,16 +413,11 @@ namespace ObservableHelpers
         /// <returns>
         /// <c>true</c> if an object was returned successfully; otherwise, <c>false</c>.
         /// </returns>
-        public bool TryPeek(out T result)
+        public bool TryPeek(out T? result)
         {
             result = default;
 
-            if (IsDisposed)
-            {
-                return default;
-            }
-
-            T proxy = default;
+            T? proxy = default;
             bool ret = RWLock.LockRead(() =>
             {
                 if (Count == 0)
@@ -465,11 +441,6 @@ namespace ObservableHelpers
         /// <inheritdoc/>
         public override IEnumerator<T> GetEnumerator()
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
             return new QueueEnumerator(this);
         }
 
@@ -486,7 +457,9 @@ namespace ObservableHelpers
         }
 
         /// <inheritdoc/>
-        bool IProducerConsumerCollection<T>.TryTake(out T item)
+#pragma warning disable CS8769 // Nullability of reference types in type of parameter doesn't match implemented member (possibly because of nullability attributes).
+        bool IProducerConsumerCollection<T>.TryTake(out T? item)
+#pragma warning restore CS8769 // Nullability of reference types in type of parameter doesn't match implemented member (possibly because of nullability attributes).
         {
             return TryDequeue(out item);
         }
@@ -533,7 +506,7 @@ namespace ObservableHelpers
 
             #region IEnumerator Members
 
-            object IEnumerator.Current => enumerator.Current;
+            object? IEnumerator.Current => enumerator.Current;
 
             #endregion
         }

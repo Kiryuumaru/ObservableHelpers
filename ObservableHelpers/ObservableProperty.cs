@@ -4,6 +4,7 @@ using System;
 using System.Threading;
 using System.ComponentModel;
 using System.Collections.Generic;
+using SynchronizationContextHelpers;
 
 namespace ObservableHelpers
 {
@@ -18,13 +19,13 @@ namespace ObservableHelpers
         /// <summary>
         /// Gets the value of the property.
         /// </summary>
-        public object Value
+        public object? Value
         {
             get => GetObject(null);
             set => SetObject(value?.GetType(), value);
         }
 
-        private object valueHolder;
+        private object? valueHolder;
 
         #endregion
 
@@ -54,7 +55,7 @@ namespace ObservableHelpers
         /// <returns>
         /// <c>true</c> whether the property has changed; otherwise <c>false</c>.
         /// </returns>
-        public bool SetValue<T>(T value) => SetObject(typeof(T), value);
+        public bool SetValue<T>(T? value) => SetObject(typeof(T), value);
 
         /// <summary>
         /// Gets the value of the property.
@@ -68,7 +69,7 @@ namespace ObservableHelpers
         /// <returns>
         /// The value of the property.
         /// </returns>
-        public T GetValue<T>(T defaultValue = default) => (T)GetObject(typeof(T), defaultValue);
+        public T? GetValue<T>(T? defaultValue = default) => (T?)GetObject(typeof(T), defaultValue);
 
         /// <summary>
         /// Sets the object of the property.
@@ -82,18 +83,13 @@ namespace ObservableHelpers
         /// <returns>
         /// <c>true</c> whether the property has changed; otherwise <c>false</c>.
         /// </returns>
-        public bool SetObject(Type type, object value)
+        public bool SetObject(Type? type, object? value)
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
             if (RWLock.LockWrite(() =>
             {
                 if (InternalSetObject(type, value))
                 {
-                    if (value is ISyncObject sync)
+                    if (value is SyncContext sync)
                     {
                         sync.SyncOperation.SetContext(this);
                     }
@@ -121,23 +117,18 @@ namespace ObservableHelpers
         /// <returns>
         /// The value of the property.
         /// </returns>
-        public object GetObject(Type type, object defaultValue = default)
+        public object? GetObject(Type? type, object? defaultValue = default)
         {
-            if (IsDisposed)
-            {
-                return defaultValue;
-            }
-
             return RWLock.LockRead(() =>
             {
-                object obj = InternalGetObject(type);
+                object? obj = InternalGetObject(type);
                 if (type == null || (obj != null && type.IsAssignableFrom(obj.GetType())))
                 {
                     return obj;
                 }
                 else
                 {
-                    if (defaultValue is ISyncObject sync)
+                    if (defaultValue is SyncContext sync)
                     {
                         sync.SyncOperation.SetContext(this);
                     }
@@ -159,7 +150,7 @@ namespace ObservableHelpers
         /// <returns>
         /// <c>true</c> whether the property has changed; otherwise <c>false</c>.
         /// </returns>
-        protected virtual bool InternalSetObject(Type type, object obj)
+        protected virtual bool InternalSetObject(Type? type, object? obj)
         {
             if (!(valueHolder?.Equals(obj) ?? obj == null))
             {
@@ -179,7 +170,7 @@ namespace ObservableHelpers
         /// <returns>
         /// The value object of the property.
         /// </returns>
-        protected virtual object InternalGetObject(Type type)
+        protected virtual object? InternalGetObject(Type? type)
         {
             return valueHolder;
         }
@@ -191,7 +182,7 @@ namespace ObservableHelpers
         /// <inheritdoc/>
         public override string ToString()
         {
-            return valueHolder?.ToString();
+            return valueHolder?.ToString() ?? "";
         }
 
         #endregion
@@ -201,11 +192,6 @@ namespace ObservableHelpers
         /// <inheritdoc/>
         public override bool SetNull()
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
             return RWLock.LockUpgradeableRead(() =>
             {
                 if (GetObject(null) is INullableObject model)
@@ -222,14 +208,9 @@ namespace ObservableHelpers
         /// <inheritdoc/>
         public override bool IsNull()
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
             return RWLock.LockRead(() =>
             {
-                object obj = GetObject(null);
+                object? obj = GetObject(null);
 
                 if (obj is INullableObject model)
                 {
@@ -259,7 +240,7 @@ namespace ObservableHelpers
         /// <summary>
         /// Gets the value of the property.
         /// </summary>
-        public new T Value
+        public new T? Value
         {
             get => GetValue<T>();
             set => SetValue<T>(value);
@@ -290,7 +271,7 @@ namespace ObservableHelpers
         /// <returns>
         /// <c>true</c> whether the property has changed; otherwise <c>false</c>.
         /// </returns>
-        public bool SetValue(T value) => SetValue<T>(value);
+        public bool SetValue(T? value) => SetValue<T>(value);
 
         /// <summary>
         /// Gets the value of the property.
@@ -301,7 +282,7 @@ namespace ObservableHelpers
         /// <returns>
         /// The value of the property.
         /// </returns>
-        public T GetValue(T defaultValue = default) => GetValue<T>(defaultValue);
+        public T? GetValue(T? defaultValue = default) => GetValue<T>(defaultValue);
 
         #endregion
     }

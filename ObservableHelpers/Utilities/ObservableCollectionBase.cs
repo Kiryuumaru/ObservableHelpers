@@ -1,4 +1,5 @@
 ﻿using ObservableHelpers.Abstraction;
+using SynchronizationContextHelpers;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -37,11 +38,6 @@ namespace ObservableHelpers.Utilities
         {
             get
             {
-                if (IsDisposed)
-                {
-                    return default;
-                }
-
                 return RWLock.LockRead(() =>
                 {
                     if (index < 0 || index >= Items.Count)
@@ -60,11 +56,6 @@ namespace ObservableHelpers.Utilities
         {
             get
             {
-                if (IsDisposed)
-                {
-                    return default;
-                }
-
                 return Items.Count;
             }
         }
@@ -129,11 +120,6 @@ namespace ObservableHelpers.Utilities
         /// </returns>
         public bool Contains(T item)
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
             return RWLock.LockRead(() => Items.Contains(item));
         }
 
@@ -151,11 +137,6 @@ namespace ObservableHelpers.Utilities
         /// </exception>
         public void CopyTo(T[] array)
         {
-            if (IsDisposed)
-            {
-                return;
-            }
-
             RWLock.LockRead(() => Items.CopyTo(array));
         }
 
@@ -179,11 +160,6 @@ namespace ObservableHelpers.Utilities
         /// </exception>
         public void CopyTo(T[] array, int arrayIndex)
         {
-            if (IsDisposed)
-            {
-                return;
-            }
-
             RWLock.LockRead(() => Items.CopyTo(array, arrayIndex));
         }
 
@@ -207,11 +183,6 @@ namespace ObservableHelpers.Utilities
         /// </exception>
         public void CopyTo(Array array, int arrayIndex)
         {
-            if (IsDisposed)
-            {
-                return;
-            }
-
             RWLock.LockRead(() => (Items as ICollection).CopyTo(array, arrayIndex));
         }
 
@@ -241,11 +212,6 @@ namespace ObservableHelpers.Utilities
         /// </exception>
         public void CopyTo(int index, T[] array, int arrayIndex, int count)
         {
-            if (IsDisposed)
-            {
-                return;
-            }
-
             RWLock.LockRead(() => Items.CopyTo(index, array, arrayIndex, count));
         }
 
@@ -257,11 +223,6 @@ namespace ObservableHelpers.Utilities
         /// </returns>
         public virtual IEnumerator<T> GetEnumerator()
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
             return RWLock.LockRead(() => Items.GetEnumerator());
         }
 
@@ -276,11 +237,6 @@ namespace ObservableHelpers.Utilities
         /// </returns>
         public int IndexOf(T value)
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
             return RWLock.LockRead(() => Items.IndexOf(value));
         }
 
@@ -298,10 +254,6 @@ namespace ObservableHelpers.Utilities
         /// </exception>
         public ObservableCollectionBaseFilter ObservableFilter(Predicate<T> predicate)
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
             if (predicate == null)
             {
                 throw new ArgumentNullException(nameof(predicate));
@@ -361,7 +313,7 @@ namespace ObservableHelpers.Utilities
         /// </returns>
         protected bool ClearItemsOperationInvoke(out IEnumerable<T> oldItems)
         {
-            IEnumerable<T> proxy = default;
+            IEnumerable<T>? proxy = default;
             bool ret = RWLock.LockWrite(() =>
             {
                 if (InternalClearItems(out proxy))
@@ -370,7 +322,7 @@ namespace ObservableHelpers.Utilities
                 }
                 return false;
             });
-            oldItems = proxy;
+            oldItems = proxy ?? new T[0];
             return ret;
         }
 
@@ -447,7 +399,7 @@ namespace ObservableHelpers.Utilities
                 {
                     if (InternalInsertItems(index, new T[] { item }, out proxy))
                     {
-                        if (item is ISyncObject sync)
+                        if (item is SyncContext sync)
                         {
                             sync.SyncOperation.SetContext(this);
                         }
@@ -551,7 +503,7 @@ namespace ObservableHelpers.Utilities
                     {
                         foreach (T item in items)
                         {
-                            if (item is ISyncObject sync)
+                            if (item is SyncContext sync)
                             {
                                 sync.SyncOperation.SetContext(this);
                             }
@@ -609,7 +561,7 @@ namespace ObservableHelpers.Utilities
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="oldIndex"/> or <paramref name="newIndex"/> is less than zero. -or- is greater than or equal to <see cref="ObservableCollectionBase{T}.Count"/>.
         /// </exception>
-        protected bool MoveItem(int oldIndex, int newIndex, out T movedItem)
+        protected bool MoveItem(int oldIndex, int newIndex, out T? movedItem)
         {
             if (MoveItemOperationInvoke(oldIndex, newIndex, out movedItem))
             {
@@ -637,9 +589,9 @@ namespace ObservableHelpers.Utilities
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="oldIndex"/> or <paramref name="newIndex"/> is less than zero. -or- is greater than or equal to <see cref="ObservableCollectionBase{T}.Count"/>.
         /// </exception>
-        protected bool MoveItemOperationInvoke(int oldIndex, int newIndex, out T movedItem)
+        protected bool MoveItemOperationInvoke(int oldIndex, int newIndex, out T? movedItem)
         {
-            T proxy = default;
+            T? proxy = default;
             bool ret = RWLock.LockUpgradeableRead(() =>
             {
                 if (oldIndex < 0 || oldIndex >= Items.Count)
@@ -677,7 +629,7 @@ namespace ObservableHelpers.Utilities
         /// <param name="movedItem">
         /// The moved element at the specified <paramref name="oldIndex"/> to the specified <paramref name="newIndex"/> from the <see cref="ObservableCollectionBase{T}"/>.
         /// </param>
-        protected void MoveItemObservableInvoke(int oldIndex, int newIndex, T movedItem)
+        protected void MoveItemObservableInvoke(int oldIndex, int newIndex, T? movedItem)
         {
             RWLock.InvokeOnLockExit(() =>
             {
@@ -701,7 +653,7 @@ namespace ObservableHelpers.Utilities
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="index"/> is less than zero. -or- is greater than <see cref="ObservableCollectionBase{T}.Count"/>.
         /// </exception>
-        protected bool RemoveItem(int index, out T removedItem)
+        protected bool RemoveItem(int index, out T? removedItem)
         {
             if (RemoveItemOperationInvoke(index, out removedItem))
             {
@@ -726,9 +678,9 @@ namespace ObservableHelpers.Utilities
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="index"/> is less than zero. -or- is greater than <see cref="ObservableCollectionBase{T}.Count"/>.
         /// </exception>
-        protected bool RemoveItemOperationInvoke(int index, out T removedItem)
+        protected bool RemoveItemOperationInvoke(int index, out T? removedItem)
         {
-            T proxy = default;
+            T? proxy = default;
             bool ret = RWLock.LockUpgradeableRead(() =>
             {
                 if (index < 0 || index >= Items.Count)
@@ -759,7 +711,7 @@ namespace ObservableHelpers.Utilities
         /// <param name="removedItem">
         /// The removed element at the specified <paramref name="index"/> from the <see cref="ObservableCollectionBase{T}"/>.
         /// </param>
-        protected void RemoveItemObservableInvoke(int index, T removedItem)
+        protected void RemoveItemObservableInvoke(int index, T? removedItem)
         {
             RWLock.InvokeOnLockExit(() =>
             {
@@ -823,7 +775,7 @@ namespace ObservableHelpers.Utilities
         /// </exception>
         protected bool RemoveItemsOperationInvoke(int index, int count, out IEnumerable<T> removedItems)
         {
-            IEnumerable<T> proxy = default;
+            IEnumerable<T>? proxy = default;
             bool ret = RWLock.LockUpgradeableRead(() =>
             {
                 if (index < 0)
@@ -848,7 +800,7 @@ namespace ObservableHelpers.Utilities
                     return false;
                 });
             });
-            removedItems = proxy;
+            removedItems = proxy ?? new T[0];
             return ret;
         }
 
@@ -896,7 +848,7 @@ namespace ObservableHelpers.Utilities
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="index"/> is less than zero. -or- is greater than or equal to <see cref="ObservableCollectionBase{T}.Count"/>.
         /// </exception>
-        protected bool SetItem(int index, T item, out T originalItem)
+        protected bool SetItem(int index, T item, out T? originalItem)
         {
             if (SetItemOperationInvoke(index, item, out originalItem))
             {
@@ -924,9 +876,9 @@ namespace ObservableHelpers.Utilities
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="index"/> is less than zero. -or- is greater than or equal to <see cref="ObservableCollectionBase{T}.Count"/>.
         /// </exception>
-        protected bool SetItemOperationInvoke(int index, T item, out T originalItem)
+        protected bool SetItemOperationInvoke(int index, T item, out T? originalItem)
         {
-            T proxy = default;
+            T? proxy = default;
             bool ret = RWLock.LockUpgradeableRead(() =>
             {
                 if (index < 0 || index >= Items.Count)
@@ -938,7 +890,7 @@ namespace ObservableHelpers.Utilities
                 {
                     if (InternalSetItem(index, item, out proxy))
                     {
-                        if (item is ISyncObject sync)
+                        if (item is SyncContext sync)
                         {
                             sync.SyncOperation.SetContext(this);
                         }
@@ -963,7 +915,7 @@ namespace ObservableHelpers.Utilities
         /// <param name="originalItem">
         /// The replaced original element at the specified <paramref name="index"/> from the <see cref="ObservableCollectionBase{T}"/>.
         /// </param>
-        protected void SetItemObservableInvoke(int index, T item, T originalItem)
+        protected void SetItemObservableInvoke(int index, T item, T? originalItem)
         {
             RWLock.InvokeOnLockExit(() =>
             {
@@ -1089,14 +1041,14 @@ namespace ObservableHelpers.Utilities
             }
             else
             {
-                oldItems = null;
+                oldItems = new T[0];
 
                 return false;
             }
         }
 
         /// <summary>
-        /// Provides an overridable internal operation for <see cref="SetItem(int, T, out T)"/>.
+        /// Provides an overridable internal operation for <see cref="SetItem(int, T, out T?)"/>.
         /// </summary>
         /// <param name="index">
         /// The zero-based index of the element to replace.
@@ -1119,9 +1071,9 @@ namespace ObservableHelpers.Utilities
             return true;
         }
 
-        private protected ArgumentException WrongTypeException(string propertyName, Type providedType)
+        private protected ArgumentException WrongTypeException(string propertyName, Type? providedType)
         {
-            return new ArgumentException("Expected value type is \"" + typeof(T).FullName + "\" but collection was provided with \"" + providedType.FullName + "\" value type.", propertyName);
+            return new ArgumentException("Expected value type is \"" + typeof(T).FullName + "\" but collection was provided with \"" + (providedType?.FullName ?? "unknown") + "\" value type.", propertyName);
         }
 
         private protected NotSupportedException ReadOnlyException(string operationName)
@@ -1136,11 +1088,6 @@ namespace ObservableHelpers.Utilities
         /// <inheritdoc/>
         public override bool IsNull()
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
             return RWLock.LockRead(() => Items.Count == 0);
         }
 
@@ -1174,11 +1121,6 @@ namespace ObservableHelpers.Utilities
         {
             get
             {
-                if (IsDisposed)
-                {
-                    return default;
-                }
-
                 if (syncRoot == null)
                 {
                     Interlocked.CompareExchange(ref syncRoot, new object(), null);
@@ -1189,7 +1131,7 @@ namespace ObservableHelpers.Utilities
 
         void ICollection.CopyTo(Array array, int index) => CopyTo(array, index);
 
-        private object syncRoot;
+        private object? syncRoot;
 
         #endregion
 

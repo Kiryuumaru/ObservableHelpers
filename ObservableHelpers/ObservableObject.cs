@@ -1,4 +1,5 @@
-﻿using ObservableHelpers.Exceptions;
+﻿using DisposableHelpers;
+using ObservableHelpers.Exceptions;
 using ObservableHelpers.Utilities;
 using System;
 using System.Collections.Generic;
@@ -18,10 +19,10 @@ namespace ObservableHelpers
     {
         #region Properties
 
-        private readonly Dictionary<int, NamedProperty> namedProperties = new Dictionary<int, NamedProperty>();
-        private readonly Dictionary<string, int> keyDictionary = new Dictionary<string, int>();
-        private readonly Dictionary<string, int> propertyNameDictionary = new Dictionary<string, int>();
-        private readonly Random random = new Random();
+        private readonly Dictionary<int, NamedProperty> namedProperties = new();
+        private readonly Dictionary<string, int> keyDictionary = new();
+        private readonly Dictionary<string, int> propertyNameDictionary = new();
+        private readonly Random random = new();
 
         #endregion
 
@@ -94,12 +95,12 @@ namespace ObservableHelpers
         /// Throws when <paramref name="key"/> is not provided.
         /// </exception>
         protected bool SetProperty<T>(
-            T value,
-            string key = null,
-            [CallerMemberName] string propertyName = null,
-            string group = null,
-            Func<(T oldValue, T newValue), bool> setValidate = null,
-            Action<(string key, string propertyName, string group, T oldValue, T newValue, bool HasChanges)> postAction = null)
+            T? value,
+            string? key = null,
+            [CallerMemberName] string? propertyName = null,
+            string? group = null,
+            Func<(T? oldValue, T? newValue), bool>? setValidate = null,
+            Action<(string? key, string? propertyName, string? group, T? oldValue, T? newValue, bool HasChanges)>? postAction = null)
         {
             bool hasChanges = false;
 
@@ -169,15 +170,15 @@ namespace ObservableHelpers
         /// <exception cref="PropertyKeyAndNameNullException">
         /// Throws when <paramref name="key"/> is not provided.
         /// </exception>
-        protected T GetProperty<T>(
-            T defaultValue = default,
-            string key = null,
-            [CallerMemberName] string propertyName = null,
-            string group = null,
-            Func<(T oldValue, T newValue), bool> setValidate = null,
-            Action<(string key, string propertyName, string group, T oldValue, T newValue, bool HasChanges)> postAction = null)
+        protected T? GetProperty<T>(
+            T? defaultValue = default,
+            string? key = null,
+            [CallerMemberName] string? propertyName = null,
+            string? group = null,
+            Func<(T? oldValue, T? newValue), bool>? setValidate = null,
+            Action<(string? key, string? propertyName, string? group, T? oldValue, T? newValue, bool HasChanges)>? postAction = null)
         {
-            T returnValue = default;
+            T? returnValue = default;
 
             NamedProperty namedProperty = GetOrCreateNamedProperty(defaultValue, key, propertyName, group,
                 args =>
@@ -282,7 +283,7 @@ namespace ObservableHelpers
         /// <returns>
         /// The raw properties.
         /// </returns>
-        protected IEnumerable<NamedProperty> GetRawProperties(string group = null)
+        protected IEnumerable<NamedProperty> GetRawProperties(string? group = null)
         {
             return RWLock.LockRead(() =>
             {
@@ -302,7 +303,7 @@ namespace ObservableHelpers
         {
             namedProperty.Property.SyncOperation.SetContext(this);
 
-            PropertyChangedEventHandler eventProxy = new PropertyChangedEventHandler((s, e) =>
+            PropertyChangedEventHandler eventProxy = new((s, e) =>
             {
                 if (IsDisposed)
                 {
@@ -345,7 +346,7 @@ namespace ObservableHelpers
         /// <exception cref="PropertyKeyAndNameNullException">
         /// Throws when both <paramref name="key"/> and <paramref name="propertyName"/> are not provided.
         /// </exception>
-        protected bool TryGetNamedProperty(string key, string propertyName, out NamedProperty namedProperty)
+        protected bool TryGetNamedProperty(string? key, string? propertyName, out NamedProperty? namedProperty)
         {
             if (key == null && propertyName == null)
             {
@@ -353,7 +354,7 @@ namespace ObservableHelpers
             }
 
             namedProperty = default;
-            NamedProperty proxy = default;
+            NamedProperty? proxy = default;
             var ret = RWLock.LockRead(() =>
             {
                 if (key != null && keyDictionary.TryGetValue(key, out int namedPropertyKey))
@@ -404,12 +405,12 @@ namespace ObservableHelpers
         /// Throws when both <paramref name="key"/> and <paramref name="propertyName"/> are not provided.
         /// </exception>
         protected NamedProperty GetOrCreateNamedProperty<T>(
-            T defaultValue,
-            string key,
-            string propertyName,
-            string group,
-            Func<(NamedProperty namedProperty, T oldValue), bool> createValidation = null,
-            Action<(NamedProperty namedProperty, T oldValue, T newValue, bool hasChanges)> postAction = null)
+            T? defaultValue,
+            string? key,
+            string? propertyName,
+            string? group,
+            Func<(NamedProperty namedProperty, T? oldValue), bool>? createValidation = null,
+            Action<(NamedProperty namedProperty, T? oldValue, T? newValue, bool hasChanges)>? postAction = null)
         {
             return CreateOrUpdateNamedProperty(defaultValue, key, propertyName, group, createValidation, args => false, postAction);
         }
@@ -445,27 +446,27 @@ namespace ObservableHelpers
         /// Throws when both <paramref name="key"/> and <paramref name="propertyName"/> are not provided.
         /// </exception>
         protected NamedProperty CreateOrUpdateNamedProperty<T>(
-            T value,
-            string key,
-            string propertyName,
-            string group,
-            Func<(NamedProperty namedProperty, T oldValue), bool> addValidate = null,
-            Func<(NamedProperty namedProperty, T oldValue), bool> updateValidate = null,
-            Action<(NamedProperty namedProperty, T oldValue, T newValue, bool hasChanges)> postAction = null)
+            T? value,
+            string? key,
+            string? propertyName,
+            string? group,
+            Func<(NamedProperty namedProperty, T? oldValue), bool>? addValidate = null,
+            Func<(NamedProperty namedProperty, T? oldValue), bool>? updateValidate = null,
+            Action<(NamedProperty namedProperty, T? oldValue, T? newValue, bool hasChanges)>? postAction = null)
         {
             if (key == null && propertyName == null)
             {
                 throw new PropertyKeyAndNameNullException();
             }
 
-            T oldValue = default;
-            T newValue = default;
+            T? oldValue = default;
+            T? newValue = default;
             bool hasChanges = false;
             bool invokePropertyChanged = false;
 
             NamedProperty ret = RWLock.LockUpgradeableRead(() =>
             {
-                NamedProperty namedProperty = default;
+                NamedProperty? namedProperty = default;
                 int namedPropertyKey = default;
                 bool fromKey = false;
 
@@ -544,39 +545,37 @@ namespace ObservableHelpers
                 }
                 else
                 {
-                    RWLock.LockWrite(() =>
+                    namedProperty = RWLock.LockWrite(() =>
                     {
-                        namedProperty = NamedPropertyFactory(key, propertyName, group);
-                        if (namedProperty != null)
+                        NamedProperty newNamedProperty = NamedPropertyFactory(key, propertyName, group);
+                        if (addValidate?.Invoke((newNamedProperty, oldValue)) ?? true)
                         {
-                            if (addValidate?.Invoke((namedProperty, oldValue)) ?? true)
+                            while (true)
                             {
-                                while (true)
+                                namedPropertyKey = random.Next(int.MinValue, int.MaxValue);
+                                if (!namedProperties.ContainsKey(namedPropertyKey))
                                 {
-                                    namedPropertyKey = random.Next(int.MinValue, int.MaxValue);
-                                    if (!namedProperties.ContainsKey(namedPropertyKey))
-                                    {
-                                        break;
-                                    }
+                                    break;
                                 }
-                                namedProperties[namedPropertyKey] = namedProperty;
-                                if (key != null)
-                                {
-                                    keyDictionary[key] = namedPropertyKey;
-                                }
-                                if (propertyName != null)
-                                {
-                                    propertyNameDictionary[propertyName] = namedPropertyKey;
-                                }
-                                WireNamedProperty(namedProperty);
-                                if (!namedProperty.Property.SetValue(value))
-                                {
-                                    invokePropertyChanged = true;
-                                }
-                                newValue = value;
-                                hasChanges = true;
                             }
+                            namedProperties[namedPropertyKey] = newNamedProperty;
+                            if (key != null)
+                            {
+                                keyDictionary[key] = namedPropertyKey;
+                            }
+                            if (propertyName != null)
+                            {
+                                propertyNameDictionary[propertyName] = namedPropertyKey;
+                            }
+                            WireNamedProperty(newNamedProperty);
+                            if (!newNamedProperty.Property.SetValue(value))
+                            {
+                                invokePropertyChanged = true;
+                            }
+                            newValue = value;
+                            hasChanges = true;
                         }
+                        return newNamedProperty;
                     });
                 }
 
@@ -615,9 +614,9 @@ namespace ObservableHelpers
         /// Throws when both <paramref name="key"/> and <paramref name="propertyName"/> are not provided.
         /// </exception>
         protected IDisposable AttachOnPropertyChanged<T>(
-            Action<T> onPropertyChanged,
-            string propertyName = null,
-            string key = null)
+            Action<T?> onPropertyChanged,
+            string? propertyName = null,
+            string? key = null)
         {
             if (key == null && propertyName == null)
             {
@@ -662,7 +661,7 @@ namespace ObservableHelpers
 
             invoke();
 
-            return new AnonymousDisposable(delegate
+            return new Disposable(delegate
             {
                 PropertyChanged -= handler;
             });
@@ -690,9 +689,9 @@ namespace ObservableHelpers
         /// Throws when both <paramref name="key"/> and <paramref name="propertyName"/> are not provided.
         /// </exception>
         protected IDisposable AttachOnImmediatePropertyChanged<T>(
-            Action<T> onPropertyChanged,
-            string propertyName = null,
-            string key = null)
+            Action<T?> onPropertyChanged,
+            string? propertyName = null,
+            string? key = null)
         {
             if (key == null && propertyName == null)
             {
@@ -737,7 +736,7 @@ namespace ObservableHelpers
 
             invoke();
 
-            return new AnonymousDisposable(delegate
+            return new Disposable(delegate
             {
                 ImmediatePropertyChanged -= handler;
             });
@@ -758,19 +757,19 @@ namespace ObservableHelpers
         /// <returns>
         /// The created instance of <see cref="NamedProperty"/>.
         /// </returns>
-        protected virtual NamedProperty NamedPropertyFactory(string key, string propertyName, string group)
+        protected virtual NamedProperty NamedPropertyFactory(string? key, string? propertyName, string? group)
         {
             return new NamedProperty(new ObservableProperty(), key, propertyName, group);
         }
 
-        private bool RemoveProperty(string key, string propertyName)
+        private bool RemoveProperty(string? key, string? propertyName)
         {
             if (key == null && propertyName == null)
             {
                 throw new PropertyKeyAndNameNullException();
             }
 
-            NamedProperty namedProperty = default;
+            NamedProperty? namedProperty = default;
             if (RWLock.LockUpgradeableRead(() =>
             {
                 int namedPropertyKey = default;
@@ -806,13 +805,16 @@ namespace ObservableHelpers
                 return false;
             }))
             {
-                RWLock.InvokeOnLockExit(() => OnPropertyChanged(namedProperty.Key, namedProperty.PropertyName, namedProperty.Group));
-                return true;
+                if (namedProperty != null)
+                {
+                    RWLock.InvokeOnLockExit(() => OnPropertyChanged(namedProperty.Key, namedProperty.PropertyName, namedProperty.Group));
+                    return true;
+                }
             }
             return false;
         }
 
-        private bool ContainsProperty(string key, string propertyName)
+        private bool ContainsProperty(string? key, string? propertyName)
         {
             if (key == null && propertyName == null)
             {
@@ -834,7 +836,7 @@ namespace ObservableHelpers
             });
         }
 
-        private void OnPropertyChanged(string key, string propertyName, string group)
+        private void OnPropertyChanged(string? key, string? propertyName, string? group)
         {
             if (IsDisposed)
             {
@@ -897,17 +899,17 @@ namespace ObservableHelpers
             /// <summary>
             /// Gets or sets the key of the <see cref="Property"/>
             /// </summary>
-            public string Key { get; internal set; }
+            public string? Key { get; internal set; }
 
             /// <summary>
             /// Gets or sets the name of the <see cref="Property"/>
             /// </summary>
-            public string PropertyName { get; internal set; }
+            public string? PropertyName { get; internal set; }
 
             /// <summary>
             /// Gets or sets the group of the <see cref="Property"/>
             /// </summary>
-            public string Group { get; internal set; }
+            public string? Group { get; internal set; }
 
             /// <summary>
             /// Gets or sets <c>true</c> if the property is from default value; otherwise <c>false</c>.
@@ -923,9 +925,9 @@ namespace ObservableHelpers
             /// </summary>
             public NamedProperty(
                 ObservableProperty property,
-                string key,
-                string propertyName,
-                string group)
+                string? key,
+                string? propertyName,
+                string? group)
             {
                 Property = property;
                 Key = key;
@@ -957,21 +959,21 @@ namespace ObservableHelpers
             /// <summary>
             /// Gets the key of the property that changed.
             /// </summary>
-            public string Key { get; }
+            public string? Key { get; }
 
             /// <summary>
             /// Gets the group of the property that changed.
             /// </summary>
-            public string Group { get; }
+            public string? Group { get; }
 
             #endregion
 
             #region Initializers
 
             internal ObjectPropertyChangesEventArgs(
-                string key,
-                string propertyName,
-                string group)
+                string? key,
+                string? propertyName,
+                string? group)
                 : base(propertyName)
             {
                 Key = key;

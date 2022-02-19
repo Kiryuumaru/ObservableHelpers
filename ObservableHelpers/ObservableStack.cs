@@ -67,10 +67,6 @@ namespace ObservableHelpers
         /// </exception>
         public void Clear()
         {
-            if (IsDisposed)
-            {
-                return;
-            }
             if (IsReadOnly)
             {
                 throw ReadOnlyException(nameof(Clear));
@@ -90,11 +86,6 @@ namespace ObservableHelpers
         /// </exception>
         public T Peek()
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
             return RWLock.LockRead(() =>
             {
                 if (Count == 0)
@@ -122,10 +113,6 @@ namespace ObservableHelpers
         /// </exception>
         public T Pop()
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
             if (IsReadOnly)
             {
                 throw ReadOnlyException(nameof(Pop));
@@ -139,7 +126,10 @@ namespace ObservableHelpers
                 }
                 else
                 {
-                    RemoveItem(0, out T item);
+                    if (!RemoveItem(0, out T? item) || item == null)
+                    {
+                        throw new InvalidOperationException("The stack is empty");
+                    }
                     return item;
                 }
             });
@@ -156,10 +146,6 @@ namespace ObservableHelpers
         /// </exception>
         public void Push(T item)
         {
-            if (IsDisposed)
-            {
-                return;
-            }
             if (IsReadOnly)
             {
                 throw ReadOnlyException(nameof(Push));
@@ -182,10 +168,6 @@ namespace ObservableHelpers
         /// </exception>
         public void PushRange(T[] items)
         {
-            if (IsDisposed)
-            {
-                return;
-            }
             if (IsReadOnly)
             {
                 throw ReadOnlyException(nameof(PushRange));
@@ -220,10 +202,6 @@ namespace ObservableHelpers
         /// </exception>
         public void PushRange(T[] items, int startIndex, int count)
         {
-            if (IsDisposed)
-            {
-                return;
-            }
             if (IsReadOnly)
             {
                 throw ReadOnlyException(nameof(PushRange));
@@ -260,11 +238,6 @@ namespace ObservableHelpers
         /// </returns>
         public T[] ToArray()
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
             return RWLock.LockRead(() => Items.ToArray());
         }
 
@@ -273,11 +246,6 @@ namespace ObservableHelpers
         /// </summary>
         public void TrimExcess()
         {
-            if (IsDisposed)
-            {
-                return;
-            }
-
             Items.TrimExcess();
         }
 
@@ -290,16 +258,11 @@ namespace ObservableHelpers
         /// <returns>
         /// <c>true</c> if and object was returned successfully; otherwise, <c>false</c>.
         /// </returns>
-        public bool TryPeek(out T result)
+        public bool TryPeek(out T? result)
         {
             result = default;
 
-            if (IsDisposed)
-            {
-                return default;
-            }
-
-            T proxy = default;
+            T? proxy = default;
             bool ret = RWLock.LockRead(() =>
             {
                 if (Count == 0)
@@ -327,20 +290,16 @@ namespace ObservableHelpers
         /// <exception cref="NotSupportedException">
         /// The <see cref="ObservableQueue{T}"/> is read-only.
         /// </exception>
-        public bool TryPop(out T result)
+        public bool TryPop(out T? result)
         {
             result = default;
 
-            if (IsDisposed)
-            {
-                return default;
-            }
             if (IsReadOnly)
             {
                 throw ReadOnlyException(nameof(TryPop));
             }
 
-            T proxy = default;
+            T? proxy = default;
             bool ret = RWLock.LockUpgradeableRead(() =>
             {
                 if (Count == 0)
@@ -403,10 +362,6 @@ namespace ObservableHelpers
         /// </exception>
         public int TryPopRange(T[] items, int startIndex, int count)
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
             if (IsReadOnly)
             {
                 throw ReadOnlyException(nameof(TryPopRange));
@@ -468,11 +423,6 @@ namespace ObservableHelpers
         /// </returns>
         public override IEnumerator<T> GetEnumerator()
         {
-            if (IsDisposed)
-            {
-                return default;
-            }
-
             return new StackEnumerator(this);
         }
 
@@ -488,7 +438,9 @@ namespace ObservableHelpers
         }
 
         /// <inheritdoc/>
-        bool IProducerConsumerCollection<T>.TryTake(out T item)
+#pragma warning disable CS8769 // Nullability of reference types in type of parameter doesn't match implemented member (possibly because of nullability attributes).
+        bool IProducerConsumerCollection<T>.TryTake(out T? item)
+#pragma warning restore CS8769 // Nullability of reference types in type of parameter doesn't match implemented member (possibly because of nullability attributes).
         {
             return TryPop(out item);
         }
@@ -535,7 +487,7 @@ namespace ObservableHelpers
 
             #region IEnumerator Members
 
-            object IEnumerator.Current => enumerator.Current;
+            object? IEnumerator.Current => enumerator.Current;
 
             #endregion
         }
