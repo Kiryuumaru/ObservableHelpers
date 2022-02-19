@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Threading;
 using SynchronizationContextHelpers;
+using LockerHelpers;
 
 namespace ObservableHelpers.Utilities;
 
