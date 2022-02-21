@@ -392,19 +392,25 @@ namespace ObservableHelpers
                 else if (Count <= count)
                 {
                     int lastCount = Count;
-                    RemoveItems(0, lastCount, out IEnumerable<T> removedItems);
-                    foreach (T item in removedItems)
+                    RemoveItems(0, lastCount, out IEnumerable<T>? removedItems);
+                    if (removedItems != null)
                     {
-                        items[startIndex++] = item;
+                        foreach (T item in removedItems)
+                        {
+                            items[startIndex++] = item;
+                        }
                     }
                     return lastCount;
                 }
                 else
                 {
-                    RemoveItems(0, count, out IEnumerable<T> removedItems);
-                    foreach (T item in removedItems)
+                    RemoveItems(0, count, out IEnumerable<T>? removedItems);
+                    if (removedItems != null)
                     {
-                        items[startIndex++] = item;
+                        foreach (T item in removedItems)
+                        {
+                            items[startIndex++] = item;
+                        }
                     }
                     return count;
                 }

@@ -1350,7 +1350,7 @@ namespace ObservableHelpers
         }
 
         /// <inheritdoc/>
-        protected override bool InternalClearItems(out IEnumerable<KeyValuePair<TKey, TValue>> oldItems)
+        protected override bool InternalClearItems(out IEnumerable<KeyValuePair<TKey, TValue>>? oldItems)
         {
             if (base.InternalClearItems(out oldItems))
             {
@@ -1440,14 +1440,14 @@ namespace ObservableHelpers
             }
             if (isAllExists)
             {
-                if (base.InternalRemoveItems(index, count, out proxy))
+                if (base.InternalRemoveItems(index, count, out proxy) && proxy != null)
                 {
                     foreach (KeyValuePair<TKey, TValue> item in proxy)
                     {
                         dictionary.Remove(item.Key);
                     }
-                    Keys.ExposedRemoveItemsOperationInvoke(index, count, out IEnumerable<TKey> removedKeys);
-                    Values.ExposedRemoveItemsOperationInvoke(index, count, out IEnumerable<TValue> removedValues);
+                    Keys.ExposedRemoveItemsOperationInvoke(index, count, out IEnumerable<TKey>? removedKeys);
+                    Values.ExposedRemoveItemsOperationInvoke(index, count, out IEnumerable<TValue>? removedValues);
                     RWLock.InvokeOnLockExit(() =>
                     {
                         Keys.ExposedRemoveItemsObservableInvoke(index, removedKeys);
@@ -1464,6 +1464,7 @@ namespace ObservableHelpers
         /// <inheritdoc/>
         protected override bool InternalSetItem(int index, KeyValuePair<TKey, TValue> item, out KeyValuePair<TKey, TValue> originalItem)
         {
+            originalItem = default;
             if (dictionary.ContainsKey(item.Key))
             {
                 if (base.InternalSetItem(index, item, out originalItem))
@@ -1491,8 +1492,8 @@ namespace ObservableHelpers
         {
             return RWLock.LockUpgradeableRead(() =>
             {
-                ClearItems(out IEnumerable<KeyValuePair<TKey, TValue>> oldItems);
-                return oldItems.Count() != 0;
+                ClearItems(out IEnumerable<KeyValuePair<TKey, TValue>>? oldItems);
+                return oldItems?.Count() != 0;
             });
         }
 
@@ -1744,7 +1745,7 @@ namespace ObservableHelpers
 
             #region Methods
 
-            internal bool ExposedClearItemsOperationInvoke(out IEnumerable<T> oldItems)
+            internal bool ExposedClearItemsOperationInvoke(out IEnumerable<T>? oldItems)
             {
                 return ClearItemsOperationInvoke(out oldItems);
             }
@@ -1759,7 +1760,7 @@ namespace ObservableHelpers
                 return InsertItemsOperationInvoke(index, items, out lastCount);
             }
 
-            internal void ExposedInsertItemsObservableInvoke(int index, IEnumerable<T> items)
+            internal void ExposedInsertItemsObservableInvoke(int index, IEnumerable<T>? items)
             {
                 InsertItemsObservableInvoke(index, items);
             }
@@ -1774,12 +1775,12 @@ namespace ObservableHelpers
                 MoveItemObservableInvoke(oldIndex, newIndex, movedItem);
             }
 
-            internal bool ExposedRemoveItemsOperationInvoke(int index, int count, out IEnumerable<T> removedItems)
+            internal bool ExposedRemoveItemsOperationInvoke(int index, int count, out IEnumerable<T>? removedItems)
             {
                 return RemoveItemsOperationInvoke(index, count, out removedItems);
             }
 
-            internal void ExposedRemoveItemsObservableInvoke(int index, IEnumerable<T> removedItems)
+            internal void ExposedRemoveItemsObservableInvoke(int index, IEnumerable<T>? removedItems)
             {
                 RemoveItemsObservableInvoke(index, removedItems);
             }

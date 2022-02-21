@@ -292,7 +292,7 @@ namespace ObservableHelpers.Utilities
         /// <returns>
         /// <c>true</c> if operation was executed; otherwise <c>false</c>.
         /// </returns>
-        protected bool ClearItems(out IEnumerable<T> oldItems)
+        protected bool ClearItems(out IEnumerable<T>? oldItems)
         {
             if (ClearItemsOperationInvoke(out oldItems))
             {
@@ -311,7 +311,7 @@ namespace ObservableHelpers.Utilities
         /// <returns>
         /// <c>true</c> if operation was executed; otherwise <c>false</c>.
         /// </returns>
-        protected bool ClearItemsOperationInvoke(out IEnumerable<T> oldItems)
+        protected bool ClearItemsOperationInvoke(out IEnumerable<T>? oldItems)
         {
             IEnumerable<T>? proxy = default;
             bool ret = RWLock.LockWrite(() =>
@@ -322,7 +322,7 @@ namespace ObservableHelpers.Utilities
                 }
                 return false;
             });
-            oldItems = proxy ?? new T[0];
+            oldItems = proxy;
             return ret;
         }
 
@@ -526,7 +526,7 @@ namespace ObservableHelpers.Utilities
         /// <param name="items">
         /// The elements to insert. The value can be null for reference types.
         /// </param>
-        protected void InsertItemsObservableInvoke(int index, IEnumerable<T> items)
+        protected void InsertItemsObservableInvoke(int index, IEnumerable<T>? items)
         {
             RWLock.InvokeOnLockExit(() =>
             {
@@ -690,7 +690,7 @@ namespace ObservableHelpers.Utilities
 
                 return RWLock.LockWrite(() =>
                 {
-                    if (InternalRemoveItems(index, 1, out IEnumerable<T> removedItems))
+                    if (InternalRemoveItems(index, 1, out IEnumerable<T>? removedItems) && removedItems != null)
                     {
                         proxy = removedItems.FirstOrDefault();
                         return true;
@@ -742,7 +742,7 @@ namespace ObservableHelpers.Utilities
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="index"/> or <paramref name="count"/> is less than zero.
         /// </exception>
-        protected bool RemoveItems(int index, int count, out IEnumerable<T> removedItems)
+        protected bool RemoveItems(int index, int count, out IEnumerable<T>? removedItems)
         {
             if (RemoveItemsOperationInvoke(index, count, out removedItems))
             {
@@ -773,7 +773,7 @@ namespace ObservableHelpers.Utilities
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="index"/> or <paramref name="count"/> is less than zero.
         /// </exception>
-        protected bool RemoveItemsOperationInvoke(int index, int count, out IEnumerable<T> removedItems)
+        protected bool RemoveItemsOperationInvoke(int index, int count, out IEnumerable<T>? removedItems)
         {
             IEnumerable<T>? proxy = default;
             bool ret = RWLock.LockUpgradeableRead(() =>
@@ -813,7 +813,7 @@ namespace ObservableHelpers.Utilities
         /// <param name="removedItems">
         /// The removed elements at the specified <paramref name="index"/> from the <see cref="ObservableCollectionBase{T}"/>.
         /// </param>
-        protected void RemoveItemsObservableInvoke(int index, IEnumerable<T> removedItems)
+        protected void RemoveItemsObservableInvoke(int index, IEnumerable<T>? removedItems)
         {
             RWLock.InvokeOnLockExit(() =>
             {
@@ -933,7 +933,7 @@ namespace ObservableHelpers.Utilities
         /// <returns>
         /// <c>true</c> if operation was executed; otherwise <c>false</c>.
         /// </returns>
-        protected virtual bool InternalClearItems(out IEnumerable<T> oldItems)
+        protected virtual bool InternalClearItems(out IEnumerable<T>? oldItems)
         {
             oldItems = Items.ToList();
 
@@ -996,7 +996,7 @@ namespace ObservableHelpers.Utilities
         /// <returns>
         /// <c>true</c> if operation was executed; otherwise <c>false</c>.
         /// </returns>
-        protected virtual bool InternalMoveItem(int oldIndex, int newIndex, out T movedItem)
+        protected virtual bool InternalMoveItem(int oldIndex, int newIndex, out T? movedItem)
         {
             movedItem = Items[oldIndex];
 
@@ -1021,7 +1021,7 @@ namespace ObservableHelpers.Utilities
         /// <returns>
         /// <c>true</c> if operation was executed; otherwise <c>false</c>.
         /// </returns>
-        protected virtual bool InternalRemoveItems(int index, int count, out IEnumerable<T> oldItems)
+        protected virtual bool InternalRemoveItems(int index, int count, out IEnumerable<T>? oldItems)
         {
             if (count == 1)
             {
@@ -1062,7 +1062,7 @@ namespace ObservableHelpers.Utilities
         /// <returns>
         /// <c>true</c> if operation was executed; otherwise <c>false</c>.
         /// </returns>
-        protected virtual bool InternalSetItem(int index, T item, out T originalItem)
+        protected virtual bool InternalSetItem(int index, T item, out T? originalItem)
         {
             originalItem = Items[index];
 

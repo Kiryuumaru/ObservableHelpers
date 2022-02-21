@@ -360,8 +360,8 @@ namespace ObservableHelpers
         {
             return RWLock.LockUpgradeableRead(() =>
             {
-                ClearItems(out IEnumerable<T> oldItems);
-                return oldItems.Count() != 0;
+                ClearItems(out IEnumerable<T>? oldItems);
+                return oldItems?.Count() != 0;
             });
         }
 

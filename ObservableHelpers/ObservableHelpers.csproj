@@ -17,8 +17,8 @@
     <RepositoryUrl>https://github.com/Kiryuumaru/ObservableHelpers</RepositoryUrl>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageReleaseNotes>* Enabled nullable language feature</PackageReleaseNotes>
-    <Version>1.4.7</Version>
+    <PackageReleaseNotes>* Added netstandard 2.1 target framework</PackageReleaseNotes>
+    <Version>1.4.8</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -28,7 +28,6 @@
 
   <ItemGroup>
     <PackageReference Include="LockerHelpers" Version="1.0.1" />
-    <PackageReference Include="SerializerHelpers" Version="1.0.0" />
     <PackageReference Include="SynchronizationContextHelpers" Version="1.0.1" />
   </ItemGroup>
 
