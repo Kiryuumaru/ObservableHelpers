@@ -1,35 +1,35 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0;netstandard2.1;</TargetFrameworks>
     <LangVersion>10.0</LangVersion>
     <Nullable>enable</Nullable>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <Company>Kiryuumaru</Company>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <Authors>Kiryuumaru</Authors>
+    <Company>Kiryuumaru</Company>
+    <Copyright>Kiryuumaru</Copyright>
     <Description>Observable helpers with short-and-easy and UI-safe property implementations. Can be used for any MVVM software architectural applications.</Description>
-    <RepositoryUrl>https://github.com/Kiryuumaru/ObservableHelpers</RepositoryUrl>
     <PackageTags>MVVM, Observable, Model, Helper</PackageTags>
     <PackageProjectUrl>https://github.com/Kiryuumaru/ObservableHelpers</PackageProjectUrl>
-    <Version>1.4.7</Version>
-    <PackageReleaseNotes>* Enabled nullable language feature</PackageReleaseNotes>
+    <RepositoryUrl>https://github.com/Kiryuumaru/ObservableHelpers</RepositoryUrl>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
+    <PackageReleaseNotes>* Enabled nullable language feature</PackageReleaseNotes>
+    <Version>1.4.7</Version>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\LICENSE.md" Pack="true" PackagePath="" />
-    <None Include="..\README.md">
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
-    </None>
+    <None Include="..\LICENSE" Pack="true" PackagePath="" />
+    <None Include="..\README.md" Pack="true" PackagePath="" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="DisposableHelpers" Version="1.0.0" />
-    <PackageReference Include="LockerHelpers" Version="1.0.0" />
-    <PackageReference Include="SynchronizationContextHelpers" Version="1.0.0" />
+    <PackageReference Include="LockerHelpers" Version="1.0.1" />
+    <PackageReference Include="SerializerHelpers" Version="1.0.0" />
+    <PackageReference Include="SynchronizationContextHelpers" Version="1.0.1" />
   </ItemGroup>
 
 </Project>
