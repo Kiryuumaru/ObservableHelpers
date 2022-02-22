@@ -17,11 +17,9 @@
     <RepositoryUrl>https://github.com/Kiryuumaru/ObservableHelpers</RepositoryUrl>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageReleaseNotes>
-      * Breaking changes.
-      * Changed ObservableProperty GetValue with proper nullability implementation.
-      * Changed ObservableObject GetProperty with proper nullability implementation.
-    </PackageReleaseNotes>
+    <PackageReleaseNotes>* Breaking changes.
+* Changed ObservableProperty GetValue with proper nullability implementation.
+* Changed ObservableObject GetProperty with proper nullability implementation.</PackageReleaseNotes>
     <Version>1.5.0</Version>
   </PropertyGroup>
 
