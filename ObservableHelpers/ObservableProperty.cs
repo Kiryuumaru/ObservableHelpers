@@ -55,13 +55,27 @@ namespace ObservableHelpers
         /// <returns>
         /// <c>true</c> whether the property has changed; otherwise <c>false</c>.
         /// </returns>
-        public bool SetValue<T>(T? value) => SetObject(typeof(T), value);
+        public bool SetValue<T>(T value) => SetObject(typeof(T), value);
 
         /// <summary>
         /// Gets the value of the property.
         /// </summary>
-        /// <param name="defaultValue">
-        /// The default value return if the property is disposed or null.
+        /// <typeparam name="T">
+        /// The underlying type of the value to get.
+        /// </typeparam>
+        /// <returns>
+        /// The value of the property.
+        /// </returns>
+        public T? GetValue<T>()
+        {
+            return (T?)GetObject(typeof(T));
+        }
+
+        /// <summary>
+        /// Gets the value of the property.
+        /// </summary>
+        /// <param name="defaultValueFactory">
+        /// The default value factory if the property is disposed or null.
         /// </param>
         /// <typeparam name="T">
         /// The underlying type of the value to get.
@@ -69,7 +83,14 @@ namespace ObservableHelpers
         /// <returns>
         /// The value of the property.
         /// </returns>
-        public T? GetValue<T>(T? defaultValue = default) => (T?)GetObject(typeof(T), defaultValue);
+        public T GetValue<T>(Func<T> defaultValueFactory)
+        {
+            if (GetObject(typeof(T), () => defaultValueFactory()) is T value)
+            {
+                return value;
+            }
+            return defaultValueFactory();
+        }
 
         /// <summary>
         /// Sets the object of the property.
@@ -111,13 +132,13 @@ namespace ObservableHelpers
         /// <param name="type">
         /// Underlying type of the object to get.
         /// </param>
-        /// <param name="defaultValue">
-        /// The default value return if the property is disposed or null.
+        /// <param name="defaultValueFactory">
+        /// The default value factory if the property is disposed or null.
         /// </param>
         /// <returns>
         /// The value of the property.
         /// </returns>
-        public object? GetObject(Type? type, object? defaultValue = default)
+        public object? GetObject(Type? type, Func<object?>? defaultValueFactory = default)
         {
             return RWLock.LockRead(() =>
             {
@@ -128,6 +149,8 @@ namespace ObservableHelpers
                 }
                 else
                 {
+                    object? defaultValue = defaultValueFactory?.Invoke();
+
                     if (defaultValue is SyncContext sync)
                     {
                         sync.SyncOperation.SetContext(this);
@@ -162,7 +185,7 @@ namespace ObservableHelpers
         }
 
         /// <summary>
-        /// Internal implementation for <see cref="GetObject(Type, object)"/>.
+        /// Internal implementation for <see cref="GetObject(Type?, Func{object?}?)"/>.
         /// </summary>
         /// <param name="type">
         /// Underlying type of the object to get.
@@ -242,8 +265,8 @@ namespace ObservableHelpers
         /// </summary>
         public new T? Value
         {
-            get => GetValue<T>();
-            set => SetValue<T>(value);
+            get => GetValue();
+            set => SetValue<T?>(value);
         }
 
         #endregion
@@ -271,7 +294,15 @@ namespace ObservableHelpers
         /// <returns>
         /// <c>true</c> whether the property has changed; otherwise <c>false</c>.
         /// </returns>
-        public bool SetValue(T? value) => SetValue<T>(value);
+        public bool SetValue(T value) => SetValue<T>(value);
+
+        /// <summary>
+        /// Gets the value of the property.
+        /// </summary>
+        /// <returns>
+        /// The value of the property.
+        /// </returns>
+        public T? GetValue() => GetValue<T>();
 
         /// <summary>
         /// Gets the value of the property.
@@ -282,7 +313,7 @@ namespace ObservableHelpers
         /// <returns>
         /// The value of the property.
         /// </returns>
-        public T? GetValue(T? defaultValue = default) => GetValue<T>(defaultValue);
+        public T GetValue(Func<T> defaultValue) => GetValue<T>(defaultValue);
 
         #endregion
     }

@@ -17,8 +17,12 @@
     <RepositoryUrl>https://github.com/Kiryuumaru/ObservableHelpers</RepositoryUrl>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageReleaseNotes>* Added netstandard 2.1 target framework</PackageReleaseNotes>
-    <Version>1.4.8</Version>
+    <PackageReleaseNotes>
+      * Breaking changes.
+      * Changed ObservableProperty GetValue with proper nullability implementation.
+      * Changed ObservableObject GetProperty with proper nullability implementation.
+    </PackageReleaseNotes>
+    <Version>1.5.0</Version>
   </PropertyGroup>
 
   <ItemGroup>

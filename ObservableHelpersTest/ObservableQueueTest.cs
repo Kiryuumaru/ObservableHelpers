@@ -88,7 +88,9 @@ public class ConstructorTest
     [Fact]
     public void Throws()
     {
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
         Assert.Throws<ArgumentNullException>(() => new ObservableQueue<int>(null));
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
     }
 }
 
@@ -144,15 +146,15 @@ public class DequeueTest
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[0].Action);
         Assert.Equal(0, raiseCol[0].OldStartingIndex);
-        Assert.Equal(1, raiseCol[0].OldItems[0]);
+        Assert.Equal(1, raiseCol[0]?.OldItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[1].Action);
         Assert.Equal(0, raiseCol[1].OldStartingIndex);
-        Assert.Equal(2, raiseCol[1].OldItems[0]);
+        Assert.Equal(2, raiseCol[1]?.OldItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[2].Action);
         Assert.Equal(0, raiseCol[2].OldStartingIndex);
-        Assert.Equal(3, raiseCol[2].OldItems[0]);
+        Assert.Equal(3, raiseCol[2]?.OldItems?[0]);
     }
 
     [Fact]
@@ -193,15 +195,15 @@ public class EnqueueTest
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[0].Action);
         Assert.Equal(0, raiseCol[0].NewStartingIndex);
-        Assert.Equal(1, raiseCol[0].NewItems[0]);
+        Assert.Equal(1, raiseCol[0]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[1].Action);
         Assert.Equal(1, raiseCol[1].NewStartingIndex);
-        Assert.Equal(2, raiseCol[1].NewItems[0]);
+        Assert.Equal(2, raiseCol[1]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[2].Action);
         Assert.Equal(2, raiseCol[2].NewStartingIndex);
-        Assert.Equal(3, raiseCol[2].NewItems[0]);
+        Assert.Equal(3, raiseCol[2]?.NewItems?[0]);
 
         Assert.Collection(col,
             i => Assert.Equal(1, i),
@@ -286,31 +288,31 @@ public class EnqueueRangeTest
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol1[0].Action);
         Assert.Equal(0, raiseCol1[0].NewStartingIndex);
-        Assert.Equal(1, raiseCol1[0].NewItems[0]);
-        Assert.Equal(2, raiseCol1[0].NewItems[1]);
+        Assert.Equal(1, raiseCol1[0]?.NewItems?[0]);
+        Assert.Equal(2, raiseCol1[0]?.NewItems?[1]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol2[0].Action);
         Assert.Equal(0, raiseCol2[0].NewStartingIndex);
-        Assert.Equal(1, raiseCol2[0].NewItems[0]);
-        Assert.Equal(2, raiseCol2[0].NewItems[1]);
-        Assert.Equal(3, raiseCol2[0].NewItems[2]);
+        Assert.Equal(1, raiseCol2[0]?.NewItems?[0]);
+        Assert.Equal(2, raiseCol2[0]?.NewItems?[1]);
+        Assert.Equal(3, raiseCol2[0]?.NewItems?[2]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol3[0].Action);
         Assert.Equal(0, raiseCol3[0].NewStartingIndex);
-        Assert.Equal(1, raiseCol3[0].NewItems[0]);
+        Assert.Equal(1, raiseCol3[0]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol4[0].Action);
         Assert.Equal(0, raiseCol4[0].NewStartingIndex);
-        Assert.Equal(2, raiseCol4[0].NewItems[0]);
+        Assert.Equal(2, raiseCol4[0]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol5[0].Action);
         Assert.Equal(3, raiseCol5[0].NewStartingIndex);
-        Assert.Equal(2, raiseCol5[0].NewItems[0]);
-        Assert.Equal(3, raiseCol5[0].NewItems[1]);
+        Assert.Equal(2, raiseCol5[0]?.NewItems?[0]);
+        Assert.Equal(3, raiseCol5[0]?.NewItems?[1]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol6[0].Action);
         Assert.Equal(0, raiseCol6[0].NewStartingIndex);
-        Assert.Equal(3, raiseCol6[0].NewItems[0]);
+        Assert.Equal(3, raiseCol6[0]?.NewItems?[0]);
     }
 
     [Fact]
@@ -321,7 +323,9 @@ public class EnqueueRangeTest
         var col2 = new ObservableQueue<int>(new int[] { 1, 2, 3 });
 
         Assert.Throws<NotSupportedException>(() => col.EnqueueRange(new int[] { 1, 2, 3 }));
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
         Assert.Throws<ArgumentNullException>(() => col1.EnqueueRange(null));
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
         Assert.Throws<ArgumentOutOfRangeException>(() => col1.EnqueueRange(new int[] { 1, 2, 3 }, 0, -1));
         Assert.Throws<ArgumentOutOfRangeException>(() => col1.EnqueueRange(new int[] { 1, 2, 3 }, -1, 1));
         Assert.Throws<ArgumentException>(() => col1.EnqueueRange(new int[] { 1, 2, 3 }, 2, 2));
@@ -369,27 +373,27 @@ public class DequeueAndEnqueueTest
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[0].Action);
         Assert.Equal(0, raiseCol[0].NewStartingIndex);
-        Assert.Equal(1, raiseCol[0].NewItems[0]);
+        Assert.Equal(1, raiseCol[0]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[1].Action);
         Assert.Equal(1, raiseCol[1].NewStartingIndex);
-        Assert.Equal(2, raiseCol[1].NewItems[0]);
+        Assert.Equal(2, raiseCol[1]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[2].Action);
         Assert.Equal(0, raiseCol[2].OldStartingIndex);
-        Assert.Equal(1, raiseCol[2].OldItems[0]);
+        Assert.Equal(1, raiseCol[2]?.OldItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[3].Action);
         Assert.Equal(0, raiseCol[3].OldStartingIndex);
-        Assert.Equal(2, raiseCol[3].OldItems[0]);
+        Assert.Equal(2, raiseCol[3]?.OldItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[4].Action);
         Assert.Equal(0, raiseCol[4].NewStartingIndex);
-        Assert.Equal(3, raiseCol[4].NewItems[0]);
+        Assert.Equal(3, raiseCol[4]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[5].Action);
         Assert.Equal(0, raiseCol[5].OldStartingIndex);
-        Assert.Equal(3, raiseCol[5].OldItems[0]);
+        Assert.Equal(3, raiseCol[5]?.OldItems?[0]);
     }
 }
 
@@ -479,15 +483,15 @@ public class TryDequeueTest
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[0].Action);
         Assert.Equal(0, raiseCol[0].OldStartingIndex);
-        Assert.Equal(1, raiseCol[0].OldItems[0]);
+        Assert.Equal(1, raiseCol[0]?.OldItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[1].Action);
         Assert.Equal(0, raiseCol[1].OldStartingIndex);
-        Assert.Equal(2, raiseCol[1].OldItems[0]);
+        Assert.Equal(2, raiseCol[1]?.OldItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[2].Action);
         Assert.Equal(0, raiseCol[2].OldStartingIndex);
-        Assert.Equal(3, raiseCol[2].OldItems[0]);
+        Assert.Equal(3, raiseCol[2]?.OldItems?[0]);
     }
 
     [Fact]
@@ -583,35 +587,35 @@ public class TryDequeueRangeTest
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol1[0].Action);
         Assert.Equal(0, raiseCol1[0].OldStartingIndex);
-        Assert.Equal(1, raiseCol1[0].OldItems[0]);
-        Assert.Equal(2, raiseCol1[0].OldItems[1]);
+        Assert.Equal(1, raiseCol1[0]?.OldItems?[0]);
+        Assert.Equal(2, raiseCol1[0]?.OldItems?[1]);
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol2[0].Action);
         Assert.Equal(0, raiseCol2[0].OldStartingIndex);
-        Assert.Equal(1, raiseCol2[0].OldItems[0]);
-        Assert.Equal(2, raiseCol2[0].OldItems[1]);
-        Assert.Equal(3, raiseCol2[0].OldItems[2]);
+        Assert.Equal(1, raiseCol2[0]?.OldItems?[0]);
+        Assert.Equal(2, raiseCol2[0]?.OldItems?[1]);
+        Assert.Equal(3, raiseCol2[0]?.OldItems?[2]);
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol3[0].Action);
         Assert.Equal(0, raiseCol3[0].OldStartingIndex);
-        Assert.Equal(1, raiseCol3[0].OldItems[0]);
-        Assert.Equal(2, raiseCol3[0].OldItems[1]);
-        Assert.Equal(3, raiseCol3[0].OldItems[2]);
+        Assert.Equal(1, raiseCol3[0]?.OldItems?[0]);
+        Assert.Equal(2, raiseCol3[0]?.OldItems?[1]);
+        Assert.Equal(3, raiseCol3[0]?.OldItems?[2]);
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol4[0].Action);
         Assert.Equal(0, raiseCol4[0].OldStartingIndex);
-        Assert.Equal(1, raiseCol4[0].OldItems[0]);
+        Assert.Equal(1, raiseCol4[0]?.OldItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol5[0].Action);
         Assert.Equal(0, raiseCol5[0].OldStartingIndex);
-        Assert.Equal(1, raiseCol5[0].OldItems[0]);
-        Assert.Equal(2, raiseCol5[0].OldItems[1]);
+        Assert.Equal(1, raiseCol5[0]?.OldItems?[0]);
+        Assert.Equal(2, raiseCol5[0]?.OldItems?[1]);
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol6[0].Action);
         Assert.Equal(0, raiseCol6[0].OldStartingIndex);
-        Assert.Equal(1, raiseCol6[0].OldItems[0]);
-        Assert.Equal(2, raiseCol6[0].OldItems[1]);
-        Assert.Equal(3, raiseCol6[0].OldItems[2]);
+        Assert.Equal(1, raiseCol6[0]?.OldItems?[0]);
+        Assert.Equal(2, raiseCol6[0]?.OldItems?[1]);
+        Assert.Equal(3, raiseCol6[0]?.OldItems?[2]);
     }
 
     [Fact]
@@ -624,7 +628,9 @@ public class TryDequeueRangeTest
         int[] vals1 = new int[2];
 
         Assert.Throws<NotSupportedException>(() => col.TryDequeueRange(vals));
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
         Assert.Throws<ArgumentNullException>(() => col1.TryDequeueRange(null));
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
         Assert.Throws<ArgumentOutOfRangeException>(() => col1.TryDequeueRange(vals1, 0, -1));
         Assert.Throws<ArgumentOutOfRangeException>(() => col1.TryDequeueRange(vals1, -1, 1));
         Assert.Throws<ArgumentOutOfRangeException>(() => col1.TryDequeueRange(vals1, 2, 1));

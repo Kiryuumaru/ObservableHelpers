@@ -21,9 +21,9 @@ public class SampleObject : ObservableObject
 
     }
 
-    public string SampleProp1
+    public string? SampleProp1
     {
-        get => GetProperty<string>();
+        get => GetProperty<string?>();
         set => SetProperty(value);
     }
 
@@ -35,29 +35,29 @@ public class SampleObject : ObservableObject
 
     public string SampleProp3
     {
-        get => GetProperty("defaultValue");
+        get => GetProperty(() => "defaultValue");
         set => SetProperty(value);
     }
 
-    public string SampleKeyProp1
+    public string? SampleKeyProp1
     {
-        get => GetProperty<string>(default, "keySample1");
+        get => GetProperty<string?>(() => default, "keySample1");
         set => SetProperty(value, "keySample1");
     }
 
     public DateTime SampleKeyProp2
     {
-        get => GetProperty<DateTime>(default, "keySample2", group: "group");
+        get => GetProperty<DateTime>(() => default, "keySample2", group: "group");
         set => SetProperty(value, "keySample2");
     }
 
     public string SampleKeyProp3
     {
-        get => GetProperty("defaultValue", "keySample3");
+        get => GetProperty(() => "defaultValue", "keySample3");
         set => SetProperty(value, "keySample3");
     }
 
-    public IEnumerable<NamedProperty> GetRawPropertiesExposed(string group = null) => base.GetRawProperties(group);
+    public IEnumerable<NamedProperty> GetRawPropertiesExposed(string? group = null) => base.GetRawProperties(group);
 }
 
 public class ConstructorTest
@@ -111,140 +111,109 @@ public class GetPropertyTest : SampleObject
 
         bool hasChanges = false;
 
-        Assert.Null(obj.GetProperty(default(string), null, "Sample1", null, args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Null(args.newValue);
-            return false;
-        }, args =>
-        {
-            hasChanges = args.HasChanges;
-        }));
+        Assert.Null(obj.GetProperty<string>(null, "Sample1", null,
+            args =>
+            {
+                Assert.Null(args.oldValue);
+                Assert.Null(args.newValue);
+                hasChanges = args.hasChanges;
+            }));
+
+        Assert.True(hasChanges);
+
+        hasChanges = false;
+
+        Assert.Null(obj.GetProperty<string?>(() => null, null, "Sample2", null,
+            args =>
+            {
+                Assert.Null(args.oldValue);
+                Assert.Null(args.newValue);
+                hasChanges = args.hasChanges;
+            }));
+
+        Assert.True(hasChanges);
+
+        hasChanges = false;
+
+        Assert.Equal("sampleDefault2", obj.GetProperty(() => "sampleDefault2", null, "Sample3", null,
+            args =>
+            {
+                Assert.Null(args.oldValue);
+                Assert.Equal("sampleDefault2", args.newValue);
+                hasChanges = args.hasChanges;
+            }));
+
+        Assert.True(hasChanges);
+
+        hasChanges = false;
+
+        Assert.Equal("sampleDefault2", obj.GetProperty(() => "sampleDefault3", null, "Sample3", null,
+            args =>
+            {
+                Assert.Equal("sampleDefault2", args.oldValue);
+                Assert.Equal("sampleDefault2", args.newValue);
+                hasChanges = args.hasChanges;
+            }));
 
         Assert.False(hasChanges);
 
         hasChanges = false;
 
-        Assert.Null(obj.GetProperty("sampleDefault1", null, "Sample2", null, args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Equal("sampleDefault1", args.newValue);
-            return false;
-        }, args =>
-        {
-            hasChanges = args.HasChanges;
-        }));
-
-        Assert.False(hasChanges);
-
-        hasChanges = false;
-
-        Assert.Equal("sampleDefault2", obj.GetProperty("sampleDefault2", null, "Sample3", null, args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Equal("sampleDefault2", args.newValue);
-            return true;
-        }, args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Equal("sampleDefault2", args.newValue);
-            hasChanges = args.HasChanges;
-        }));
+        Assert.Equal("groupDefault1", obj.GetProperty(() => "groupDefault1", null, "Sample4", "group1",
+            args =>
+            {
+                Assert.Null(args.oldValue);
+                Assert.Equal("groupDefault1", args.newValue);
+                hasChanges = args.hasChanges;
+            }));
 
         Assert.True(hasChanges);
 
         hasChanges = false;
 
-        Assert.Equal("sampleDefault2", obj.GetProperty("sampleDefault3", null, "Sample3", null, args =>
-        {
-            Assert.True(false);
-            return true;
-        }, args =>
-        {
-            Assert.Equal("sampleDefault2", args.oldValue);
-            Assert.Equal("sampleDefault2", args.newValue);
-            hasChanges = args.HasChanges;
-        }));
-
-        Assert.False(hasChanges);
-
-        hasChanges = false;
-
-        Assert.Equal("groupDefault1", obj.GetProperty("groupDefault1", null, "Sample4", "group1", args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault1", args.newValue);
-            return true;
-        }, args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault1", args.newValue);
-            hasChanges = args.HasChanges;
-        }));
+        Assert.Equal("groupDefault2", obj.GetProperty(() => "groupDefault2", null, "Sample5", "group1",
+            args =>
+            {
+                Assert.Null(args.oldValue);
+                Assert.Equal("groupDefault2", args.newValue);
+                hasChanges = args.hasChanges;
+            }));
 
         Assert.True(hasChanges);
 
         hasChanges = false;
 
-        Assert.Equal("groupDefault2", obj.GetProperty("groupDefault2", null, "Sample5", "group1", args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault2", args.newValue);
-            return true;
-        }, args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault2", args.newValue);
-            hasChanges = args.HasChanges;
-        }));
+        Assert.Equal("groupDefault3", obj.GetProperty(() => "groupDefault3", null, "Sample6", "group1",
+            args =>
+            {
+                Assert.Null(args.oldValue);
+                Assert.Equal("groupDefault3", args.newValue);
+                hasChanges = args.hasChanges;
+            }));
 
         Assert.True(hasChanges);
 
         hasChanges = false;
 
-        Assert.Equal("groupDefault3", obj.GetProperty("groupDefault3", null, "Sample6", "group1", args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault3", args.newValue);
-            return true;
-        }, args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault3", args.newValue);
-            hasChanges = args.HasChanges;
-        }));
+        Assert.Equal("groupDefault4", obj.GetProperty(() => "groupDefault4", null, "Sample7", "group2",
+            args =>
+            {
+                Assert.Null(args.oldValue);
+                Assert.Equal("groupDefault4", args.newValue);
+                hasChanges = args.hasChanges;
+            }));
 
         Assert.True(hasChanges);
 
         hasChanges = false;
 
-        Assert.Equal("groupDefault4", obj.GetProperty("groupDefault4", null, "Sample7", "group2", args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault4", args.newValue);
-            return true;
-        }, args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault4", args.newValue);
-            hasChanges = args.HasChanges;
-        }));
-
-        Assert.True(hasChanges);
-
-        hasChanges = false;
-
-        Assert.Equal("groupDefault5", obj.GetProperty("groupDefault5", null, "Sample8", "group2", args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault5", args.newValue);
-            return true;
-        }, args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault5", args.newValue);
-            hasChanges = args.HasChanges;
-        }));
+        Assert.Equal("groupDefault5", obj.GetProperty(() => "groupDefault5", null, "Sample8", "group2",
+            args =>
+            {
+                Assert.Null(args.oldValue);
+                Assert.Equal("groupDefault5", args.newValue);
+                hasChanges = args.hasChanges;
+            }));
 
         Assert.True(hasChanges);
 
@@ -254,43 +223,51 @@ public class GetPropertyTest : SampleObject
         var group1 = obj.GetRawProperties("group1");
         var group2 = obj.GetRawProperties("group2");
 
-        Assert.Equal(12, group0.Count());
+        Assert.Equal(14, group0.Count());
         Assert.Equal(3, group1.Count());
         Assert.Equal(2, group2.Count());
 
         Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp1) && i.Group == null && i.Property.Value == default);
         Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp2) && i.Group == "group" && (i.Property as ObservableProperty<DateTime>)?.Value == default);
-        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp3) && i.Group == null && i.Property.Value.ToString() == "defaultValue");
+        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp3) && i.Group == null && i.Property.Value?.ToString() == "defaultValue");
         Assert.Contains(group0, i => i.Key == "keySample1" && i.PropertyName == nameof(SampleKeyProp1) && i.Group == null && i.Property.Value == default);
         Assert.Contains(group0, i => i.Key == "keySample2" && i.PropertyName == nameof(SampleKeyProp2) && i.Group == "group" && (i.Property as ObservableProperty<DateTime>)?.Value == default);
-        Assert.Contains(group0, i => i.Key == "keySample3" && i.PropertyName == nameof(SampleKeyProp3) && i.Group == null && i.Property.Value.ToString() == "defaultValue");
-        Assert.Contains(group0, i => i.PropertyName == "Sample3" && i.Key == null && i.Group == null && i.Property.Value.ToString() == "sampleDefault2");
-        Assert.Contains(group1, i => i.PropertyName == "Sample4" && i.Key == null && i.Group == "group1" && i.Property.Value.ToString() == "groupDefault1");
-        Assert.Contains(group1, i => i.PropertyName == "Sample5" && i.Key == null && i.Group == "group1" && i.Property.Value.ToString() == "groupDefault2");
-        Assert.Contains(group1, i => i.PropertyName == "Sample6" && i.Key == null && i.Group == "group1" && i.Property.Value.ToString() == "groupDefault3");
-        Assert.Contains(group2, i => i.PropertyName == "Sample7" && i.Key == null && i.Group == "group2" && i.Property.Value.ToString() == "groupDefault4");
-        Assert.Contains(group2, i => i.PropertyName == "Sample8" && i.Key == null && i.Group == "group2" && i.Property.Value.ToString() == "groupDefault5");
+        Assert.Contains(group0, i => i.Key == "keySample3" && i.PropertyName == nameof(SampleKeyProp3) && i.Group == null && i.Property.Value?.ToString() == "defaultValue");
+        Assert.Contains(group0, i => i.PropertyName == "Sample1" && i.Key == null && i.Group == null && i.Property.Value?.ToString() == null);
+        Assert.Contains(group0, i => i.PropertyName == "Sample2" && i.Key == null && i.Group == null && i.Property.Value?.ToString() == null);
+        Assert.Contains(group0, i => i.PropertyName == "Sample3" && i.Key == null && i.Group == null && i.Property.Value?.ToString() == "sampleDefault2");
+        Assert.Contains(group1, i => i.PropertyName == "Sample4" && i.Key == null && i.Group == "group1" && i.Property.Value?.ToString() == "groupDefault1");
+        Assert.Contains(group1, i => i.PropertyName == "Sample5" && i.Key == null && i.Group == "group1" && i.Property.Value?.ToString() == "groupDefault2");
+        Assert.Contains(group1, i => i.PropertyName == "Sample6" && i.Key == null && i.Group == "group1" && i.Property.Value?.ToString() == "groupDefault3");
+        Assert.Contains(group2, i => i.PropertyName == "Sample7" && i.Key == null && i.Group == "group2" && i.Property.Value?.ToString() == "groupDefault4");
+        Assert.Contains(group2, i => i.PropertyName == "Sample8" && i.Key == null && i.Group == "group2" && i.Property.Value?.ToString() == "groupDefault5");
 
-        Assert.Equal(6, raiseCol.Count);
+        Assert.Equal(8, raiseCol.Count);
 
-        Assert.Equal("Sample3", raiseCol[0].PropertyName);
+        Assert.Equal("Sample1", raiseCol[0].PropertyName);
         Assert.Null(raiseCol[0].Key);
         Assert.Null(raiseCol[0].Group);
-        Assert.Equal("Sample4", raiseCol[1].PropertyName);
+        Assert.Equal("Sample2", raiseCol[1].PropertyName);
         Assert.Null(raiseCol[1].Key);
-        Assert.Equal("group1", raiseCol[1].Group);
-        Assert.Equal("Sample5", raiseCol[2].PropertyName);
+        Assert.Null(raiseCol[1].Group);
+        Assert.Equal("Sample3", raiseCol[2].PropertyName);
         Assert.Null(raiseCol[2].Key);
-        Assert.Equal("group1", raiseCol[2].Group);
-        Assert.Equal("Sample6", raiseCol[3].PropertyName);
+        Assert.Null(raiseCol[2].Group);
+        Assert.Equal("Sample4", raiseCol[3].PropertyName);
         Assert.Null(raiseCol[3].Key);
         Assert.Equal("group1", raiseCol[3].Group);
-        Assert.Equal("Sample7", raiseCol[4].PropertyName);
+        Assert.Equal("Sample5", raiseCol[4].PropertyName);
         Assert.Null(raiseCol[4].Key);
-        Assert.Equal("group2", raiseCol[4].Group);
-        Assert.Equal("Sample8", raiseCol[5].PropertyName);
+        Assert.Equal("group1", raiseCol[4].Group);
+        Assert.Equal("Sample6", raiseCol[5].PropertyName);
         Assert.Null(raiseCol[5].Key);
-        Assert.Equal("group2", raiseCol[5].Group);
+        Assert.Equal("group1", raiseCol[5].Group);
+        Assert.Equal("Sample7", raiseCol[6].PropertyName);
+        Assert.Null(raiseCol[6].Key);
+        Assert.Equal("group2", raiseCol[6].Group);
+        Assert.Equal("Sample8", raiseCol[7].PropertyName);
+        Assert.Null(raiseCol[7].Key);
+        Assert.Equal("group2", raiseCol[7].Group);
     }
 
     [Fact]
@@ -306,140 +283,109 @@ public class GetPropertyTest : SampleObject
 
         bool hasChanges = false;
 
-        Assert.Null(obj.GetProperty(default(string), "sample1", null, null, args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Null(args.newValue);
-            return false;
-        }, args =>
-        {
-            hasChanges = args.HasChanges;
-        }));
+        Assert.Null(obj.GetProperty<string>("sample1", null, null,
+            args =>
+            {
+                Assert.Null(args.oldValue);
+                Assert.Null(args.newValue);
+                hasChanges = args.hasChanges;
+            }));
+
+        Assert.True(hasChanges);
+
+        hasChanges = false;
+
+        Assert.Null(obj.GetProperty<string?>(() => null, "sample2", null, null,
+            args =>
+            {
+                Assert.Null(args.oldValue);
+                Assert.Null(args.newValue);
+                hasChanges = args.hasChanges;
+            }));
+
+        Assert.True(hasChanges);
+
+        hasChanges = false;
+
+        Assert.Equal("sampleDefault2", obj.GetProperty(() => "sampleDefault2", "sample3", null, null,
+            args =>
+            {
+                Assert.Null(args.oldValue);
+                Assert.Equal("sampleDefault2", args.newValue);
+                hasChanges = args.hasChanges;
+            }));
+
+        Assert.True(hasChanges);
+
+        hasChanges = false;
+
+        Assert.Equal("sampleDefault2", obj.GetProperty(() => "sampleDefault3", "sample3", null, null,
+            args =>
+            {
+                Assert.Equal("sampleDefault2", args.oldValue);
+                Assert.Equal("sampleDefault2", args.newValue);
+                hasChanges = args.hasChanges;
+            }));
 
         Assert.False(hasChanges);
 
         hasChanges = false;
 
-        Assert.Null(obj.GetProperty("sampleDefault1", "sample2", null, null, args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Equal("sampleDefault1", args.newValue);
-            return false;
-        }, args =>
-        {
-            hasChanges = args.HasChanges;
-        }));
-
-        Assert.False(hasChanges);
-
-        hasChanges = false;
-
-        Assert.Equal("sampleDefault2", obj.GetProperty("sampleDefault2", "sample3", null, null, args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Equal("sampleDefault2", args.newValue);
-            return true;
-        }, args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Equal("sampleDefault2", args.newValue);
-            hasChanges = args.HasChanges;
-        }));
+        Assert.Equal("groupDefault1", obj.GetProperty(() => "groupDefault1", "sample4", null, "group1",
+            args =>
+            {
+                Assert.Null(args.oldValue);
+                Assert.Equal("groupDefault1", args.newValue);
+                hasChanges = args.hasChanges;
+            }));
 
         Assert.True(hasChanges);
 
         hasChanges = false;
 
-        Assert.Equal("sampleDefault2", obj.GetProperty("sampleDefault3", "sample3", null, null, args =>
-        {
-            Assert.True(false);
-            return true;
-        }, args =>
-        {
-            Assert.Equal("sampleDefault2", args.oldValue);
-            Assert.Equal("sampleDefault2", args.newValue);
-            hasChanges = args.HasChanges;
-        }));
-
-        Assert.False(hasChanges);
-
-        hasChanges = false;
-
-        Assert.Equal("groupDefault1", obj.GetProperty("groupDefault1", "sample4", null, "group1", args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault1", args.newValue);
-            return true;
-        }, args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault1", args.newValue);
-            hasChanges = args.HasChanges;
-        }));
+        Assert.Equal("groupDefault2", obj.GetProperty(() => "groupDefault2", "sample5", null, "group1",
+            args =>
+            {
+                Assert.Null(args.oldValue);
+                Assert.Equal("groupDefault2", args.newValue);
+                hasChanges = args.hasChanges;
+            }));
 
         Assert.True(hasChanges);
 
         hasChanges = false;
 
-        Assert.Equal("groupDefault2", obj.GetProperty("groupDefault2", "sample5", null, "group1", args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault2", args.newValue);
-            return true;
-        }, args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault2", args.newValue);
-            hasChanges = args.HasChanges;
-        }));
+        Assert.Equal("groupDefault3", obj.GetProperty(() => "groupDefault3", "sample6", null, "group1",
+            args =>
+            {
+                Assert.Null(args.oldValue);
+                Assert.Equal("groupDefault3", args.newValue);
+                hasChanges = args.hasChanges;
+            }));
 
         Assert.True(hasChanges);
 
         hasChanges = false;
 
-        Assert.Equal("groupDefault3", obj.GetProperty("groupDefault3", "sample6", null, "group1", args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault3", args.newValue);
-            return true;
-        }, args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault3", args.newValue);
-            hasChanges = args.HasChanges;
-        }));
+        Assert.Equal("groupDefault4", obj.GetProperty(() => "groupDefault4", "sample7", null, "group2",
+            args =>
+            {
+                Assert.Null(args.oldValue);
+                Assert.Equal("groupDefault4", args.newValue);
+                hasChanges = args.hasChanges;
+            }));
 
         Assert.True(hasChanges);
 
         hasChanges = false;
 
-        Assert.Equal("groupDefault4", obj.GetProperty("groupDefault4", "sample7", null, "group2", args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault4", args.newValue);
-            return true;
-        }, args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault4", args.newValue);
-            hasChanges = args.HasChanges;
-        }));
-
-        Assert.True(hasChanges);
-
-        hasChanges = false;
-
-        Assert.Equal("groupDefault5", obj.GetProperty("groupDefault5", "sample8", null, "group2", args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault5", args.newValue);
-            return true;
-        }, args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault5", args.newValue);
-            hasChanges = args.HasChanges;
-        }));
+        Assert.Equal("groupDefault5", obj.GetProperty(() => "groupDefault5", "sample8", null, "group2",
+            args =>
+            {
+                Assert.Null(args.oldValue);
+                Assert.Equal("groupDefault5", args.newValue);
+                hasChanges = args.hasChanges;
+            }));
 
         Assert.True(hasChanges);
 
@@ -449,43 +395,51 @@ public class GetPropertyTest : SampleObject
         var group1 = obj.GetRawProperties("group1");
         var group2 = obj.GetRawProperties("group2");
 
-        Assert.Equal(12, group0.Count());
+        Assert.Equal(14, group0.Count());
         Assert.Equal(3, group1.Count());
         Assert.Equal(2, group2.Count());
 
         Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp1) && i.Group == null && i.Property.Value == default);
         Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp2) && i.Group == "group" && (i.Property as ObservableProperty<DateTime>)?.Value == default);
-        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp3) && i.Group == null && i.Property.Value.ToString() == "defaultValue");
+        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp3) && i.Group == null && i.Property.Value?.ToString() == "defaultValue");
         Assert.Contains(group0, i => i.Key == "keySample1" && i.PropertyName == nameof(SampleKeyProp1) && i.Group == null && i.Property.Value == default);
         Assert.Contains(group0, i => i.Key == "keySample2" && i.PropertyName == nameof(SampleKeyProp2) && i.Group == "group" && (i.Property as ObservableProperty<DateTime>)?.Value == default);
-        Assert.Contains(group0, i => i.Key == "keySample3" && i.PropertyName == nameof(SampleKeyProp3) && i.Group == null && i.Property.Value.ToString() == "defaultValue");
-        Assert.Contains(group0, i => i.Key == "sample3" && i.PropertyName == null && i.Group == null && i.Property.Value.ToString() == "sampleDefault2");
-        Assert.Contains(group0, i => i.Key == "sample4" && i.PropertyName == null && i.Group == "group1" && i.Property.Value.ToString() == "groupDefault1");
-        Assert.Contains(group1, i => i.Key == "sample5" && i.PropertyName == null && i.Group == "group1" && i.Property.Value.ToString() == "groupDefault2");
-        Assert.Contains(group1, i => i.Key == "sample6" && i.PropertyName == null && i.Group == "group1" && i.Property.Value.ToString() == "groupDefault3");
-        Assert.Contains(group2, i => i.Key == "sample7" && i.PropertyName == null && i.Group == "group2" && i.Property.Value.ToString() == "groupDefault4");
-        Assert.Contains(group2, i => i.Key == "sample8" && i.PropertyName == null && i.Group == "group2" && i.Property.Value.ToString() == "groupDefault5");
+        Assert.Contains(group0, i => i.Key == "keySample3" && i.PropertyName == nameof(SampleKeyProp3) && i.Group == null && i.Property.Value?.ToString() == "defaultValue");
+        Assert.Contains(group0, i => i.Key == "sample1" && i.PropertyName == null && i.Group == null && i.Property.Value?.ToString() == null);
+        Assert.Contains(group0, i => i.Key == "sample2" && i.PropertyName == null && i.Group == null && i.Property.Value?.ToString() == null);
+        Assert.Contains(group0, i => i.Key == "sample3" && i.PropertyName == null && i.Group == null && i.Property.Value?.ToString() == "sampleDefault2");
+        Assert.Contains(group0, i => i.Key == "sample4" && i.PropertyName == null && i.Group == "group1" && i.Property.Value?.ToString() == "groupDefault1");
+        Assert.Contains(group1, i => i.Key == "sample5" && i.PropertyName == null && i.Group == "group1" && i.Property.Value?.ToString() == "groupDefault2");
+        Assert.Contains(group1, i => i.Key == "sample6" && i.PropertyName == null && i.Group == "group1" && i.Property.Value?.ToString() == "groupDefault3");
+        Assert.Contains(group2, i => i.Key == "sample7" && i.PropertyName == null && i.Group == "group2" && i.Property.Value?.ToString() == "groupDefault4");
+        Assert.Contains(group2, i => i.Key == "sample8" && i.PropertyName == null && i.Group == "group2" && i.Property.Value?.ToString() == "groupDefault5");
 
-        Assert.Equal(6, raiseCol.Count);
+        Assert.Equal(8, raiseCol.Count);
 
         Assert.Null(raiseCol[0].PropertyName);
-        Assert.Equal("sample3", raiseCol[0].Key);
+        Assert.Equal("sample1", raiseCol[0].Key);
         Assert.Null(raiseCol[0].Group);
         Assert.Null(raiseCol[1].PropertyName);
-        Assert.Equal("sample4", raiseCol[1].Key);
-        Assert.Equal("group1", raiseCol[1].Group);
+        Assert.Equal("sample2", raiseCol[1].Key);
+        Assert.Null(raiseCol[1].Group);
         Assert.Null(raiseCol[2].PropertyName);
-        Assert.Equal("sample5", raiseCol[2].Key);
-        Assert.Equal("group1", raiseCol[2].Group);
+        Assert.Equal("sample3", raiseCol[2].Key);
+        Assert.Null(raiseCol[2].Group);
         Assert.Null(raiseCol[3].PropertyName);
-        Assert.Equal("sample6", raiseCol[3].Key);
+        Assert.Equal("sample4", raiseCol[3].Key);
         Assert.Equal("group1", raiseCol[3].Group);
         Assert.Null(raiseCol[4].PropertyName);
-        Assert.Equal("sample7", raiseCol[4].Key);
-        Assert.Equal("group2", raiseCol[4].Group);
+        Assert.Equal("sample5", raiseCol[4].Key);
+        Assert.Equal("group1", raiseCol[4].Group);
         Assert.Null(raiseCol[5].PropertyName);
-        Assert.Equal("sample8", raiseCol[5].Key);
-        Assert.Equal("group2", raiseCol[5].Group);
+        Assert.Equal("sample6", raiseCol[5].Key);
+        Assert.Equal("group1", raiseCol[5].Group);
+        Assert.Null(raiseCol[6].PropertyName);
+        Assert.Equal("sample7", raiseCol[6].Key);
+        Assert.Equal("group2", raiseCol[6].Group);
+        Assert.Null(raiseCol[7].PropertyName);
+        Assert.Equal("sample8", raiseCol[7].Key);
+        Assert.Equal("group2", raiseCol[7].Group);
     }
 
     [Fact]
@@ -501,140 +455,109 @@ public class GetPropertyTest : SampleObject
 
         bool hasChanges = false;
 
-        Assert.Null(obj.GetProperty(default(string), "sample1", "Sample1", null, args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Null(args.newValue);
-            return false;
-        }, args =>
-        {
-            hasChanges = args.HasChanges;
-        }));
+        Assert.Null(obj.GetProperty<string>("sample1", "Sample1", null,
+            args =>
+            {
+                Assert.Null(args.oldValue);
+                Assert.Null(args.newValue);
+                hasChanges = args.hasChanges;
+            }));
+
+        Assert.True(hasChanges);
+
+        hasChanges = false;
+
+        Assert.Null(obj.GetProperty<string?>(() => null, "sample2", "Sample2", null,
+            args =>
+            {
+                Assert.Null(args.oldValue);
+                Assert.Null(args.newValue);
+                hasChanges = args.hasChanges;
+            }));
+
+        Assert.True(hasChanges);
+
+        hasChanges = false;
+
+        Assert.Equal("sampleDefault2", obj.GetProperty(() => "sampleDefault2", "sample3", "Sample3", null,
+            args =>
+            {
+                Assert.Null(args.oldValue);
+                Assert.Equal("sampleDefault2", args.newValue);
+                hasChanges = args.hasChanges;
+            }));
+
+        Assert.True(hasChanges);
+
+        hasChanges = false;
+
+        Assert.Equal("sampleDefault2", obj.GetProperty(() => "sampleDefault3", "sample3", "Sample3", null,
+            args =>
+            {
+                Assert.Equal("sampleDefault2", args.oldValue);
+                Assert.Equal("sampleDefault2", args.newValue);
+                hasChanges = args.hasChanges;
+            }));
 
         Assert.False(hasChanges);
 
         hasChanges = false;
 
-        Assert.Null(obj.GetProperty("sampleDefault1", "sample2", "Sample2", null, args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Equal("sampleDefault1", args.newValue);
-            return false;
-        }, args =>
-        {
-            hasChanges = args.HasChanges;
-        }));
-
-        Assert.False(hasChanges);
-
-        hasChanges = false;
-
-        Assert.Equal("sampleDefault2", obj.GetProperty("sampleDefault2", "sample3", "Sample3", null, args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Equal("sampleDefault2", args.newValue);
-            return true;
-        }, args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Equal("sampleDefault2", args.newValue);
-            hasChanges = args.HasChanges;
-        }));
+        Assert.Equal("groupDefault1", obj.GetProperty(() => "groupDefault1", "sample4", "Sample4", "group1",
+            args =>
+            {
+                Assert.Null(args.oldValue);
+                Assert.Equal("groupDefault1", args.newValue);
+                hasChanges = args.hasChanges;
+            }));
 
         Assert.True(hasChanges);
 
         hasChanges = false;
 
-        Assert.Equal("sampleDefault2", obj.GetProperty("sampleDefault3", "sample3", "Sample3", null, args =>
-        {
-            Assert.True(false);
-            return true;
-        }, args =>
-        {
-            Assert.Equal("sampleDefault2", args.oldValue);
-            Assert.Equal("sampleDefault2", args.newValue);
-            hasChanges = args.HasChanges;
-        }));
-
-        Assert.False(hasChanges);
-
-        hasChanges = false;
-
-        Assert.Equal("groupDefault1", obj.GetProperty("groupDefault1", "sample4", "Sample4", "group1", args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault1", args.newValue);
-            return true;
-        }, args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault1", args.newValue);
-            hasChanges = args.HasChanges;
-        }));
+        Assert.Equal("groupDefault2", obj.GetProperty(() => "groupDefault2", "sample5", "Sample5", "group1",
+            args =>
+            {
+                Assert.Null(args.oldValue);
+                Assert.Equal("groupDefault2", args.newValue);
+                hasChanges = args.hasChanges;
+            }));
 
         Assert.True(hasChanges);
 
         hasChanges = false;
 
-        Assert.Equal("groupDefault2", obj.GetProperty("groupDefault2", "sample5", "Sample5", "group1", args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault2", args.newValue);
-            return true;
-        }, args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault2", args.newValue);
-            hasChanges = args.HasChanges;
-        }));
+        Assert.Equal("groupDefault3", obj.GetProperty(() => "groupDefault3", "sample6", "Sample6", "group1",
+            args =>
+            {
+                Assert.Null(args.oldValue);
+                Assert.Equal("groupDefault3", args.newValue);
+                hasChanges = args.hasChanges;
+            }));
 
         Assert.True(hasChanges);
 
         hasChanges = false;
 
-        Assert.Equal("groupDefault3", obj.GetProperty("groupDefault3", "sample6", "Sample6", "group1", args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault3", args.newValue);
-            return true;
-        }, args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault3", args.newValue);
-            hasChanges = args.HasChanges;
-        }));
+        Assert.Equal("groupDefault4", obj.GetProperty(() => "groupDefault4", "sample7", "Sample7", "group2",
+            args =>
+            {
+                Assert.Null(args.oldValue);
+                Assert.Equal("groupDefault4", args.newValue);
+                hasChanges = args.hasChanges;
+            }));
 
         Assert.True(hasChanges);
 
         hasChanges = false;
 
-        Assert.Equal("groupDefault4", obj.GetProperty("groupDefault4", "sample7", "Sample7", "group2", args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault4", args.newValue);
-            return true;
-        }, args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault4", args.newValue);
-            hasChanges = args.HasChanges;
-        }));
-
-        Assert.True(hasChanges);
-
-        hasChanges = false;
-
-        Assert.Equal("groupDefault5", obj.GetProperty("groupDefault5", "sample8", "Sample8", "group2", args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault5", args.newValue);
-            return true;
-        }, args =>
-        {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault5", args.newValue);
-            hasChanges = args.HasChanges;
-        }));
+        Assert.Equal("groupDefault5", obj.GetProperty(() => "groupDefault5", "sample8", "Sample8", "group2",
+            args =>
+            {
+                Assert.Null(args.oldValue);
+                Assert.Equal("groupDefault5", args.newValue);
+                hasChanges = args.hasChanges;
+            }));
 
         Assert.True(hasChanges);
 
@@ -644,43 +567,51 @@ public class GetPropertyTest : SampleObject
         var group1 = obj.GetRawProperties("group1");
         var group2 = obj.GetRawProperties("group2");
 
-        Assert.Equal(12, group0.Count());
+        Assert.Equal(14, group0.Count());
         Assert.Equal(3, group1.Count());
         Assert.Equal(2, group2.Count());
 
         Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp1) && i.Group == null && i.Property.Value == default);
         Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp2) && i.Group == "group" && (i.Property as ObservableProperty<DateTime>)?.Value == default);
-        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp3) && i.Group == null && i.Property.Value.ToString() == "defaultValue");
+        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp3) && i.Group == null && i.Property.Value?.ToString() == "defaultValue");
         Assert.Contains(group0, i => i.Key == "keySample1" && i.PropertyName == nameof(SampleKeyProp1) && i.Group == null && i.Property.Value == default);
         Assert.Contains(group0, i => i.Key == "keySample2" && i.PropertyName == nameof(SampleKeyProp2) && i.Group == "group" && (i.Property as ObservableProperty<DateTime>)?.Value == default);
-        Assert.Contains(group0, i => i.Key == "keySample3" && i.PropertyName == nameof(SampleKeyProp3) && i.Group == null && i.Property.Value.ToString() == "defaultValue");
-        Assert.Contains(group0, i => i.Key == "sample3" && i.PropertyName == "Sample3" && i.Group == null && i.Property.Value.ToString() == "sampleDefault2");
-        Assert.Contains(group0, i => i.Key == "sample4" && i.PropertyName == "Sample4" && i.Group == "group1" && i.Property.Value.ToString() == "groupDefault1");
-        Assert.Contains(group1, i => i.Key == "sample5" && i.PropertyName == "Sample5" && i.Group == "group1" && i.Property.Value.ToString() == "groupDefault2");
-        Assert.Contains(group1, i => i.Key == "sample6" && i.PropertyName == "Sample6" && i.Group == "group1" && i.Property.Value.ToString() == "groupDefault3");
-        Assert.Contains(group2, i => i.Key == "sample7" && i.PropertyName == "Sample7" && i.Group == "group2" && i.Property.Value.ToString() == "groupDefault4");
-        Assert.Contains(group2, i => i.Key == "sample8" && i.PropertyName == "Sample8" && i.Group == "group2" && i.Property.Value.ToString() == "groupDefault5");
+        Assert.Contains(group0, i => i.Key == "keySample3" && i.PropertyName == nameof(SampleKeyProp3) && i.Group == null && i.Property.Value?.ToString() == "defaultValue");
+        Assert.Contains(group0, i => i.Key == "sample1" && i.PropertyName == "Sample1" && i.Group == null && i.Property.Value?.ToString() == null);
+        Assert.Contains(group0, i => i.Key == "sample2" && i.PropertyName == "Sample2" && i.Group == null && i.Property.Value?.ToString() == null);
+        Assert.Contains(group0, i => i.Key == "sample3" && i.PropertyName == "Sample3" && i.Group == null && i.Property.Value?.ToString() == "sampleDefault2");
+        Assert.Contains(group0, i => i.Key == "sample4" && i.PropertyName == "Sample4" && i.Group == "group1" && i.Property.Value?.ToString() == "groupDefault1");
+        Assert.Contains(group1, i => i.Key == "sample5" && i.PropertyName == "Sample5" && i.Group == "group1" && i.Property.Value?.ToString() == "groupDefault2");
+        Assert.Contains(group1, i => i.Key == "sample6" && i.PropertyName == "Sample6" && i.Group == "group1" && i.Property.Value?.ToString() == "groupDefault3");
+        Assert.Contains(group2, i => i.Key == "sample7" && i.PropertyName == "Sample7" && i.Group == "group2" && i.Property.Value?.ToString() == "groupDefault4");
+        Assert.Contains(group2, i => i.Key == "sample8" && i.PropertyName == "Sample8" && i.Group == "group2" && i.Property.Value?.ToString() == "groupDefault5");
 
-        Assert.Equal(6, raiseCol.Count);
+        Assert.Equal(8, raiseCol.Count);
 
-        Assert.Equal("Sample3", raiseCol[0].PropertyName);
-        Assert.Equal("sample3", raiseCol[0].Key);
+        Assert.Equal("Sample1", raiseCol[0].PropertyName);
+        Assert.Equal("sample1", raiseCol[0].Key);
         Assert.Null(raiseCol[0].Group);
-        Assert.Equal("Sample4", raiseCol[1].PropertyName);
-        Assert.Equal("sample4", raiseCol[1].Key);
-        Assert.Equal("group1", raiseCol[1].Group);
-        Assert.Equal("Sample5", raiseCol[2].PropertyName);
-        Assert.Equal("sample5", raiseCol[2].Key);
-        Assert.Equal("group1", raiseCol[2].Group);
-        Assert.Equal("Sample6", raiseCol[3].PropertyName);
-        Assert.Equal("sample6", raiseCol[3].Key);
+        Assert.Equal("Sample2", raiseCol[1].PropertyName);
+        Assert.Equal("sample2", raiseCol[1].Key);
+        Assert.Null(raiseCol[1].Group);
+        Assert.Equal("Sample3", raiseCol[2].PropertyName);
+        Assert.Equal("sample3", raiseCol[2].Key);
+        Assert.Null(raiseCol[2].Group);
+        Assert.Equal("Sample4", raiseCol[3].PropertyName);
+        Assert.Equal("sample4", raiseCol[3].Key);
         Assert.Equal("group1", raiseCol[3].Group);
-        Assert.Equal("Sample7", raiseCol[4].PropertyName);
-        Assert.Equal("sample7", raiseCol[4].Key);
-        Assert.Equal("group2", raiseCol[4].Group);
-        Assert.Equal("Sample8", raiseCol[5].PropertyName);
-        Assert.Equal("sample8", raiseCol[5].Key);
-        Assert.Equal("group2", raiseCol[5].Group);
+        Assert.Equal("Sample5", raiseCol[4].PropertyName);
+        Assert.Equal("sample5", raiseCol[4].Key);
+        Assert.Equal("group1", raiseCol[4].Group);
+        Assert.Equal("Sample6", raiseCol[5].PropertyName);
+        Assert.Equal("sample6", raiseCol[5].Key);
+        Assert.Equal("group1", raiseCol[5].Group);
+        Assert.Equal("Sample7", raiseCol[6].PropertyName);
+        Assert.Equal("sample7", raiseCol[6].Key);
+        Assert.Equal("group2", raiseCol[6].Group);
+        Assert.Equal("Sample8", raiseCol[7].PropertyName);
+        Assert.Equal("sample8", raiseCol[7].Key);
+        Assert.Equal("group2", raiseCol[7].Group);
     }
 }
 
@@ -699,156 +630,140 @@ public class SetPropertyTest : SampleObject
 
         bool hasChanges = false;
 
-        Assert.False(obj.SetProperty(default(string), null, "Sample1", null, args =>
+        Assert.False(obj.SetProperty(default(string), null, "Sample1", null, () =>
+        {
+            return false;
+        }, args =>
         {
             Assert.Null(args.oldValue);
             Assert.Null(args.newValue);
-            return false;
-        }, args =>
-        {
-            hasChanges = args.HasChanges;
+            hasChanges = args.hasChanges;
         }));
 
         Assert.False(hasChanges);
 
         hasChanges = false;
 
-        Assert.False(obj.SetProperty("sampleDefault1", null, "Sample2", null, args =>
+        Assert.False(obj.SetProperty("sampleDefault1", null, "Sample2", null, () =>
         {
-            Assert.Null(args.oldValue);
-            Assert.Equal("sampleDefault1", args.newValue);
             return false;
         }, args =>
         {
-            hasChanges = args.HasChanges;
+            Assert.Null(args.oldValue);
+            Assert.Null(args.newValue);
+            hasChanges = args.hasChanges;
         }));
 
         Assert.False(hasChanges);
 
         hasChanges = false;
 
-        Assert.True(obj.SetProperty("sampleDefault2", null, "Sample3", null, args =>
+        Assert.True(obj.SetProperty("sampleDefault2", null, "Sample3", null, () =>
         {
-            Assert.Null(args.oldValue);
-            Assert.Equal("sampleDefault2", args.newValue);
             return true;
         }, args =>
         {
             Assert.Null(args.oldValue);
             Assert.Equal("sampleDefault2", args.newValue);
-            hasChanges = args.HasChanges;
+            hasChanges = args.hasChanges;
         }));
 
         Assert.True(hasChanges);
 
         hasChanges = false;
 
-        Assert.True(obj.SetProperty("sampleDefault3", null, "Sample3", null, args =>
+        Assert.True(obj.SetProperty("sampleDefault3", null, "Sample3", null, () =>
         {
-            Assert.Equal("sampleDefault2", args.oldValue);
-            Assert.Equal("sampleDefault3", args.newValue);
             return true;
         }, args =>
         {
             Assert.Equal("sampleDefault2", args.oldValue);
             Assert.Equal("sampleDefault3", args.newValue);
-            hasChanges = args.HasChanges;
+            hasChanges = args.hasChanges;
         }));
 
         Assert.True(hasChanges);
 
         hasChanges = false;
 
-        Assert.False(obj.SetProperty("sampleDefault3", null, "Sample3", null, args =>
+        Assert.False(obj.SetProperty("sampleDefault3", null, "Sample3", null, () =>
         {
-            Assert.Equal("sampleDefault3", args.oldValue);
-            Assert.Equal("sampleDefault3", args.newValue);
             return true;
         }, args =>
         {
             Assert.Equal("sampleDefault3", args.oldValue);
             Assert.Equal("sampleDefault3", args.newValue);
-            hasChanges = args.HasChanges;
+            hasChanges = args.hasChanges;
         }));
 
         Assert.False(hasChanges);
 
         hasChanges = false;
 
-        Assert.True(obj.SetProperty("groupDefault1", null, "Sample4", "group1", args =>
+        Assert.True(obj.SetProperty("groupDefault1", null, "Sample4", "group1", () =>
         {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault1", args.newValue);
             return true;
         }, args =>
         {
             Assert.Null(args.oldValue);
             Assert.Equal("groupDefault1", args.newValue);
-            hasChanges = args.HasChanges;
+            hasChanges = args.hasChanges;
         }));
 
         Assert.True(hasChanges);
 
         hasChanges = false;
 
-        Assert.True(obj.SetProperty("groupDefault2", null, "Sample5", "group1", args =>
+        Assert.True(obj.SetProperty("groupDefault2", null, "Sample5", "group1", () =>
         {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault2", args.newValue);
             return true;
         }, args =>
         {
             Assert.Null(args.oldValue);
             Assert.Equal("groupDefault2", args.newValue);
-            hasChanges = args.HasChanges;
+            hasChanges = args.hasChanges;
         }));
 
         Assert.True(hasChanges);
 
         hasChanges = false;
 
-        Assert.True(obj.SetProperty("groupDefault3", null, "Sample6", "group1", args =>
+        Assert.True(obj.SetProperty("groupDefault3", null, "Sample6", "group1", () =>
         {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault3", args.newValue);
             return true;
         }, args =>
         {
             Assert.Null(args.oldValue);
             Assert.Equal("groupDefault3", args.newValue);
-            hasChanges = args.HasChanges;
+            hasChanges = args.hasChanges;
         }));
 
         Assert.True(hasChanges);
 
         hasChanges = false;
 
-        Assert.True(obj.SetProperty("groupDefault4", null, "Sample7", "group2", args =>
+        Assert.True(obj.SetProperty("groupDefault4", null, "Sample7", "group2", () =>
         {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault4", args.newValue);
             return true;
         }, args =>
         {
             Assert.Null(args.oldValue);
             Assert.Equal("groupDefault4", args.newValue);
-            hasChanges = args.HasChanges;
+            hasChanges = args.hasChanges;
         }));
 
         Assert.True(hasChanges);
 
         hasChanges = false;
 
-        Assert.True(obj.SetProperty("groupDefault5", null, "Sample8", "group2", args =>
+        Assert.True(obj.SetProperty("groupDefault5", null, "Sample8", "group2", () =>
         {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault5", args.newValue);
             return true;
         }, args =>
         {
             Assert.Null(args.oldValue);
             Assert.Equal("groupDefault5", args.newValue);
-            hasChanges = args.HasChanges;
+            hasChanges = args.hasChanges;
         }));
 
         Assert.True(hasChanges);
@@ -865,16 +780,16 @@ public class SetPropertyTest : SampleObject
 
         Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp1) && i.Group == null && i.Property.Value == default);
         Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp2) && i.Group == "group" && (i.Property as ObservableProperty<DateTime>)?.Value == default);
-        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp3) && i.Group == null && i.Property.Value.ToString() == "defaultValue");
+        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp3) && i.Group == null && i.Property.Value?.ToString() == "defaultValue");
         Assert.Contains(group0, i => i.Key == "keySample1" && i.PropertyName == nameof(SampleKeyProp1) && i.Group == null && i.Property.Value == default);
         Assert.Contains(group0, i => i.Key == "keySample2" && i.PropertyName == nameof(SampleKeyProp2) && i.Group == "group" && (i.Property as ObservableProperty<DateTime>)?.Value == default);
-        Assert.Contains(group0, i => i.Key == "keySample3" && i.PropertyName == nameof(SampleKeyProp3) && i.Group == null && i.Property.Value.ToString() == "defaultValue");
-        Assert.Contains(group0, i => i.PropertyName == "Sample3" && i.Key == null && i.Group == null && i.Property.Value.ToString() == "sampleDefault3");
-        Assert.Contains(group1, i => i.PropertyName == "Sample4" && i.Key == null && i.Group == "group1" && i.Property.Value.ToString() == "groupDefault1");
-        Assert.Contains(group1, i => i.PropertyName == "Sample5" && i.Key == null && i.Group == "group1" && i.Property.Value.ToString() == "groupDefault2");
-        Assert.Contains(group1, i => i.PropertyName == "Sample6" && i.Key == null && i.Group == "group1" && i.Property.Value.ToString() == "groupDefault3");
-        Assert.Contains(group2, i => i.PropertyName == "Sample7" && i.Key == null && i.Group == "group2" && i.Property.Value.ToString() == "groupDefault4");
-        Assert.Contains(group2, i => i.PropertyName == "Sample8" && i.Key == null && i.Group == "group2" && i.Property.Value.ToString() == "groupDefault5");
+        Assert.Contains(group0, i => i.Key == "keySample3" && i.PropertyName == nameof(SampleKeyProp3) && i.Group == null && i.Property.Value?.ToString() == "defaultValue");
+        Assert.Contains(group0, i => i.PropertyName == "Sample3" && i.Key == null && i.Group == null && i.Property.Value?.ToString() == "sampleDefault3");
+        Assert.Contains(group1, i => i.PropertyName == "Sample4" && i.Key == null && i.Group == "group1" && i.Property.Value?.ToString() == "groupDefault1");
+        Assert.Contains(group1, i => i.PropertyName == "Sample5" && i.Key == null && i.Group == "group1" && i.Property.Value?.ToString() == "groupDefault2");
+        Assert.Contains(group1, i => i.PropertyName == "Sample6" && i.Key == null && i.Group == "group1" && i.Property.Value?.ToString() == "groupDefault3");
+        Assert.Contains(group2, i => i.PropertyName == "Sample7" && i.Key == null && i.Group == "group2" && i.Property.Value?.ToString() == "groupDefault4");
+        Assert.Contains(group2, i => i.PropertyName == "Sample8" && i.Key == null && i.Group == "group2" && i.Property.Value?.ToString() == "groupDefault5");
 
         Assert.Equal(7, raiseCol.Count);
 
@@ -914,156 +829,140 @@ public class SetPropertyTest : SampleObject
 
         bool hasChanges = false;
 
-        Assert.False(obj.SetProperty(default(string), "sample1", null, null, args =>
+        Assert.False(obj.SetProperty(default(string), "sample1", null, null, () =>
+        {
+            return false;
+        }, args =>
         {
             Assert.Null(args.oldValue);
             Assert.Null(args.newValue);
-            return false;
-        }, args =>
-        {
-            hasChanges = args.HasChanges;
+            hasChanges = args.hasChanges;
         }));
 
         Assert.False(hasChanges);
 
         hasChanges = false;
 
-        Assert.False(obj.SetProperty("sampleDefault1", "sample2", null, null, args =>
+        Assert.False(obj.SetProperty("sampleDefault1", "sample2", null, null, () =>
         {
-            Assert.Null(args.oldValue);
-            Assert.Equal("sampleDefault1", args.newValue);
             return false;
         }, args =>
         {
-            hasChanges = args.HasChanges;
+            Assert.Null(args.oldValue);
+            Assert.Null(args.newValue);
+            hasChanges = args.hasChanges;
         }));
 
         Assert.False(hasChanges);
 
         hasChanges = false;
 
-        Assert.True(obj.SetProperty("sampleDefault2", "sample3", null, null, args =>
+        Assert.True(obj.SetProperty("sampleDefault2", "sample3", null, null, () =>
         {
-            Assert.Null(args.oldValue);
-            Assert.Equal("sampleDefault2", args.newValue);
             return true;
         }, args =>
         {
             Assert.Null(args.oldValue);
             Assert.Equal("sampleDefault2", args.newValue);
-            hasChanges = args.HasChanges;
+            hasChanges = args.hasChanges;
         }));
 
         Assert.True(hasChanges);
 
         hasChanges = false;
 
-        Assert.True(obj.SetProperty("sampleDefault3", "sample3", null, null, args =>
+        Assert.True(obj.SetProperty("sampleDefault3", "sample3", null, null, () =>
         {
-            Assert.Equal("sampleDefault2", args.oldValue);
-            Assert.Equal("sampleDefault3", args.newValue);
             return true;
         }, args =>
         {
             Assert.Equal("sampleDefault2", args.oldValue);
             Assert.Equal("sampleDefault3", args.newValue);
-            hasChanges = args.HasChanges;
+            hasChanges = args.hasChanges;
         }));
 
         Assert.True(hasChanges);
 
         hasChanges = false;
 
-        Assert.False(obj.SetProperty("sampleDefault3", "sample3", null, null, args =>
+        Assert.False(obj.SetProperty("sampleDefault3", "sample3", null, null, () =>
         {
-            Assert.Equal("sampleDefault3", args.oldValue);
-            Assert.Equal("sampleDefault3", args.newValue);
             return true;
         }, args =>
         {
             Assert.Equal("sampleDefault3", args.oldValue);
             Assert.Equal("sampleDefault3", args.newValue);
-            hasChanges = args.HasChanges;
+            hasChanges = args.hasChanges;
         }));
 
         Assert.False(hasChanges);
 
         hasChanges = false;
 
-        Assert.True(obj.SetProperty("groupDefault1", "sample4", null, "group1", args =>
+        Assert.True(obj.SetProperty("groupDefault1", "sample4", null, "group1", () =>
         {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault1", args.newValue);
             return true;
         }, args =>
         {
             Assert.Null(args.oldValue);
             Assert.Equal("groupDefault1", args.newValue);
-            hasChanges = args.HasChanges;
+            hasChanges = args.hasChanges;
         }));
 
         Assert.True(hasChanges);
 
         hasChanges = false;
 
-        Assert.True(obj.SetProperty("groupDefault2", "sample5", null, "group1", args =>
+        Assert.True(obj.SetProperty("groupDefault2", "sample5", null, "group1", () =>
         {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault2", args.newValue);
             return true;
         }, args =>
         {
             Assert.Null(args.oldValue);
             Assert.Equal("groupDefault2", args.newValue);
-            hasChanges = args.HasChanges;
+            hasChanges = args.hasChanges;
         }));
 
         Assert.True(hasChanges);
 
         hasChanges = false;
 
-        Assert.True(obj.SetProperty("groupDefault3", "sample6", null, "group1", args =>
+        Assert.True(obj.SetProperty("groupDefault3", "sample6", null, "group1", () =>
         {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault3", args.newValue);
             return true;
         }, args =>
         {
             Assert.Null(args.oldValue);
             Assert.Equal("groupDefault3", args.newValue);
-            hasChanges = args.HasChanges;
+            hasChanges = args.hasChanges;
         }));
 
         Assert.True(hasChanges);
 
         hasChanges = false;
 
-        Assert.True(obj.SetProperty("groupDefault4", "sample7", null, "group2", args =>
+        Assert.True(obj.SetProperty("groupDefault4", "sample7", null, "group2", () =>
         {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault4", args.newValue);
             return true;
         }, args =>
         {
             Assert.Null(args.oldValue);
             Assert.Equal("groupDefault4", args.newValue);
-            hasChanges = args.HasChanges;
+            hasChanges = args.hasChanges;
         }));
 
         Assert.True(hasChanges);
 
         hasChanges = false;
 
-        Assert.True(obj.SetProperty("groupDefault5", "sample8", null, "group2", args =>
+        Assert.True(obj.SetProperty("groupDefault5", "sample8", null, "group2", () =>
         {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault5", args.newValue);
             return true;
         }, args =>
         {
             Assert.Null(args.oldValue);
             Assert.Equal("groupDefault5", args.newValue);
-            hasChanges = args.HasChanges;
+            hasChanges = args.hasChanges;
         }));
 
         Assert.True(hasChanges);
@@ -1080,16 +979,16 @@ public class SetPropertyTest : SampleObject
 
         Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp1) && i.Group == null && i.Property.Value == default);
         Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp2) && i.Group == "group" && (i.Property as ObservableProperty<DateTime>)?.Value == default);
-        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp3) && i.Group == null && i.Property.Value.ToString() == "defaultValue");
+        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp3) && i.Group == null && i.Property.Value?.ToString() == "defaultValue");
         Assert.Contains(group0, i => i.Key == "keySample1" && i.PropertyName == nameof(SampleKeyProp1) && i.Group == null && i.Property.Value == default);
         Assert.Contains(group0, i => i.Key == "keySample2" && i.PropertyName == nameof(SampleKeyProp2) && i.Group == "group" && (i.Property as ObservableProperty<DateTime>)?.Value == default);
-        Assert.Contains(group0, i => i.Key == "keySample3" && i.PropertyName == nameof(SampleKeyProp3) && i.Group == null && i.Property.Value.ToString() == "defaultValue");
-        Assert.Contains(group0, i => i.Key == "sample3" && i.PropertyName == null && i.Group == null && i.Property.Value.ToString() == "sampleDefault3");
-        Assert.Contains(group1, i => i.Key == "sample4" && i.PropertyName == null && i.Group == "group1" && i.Property.Value.ToString() == "groupDefault1");
-        Assert.Contains(group1, i => i.Key == "sample5" && i.PropertyName == null && i.Group == "group1" && i.Property.Value.ToString() == "groupDefault2");
-        Assert.Contains(group1, i => i.Key == "sample6" && i.PropertyName == null && i.Group == "group1" && i.Property.Value.ToString() == "groupDefault3");
-        Assert.Contains(group2, i => i.Key == "sample7" && i.PropertyName == null && i.Group == "group2" && i.Property.Value.ToString() == "groupDefault4");
-        Assert.Contains(group2, i => i.Key == "sample8" && i.PropertyName == null && i.Group == "group2" && i.Property.Value.ToString() == "groupDefault5");
+        Assert.Contains(group0, i => i.Key == "keySample3" && i.PropertyName == nameof(SampleKeyProp3) && i.Group == null && i.Property.Value?.ToString() == "defaultValue");
+        Assert.Contains(group0, i => i.Key == "sample3" && i.PropertyName == null && i.Group == null && i.Property.Value?.ToString() == "sampleDefault3");
+        Assert.Contains(group1, i => i.Key == "sample4" && i.PropertyName == null && i.Group == "group1" && i.Property.Value?.ToString() == "groupDefault1");
+        Assert.Contains(group1, i => i.Key == "sample5" && i.PropertyName == null && i.Group == "group1" && i.Property.Value?.ToString() == "groupDefault2");
+        Assert.Contains(group1, i => i.Key == "sample6" && i.PropertyName == null && i.Group == "group1" && i.Property.Value?.ToString() == "groupDefault3");
+        Assert.Contains(group2, i => i.Key == "sample7" && i.PropertyName == null && i.Group == "group2" && i.Property.Value?.ToString() == "groupDefault4");
+        Assert.Contains(group2, i => i.Key == "sample8" && i.PropertyName == null && i.Group == "group2" && i.Property.Value?.ToString() == "groupDefault5");
 
         Assert.Equal(7, raiseCol.Count);
 
@@ -1129,156 +1028,140 @@ public class SetPropertyTest : SampleObject
 
         bool hasChanges = false;
 
-        Assert.False(obj.SetProperty(default(string), "sample1", "Sample1", null, args =>
+        Assert.False(obj.SetProperty(default(string), "sample1", "Sample1", null, () =>
+        {
+            return false;
+        }, args =>
         {
             Assert.Null(args.oldValue);
             Assert.Null(args.newValue);
-            return false;
-        }, args =>
-        {
-            hasChanges = args.HasChanges;
+            hasChanges = args.hasChanges;
         }));
 
         Assert.False(hasChanges);
 
         hasChanges = false;
 
-        Assert.False(obj.SetProperty("sampleDefault1", "sample2", "Sample2", null, args =>
+        Assert.False(obj.SetProperty("sampleDefault1", "sample2", "Sample2", null, () =>
         {
-            Assert.Null(args.oldValue);
-            Assert.Equal("sampleDefault1", args.newValue);
             return false;
         }, args =>
         {
-            hasChanges = args.HasChanges;
+            Assert.Null(args.oldValue);
+            Assert.Null(args.newValue);
+            hasChanges = args.hasChanges;
         }));
 
         Assert.False(hasChanges);
 
         hasChanges = false;
 
-        Assert.True(obj.SetProperty("sampleDefault2", "sample3", "Sample3", null, args =>
+        Assert.True(obj.SetProperty("sampleDefault2", "sample3", "Sample3", null, () =>
         {
-            Assert.Null(args.oldValue);
-            Assert.Equal("sampleDefault2", args.newValue);
             return true;
         }, args =>
         {
             Assert.Null(args.oldValue);
             Assert.Equal("sampleDefault2", args.newValue);
-            hasChanges = args.HasChanges;
+            hasChanges = args.hasChanges;
         }));
 
         Assert.True(hasChanges);
 
         hasChanges = false;
 
-        Assert.True(obj.SetProperty("sampleDefault3", "sample3", "Sample3", null, args =>
+        Assert.True(obj.SetProperty("sampleDefault3", "sample3", "Sample3", null, () =>
         {
-            Assert.Equal("sampleDefault2", args.oldValue);
-            Assert.Equal("sampleDefault3", args.newValue);
             return true;
         }, args =>
         {
             Assert.Equal("sampleDefault2", args.oldValue);
             Assert.Equal("sampleDefault3", args.newValue);
-            hasChanges = args.HasChanges;
+            hasChanges = args.hasChanges;
         }));
 
         Assert.True(hasChanges);
 
         hasChanges = false;
 
-        Assert.False(obj.SetProperty("sampleDefault3", "sample3", "Sample3", null, args =>
+        Assert.False(obj.SetProperty("sampleDefault3", "sample3", "Sample3", null, () =>
         {
-            Assert.Equal("sampleDefault3", args.oldValue);
-            Assert.Equal("sampleDefault3", args.newValue);
             return true;
         }, args =>
         {
             Assert.Equal("sampleDefault3", args.oldValue);
             Assert.Equal("sampleDefault3", args.newValue);
-            hasChanges = args.HasChanges;
+            hasChanges = args.hasChanges;
         }));
 
         Assert.False(hasChanges);
 
         hasChanges = false;
 
-        Assert.True(obj.SetProperty("groupDefault1", "sample4", "Sample4", "group1", args =>
+        Assert.True(obj.SetProperty("groupDefault1", "sample4", "Sample4", "group1", () =>
         {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault1", args.newValue);
             return true;
         }, args =>
         {
             Assert.Null(args.oldValue);
             Assert.Equal("groupDefault1", args.newValue);
-            hasChanges = args.HasChanges;
+            hasChanges = args.hasChanges;
         }));
 
         Assert.True(hasChanges);
 
         hasChanges = false;
 
-        Assert.True(obj.SetProperty("groupDefault2", "sample5", "Sample5", "group1", args =>
+        Assert.True(obj.SetProperty("groupDefault2", "sample5", "Sample5", "group1", () =>
         {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault2", args.newValue);
             return true;
         }, args =>
         {
             Assert.Null(args.oldValue);
             Assert.Equal("groupDefault2", args.newValue);
-            hasChanges = args.HasChanges;
+            hasChanges = args.hasChanges;
         }));
 
         Assert.True(hasChanges);
 
         hasChanges = false;
 
-        Assert.True(obj.SetProperty("groupDefault3", "sample6", "Sample6", "group1", args =>
+        Assert.True(obj.SetProperty("groupDefault3", "sample6", "Sample6", "group1", () =>
         {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault3", args.newValue);
             return true;
         }, args =>
         {
             Assert.Null(args.oldValue);
             Assert.Equal("groupDefault3", args.newValue);
-            hasChanges = args.HasChanges;
+            hasChanges = args.hasChanges;
         }));
 
         Assert.True(hasChanges);
 
         hasChanges = false;
 
-        Assert.True(obj.SetProperty("groupDefault4", "sample7", "Sample7", "group2", args =>
+        Assert.True(obj.SetProperty("groupDefault4", "sample7", "Sample7", "group2", () =>
         {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault4", args.newValue);
             return true;
         }, args =>
         {
             Assert.Null(args.oldValue);
             Assert.Equal("groupDefault4", args.newValue);
-            hasChanges = args.HasChanges;
+            hasChanges = args.hasChanges;
         }));
 
         Assert.True(hasChanges);
 
         hasChanges = false;
 
-        Assert.True(obj.SetProperty("groupDefault5", "sample8", "Sample8", "group2", args =>
+        Assert.True(obj.SetProperty("groupDefault5", "sample8", "Sample8", "group2", () =>
         {
-            Assert.Null(args.oldValue);
-            Assert.Equal("groupDefault5", args.newValue);
             return true;
         }, args =>
         {
             Assert.Null(args.oldValue);
             Assert.Equal("groupDefault5", args.newValue);
-            hasChanges = args.HasChanges;
+            hasChanges = args.hasChanges;
         }));
 
         Assert.True(hasChanges);
@@ -1295,16 +1178,16 @@ public class SetPropertyTest : SampleObject
 
         Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp1) && i.Group == null && i.Property.Value == default);
         Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp2) && i.Group == "group" && (i.Property as ObservableProperty<DateTime>)?.Value == default);
-        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp3) && i.Group == null && i.Property.Value.ToString() == "defaultValue");
+        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp3) && i.Group == null && i.Property.Value?.ToString() == "defaultValue");
         Assert.Contains(group0, i => i.Key == "keySample1" && i.PropertyName == nameof(SampleKeyProp1) && i.Group == null && i.Property.Value == default);
         Assert.Contains(group0, i => i.Key == "keySample2" && i.PropertyName == nameof(SampleKeyProp2) && i.Group == "group" && (i.Property as ObservableProperty<DateTime>)?.Value == default);
-        Assert.Contains(group0, i => i.Key == "keySample3" && i.PropertyName == nameof(SampleKeyProp3) && i.Group == null && i.Property.Value.ToString() == "defaultValue");
-        Assert.Contains(group0, i => i.Key == "sample3" && i.PropertyName == "Sample3" && i.Group == null && i.Property.Value.ToString() == "sampleDefault3");
-        Assert.Contains(group1, i => i.Key == "sample4" && i.PropertyName == "Sample4" && i.Group == "group1" && i.Property.Value.ToString() == "groupDefault1");
-        Assert.Contains(group1, i => i.Key == "sample5" && i.PropertyName == "Sample5" && i.Group == "group1" && i.Property.Value.ToString() == "groupDefault2");
-        Assert.Contains(group1, i => i.Key == "sample6" && i.PropertyName == "Sample6" && i.Group == "group1" && i.Property.Value.ToString() == "groupDefault3");
-        Assert.Contains(group2, i => i.Key == "sample7" && i.PropertyName == "Sample7" && i.Group == "group2" && i.Property.Value.ToString() == "groupDefault4");
-        Assert.Contains(group2, i => i.Key == "sample8" && i.PropertyName == "Sample8" && i.Group == "group2" && i.Property.Value.ToString() == "groupDefault5");
+        Assert.Contains(group0, i => i.Key == "keySample3" && i.PropertyName == nameof(SampleKeyProp3) && i.Group == null && i.Property.Value?.ToString() == "defaultValue");
+        Assert.Contains(group0, i => i.Key == "sample3" && i.PropertyName == "Sample3" && i.Group == null && i.Property.Value?.ToString() == "sampleDefault3");
+        Assert.Contains(group1, i => i.Key == "sample4" && i.PropertyName == "Sample4" && i.Group == "group1" && i.Property.Value?.ToString() == "groupDefault1");
+        Assert.Contains(group1, i => i.Key == "sample5" && i.PropertyName == "Sample5" && i.Group == "group1" && i.Property.Value?.ToString() == "groupDefault2");
+        Assert.Contains(group1, i => i.Key == "sample6" && i.PropertyName == "Sample6" && i.Group == "group1" && i.Property.Value?.ToString() == "groupDefault3");
+        Assert.Contains(group2, i => i.Key == "sample7" && i.PropertyName == "Sample7" && i.Group == "group2" && i.Property.Value?.ToString() == "groupDefault4");
+        Assert.Contains(group2, i => i.Key == "sample8" && i.PropertyName == "Sample8" && i.Group == "group2" && i.Property.Value?.ToString() == "groupDefault5");
 
         Assert.Equal(7, raiseCol.Count);
 
@@ -1362,12 +1245,12 @@ public class RemoveTest : SampleObject
 
         Assert.Equal(6, group0.Count());
 
-        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp1) && i.Group == null && i.Property.Value.ToString() == "set1");
+        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp1) && i.Group == null && i.Property.Value?.ToString() == "set1");
         Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp2) && i.Group == "group" && (i.Property as ObservableProperty<DateTime>)?.Value == default);
-        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp3) && i.Group == null && i.Property.Value.ToString() == "defaultValue");
+        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp3) && i.Group == null && i.Property.Value?.ToString() == "defaultValue");
         Assert.Contains(group0, i => i.Key == "keySample1" && i.PropertyName == nameof(SampleKeyProp1) && i.Group == null && i.Property.Value == default);
         Assert.Contains(group0, i => i.Key == "keySample2" && i.PropertyName == nameof(SampleKeyProp2) && i.Group == "group" && (i.Property as ObservableProperty<DateTime>)?.Value == default);
-        Assert.Contains(group0, i => i.Key == "keySample3" && i.PropertyName == nameof(SampleKeyProp3) && i.Group == null && i.Property.Value.ToString() == "defaultValue");
+        Assert.Contains(group0, i => i.Key == "keySample3" && i.PropertyName == nameof(SampleKeyProp3) && i.Group == null && i.Property.Value?.ToString() == "defaultValue");
 
         Assert.Equal(7, raiseCol.Count);
 
@@ -1424,10 +1307,10 @@ public class RemoveTest : SampleObject
 
         Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp1) && i.Group == null && i.Property.Value == default);
         Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp2) && i.Group == "group" && (i.Property as ObservableProperty<DateTime>)?.Value == default);
-        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp3) && i.Group == null && i.Property.Value.ToString() == "defaultValue");
-        Assert.Contains(group0, i => i.Key == "keySample1" && i.PropertyName == nameof(SampleKeyProp1) && i.Group == null && i.Property.Value.ToString() == "set1");
+        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp3) && i.Group == null && i.Property.Value?.ToString() == "defaultValue");
+        Assert.Contains(group0, i => i.Key == "keySample1" && i.PropertyName == nameof(SampleKeyProp1) && i.Group == null && i.Property.Value?.ToString() == "set1");
         Assert.Contains(group0, i => i.Key == "keySample2" && i.PropertyName == nameof(SampleKeyProp2) && i.Group == "group" && (i.Property as ObservableProperty<DateTime>)?.Value == default);
-        Assert.Contains(group0, i => i.Key == "keySample3" && i.PropertyName == nameof(SampleKeyProp3) && i.Group == null && i.Property.Value.ToString() == "defaultValue");
+        Assert.Contains(group0, i => i.Key == "keySample3" && i.PropertyName == nameof(SampleKeyProp3) && i.Group == null && i.Property.Value?.ToString() == "defaultValue");
 
         Assert.Equal(7, raiseCol.Count);
 
@@ -1490,12 +1373,12 @@ public class RemoveTest : SampleObject
 
         Assert.Equal(6, group0.Count());
 
-        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp1) && i.Group == null && i.Property.Value.ToString() == "set1");
+        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp1) && i.Group == null && i.Property.Value?.ToString() == "set1");
         Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp2) && i.Group == "group" && (i.Property as ObservableProperty<DateTime>)?.Value == default);
-        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp3) && i.Group == null && i.Property.Value.ToString() == "defaultValue");
-        Assert.Contains(group0, i => i.Key == "keySample1" && i.PropertyName == nameof(SampleKeyProp1) && i.Group == null && i.Property.Value.ToString() == "set1");
+        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp3) && i.Group == null && i.Property.Value?.ToString() == "defaultValue");
+        Assert.Contains(group0, i => i.Key == "keySample1" && i.PropertyName == nameof(SampleKeyProp1) && i.Group == null && i.Property.Value?.ToString() == "set1");
         Assert.Contains(group0, i => i.Key == "keySample2" && i.PropertyName == nameof(SampleKeyProp2) && i.Group == "group" && (i.Property as ObservableProperty<DateTime>)?.Value == default);
-        Assert.Contains(group0, i => i.Key == "keySample3" && i.PropertyName == nameof(SampleKeyProp3) && i.Group == null && i.Property.Value.ToString() == "defaultValue");
+        Assert.Contains(group0, i => i.Key == "keySample3" && i.PropertyName == nameof(SampleKeyProp3) && i.Group == null && i.Property.Value?.ToString() == "defaultValue");
 
         Assert.Equal(14, raiseCol.Count);
 
@@ -1598,12 +1481,12 @@ public class GetRawPropertiesTest : SampleObject
         Assert.Equal(6, all.Count());
         Assert.Equal(2, group.Count());
 
-        Assert.Contains(all, i => i.Key == null && i.PropertyName == nameof(SampleProp1) && i.Group == null && i.Property.Value.ToString() == "set1");
+        Assert.Contains(all, i => i.Key == null && i.PropertyName == nameof(SampleProp1) && i.Group == null && i.Property.Value?.ToString() == "set1");
         Assert.Contains(all, i => i.Key == null && i.PropertyName == nameof(SampleProp2) && i.Group == "group" && i.Property.GetValue<DateTime>() == date1);
-        Assert.Contains(all, i => i.Key == null && i.PropertyName == nameof(SampleProp3) && i.Group == null && i.Property.Value.ToString() == "set3");
-        Assert.Contains(all, i => i.Key == "keySample1" && i.PropertyName == nameof(SampleKeyProp1) && i.Group == null && i.Property.Value.ToString() == "set1");
+        Assert.Contains(all, i => i.Key == null && i.PropertyName == nameof(SampleProp3) && i.Group == null && i.Property.Value?.ToString() == "set3");
+        Assert.Contains(all, i => i.Key == "keySample1" && i.PropertyName == nameof(SampleKeyProp1) && i.Group == null && i.Property.Value?.ToString() == "set1");
         Assert.Contains(all, i => i.Key == "keySample2" && i.PropertyName == nameof(SampleKeyProp2) && i.Group == "group" && i.Property.GetValue<DateTime>() == date1);
-        Assert.Contains(all, i => i.Key == "keySample3" && i.PropertyName == nameof(SampleKeyProp3) && i.Group == null && i.Property.Value.ToString() == "set3");
+        Assert.Contains(all, i => i.Key == "keySample3" && i.PropertyName == nameof(SampleKeyProp3) && i.Group == null && i.Property.Value?.ToString() == "set3");
 
         Assert.Contains(group, i => i.Key == null && i.PropertyName == nameof(SampleProp2) && i.Group == "group" && i.Property.GetValue<DateTime>() == date1);
         Assert.Contains(group, i => i.Key == "keySample2" && i.PropertyName == nameof(SampleKeyProp2) && i.Group == "group" && i.Property.GetValue<DateTime>() == date1);
@@ -1617,13 +1500,13 @@ public class AttachOnPropertyChangedTest : SampleObject
     {
         var obj = new AttachOnPropertyChangedTest();
 
-        string SampleProp1 = null;
+        string? SampleProp1 = null;
         DateTime SampleProp2 = default;
-        string SampleProp3 = null;
+        string? SampleProp3 = null;
 
-        obj.AttachOnPropertyChanged<string>(v => SampleProp1 = v, nameof(obj.SampleProp1));
+        obj.AttachOnPropertyChanged<string?>(v => SampleProp1 = v, nameof(obj.SampleProp1));
         obj.AttachOnPropertyChanged<DateTime>(v => SampleProp2 = v, nameof(obj.SampleProp2));
-        obj.AttachOnPropertyChanged<string>(v => SampleProp3 = v, nameof(obj.SampleProp3));
+        obj.AttachOnPropertyChanged<string?>(v => SampleProp3 = v, nameof(obj.SampleProp3));
 
         Assert.Equal(SampleProp1, obj.SampleProp1);
         Assert.Equal(SampleProp2, obj.SampleProp2);
@@ -1654,13 +1537,13 @@ public class AttachImmediateOnPropertyChangedTest : SampleObject
     {
         var obj = new AttachImmediateOnPropertyChangedTest();
 
-        string SampleProp1 = null;
+        string? SampleProp1 = null;
         DateTime SampleProp2 = default;
-        string SampleProp3 = null;
+        string? SampleProp3 = null;
 
-        obj.AttachOnImmediatePropertyChanged<string>(v => SampleProp1 = v, nameof(obj.SampleProp1));
+        obj.AttachOnImmediatePropertyChanged<string?>(v => SampleProp1 = v, nameof(obj.SampleProp1));
         obj.AttachOnImmediatePropertyChanged<DateTime>(v => SampleProp2 = v, nameof(obj.SampleProp2));
-        obj.AttachOnImmediatePropertyChanged<string>(v => SampleProp3 = v, nameof(obj.SampleProp3));
+        obj.AttachOnImmediatePropertyChanged<string?>(v => SampleProp3 = v, nameof(obj.SampleProp3));
 
         Assert.Equal(SampleProp1, obj.SampleProp1);
         Assert.Equal(SampleProp2, obj.SampleProp2);

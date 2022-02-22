@@ -1,4 +1,5 @@
 ﻿using ObservableHelpers;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using Xunit;
@@ -157,6 +158,9 @@ public class GetValueAndSetValueTest
         Assert.Null(prop1.GetValue<string>());
         Assert.Null(prop2.GetValue());
 
+        Assert.Null(prop1.GetValue<string?>(() => null));
+        Assert.Equal("", prop2.GetValue(() => ""));
+
         Assert.True(prop1.SetValue("test"));
         Assert.False(prop1.SetValue("test"));
         Assert.True(prop1.SetValue("test1"));
@@ -168,6 +172,9 @@ public class GetValueAndSetValueTest
 
         Assert.Equal("test1", prop1.GetValue<string>());
         Assert.Equal("test1", prop2.GetValue());
+
+        Assert.Equal("test1", prop1.GetValue<string?>(() => null));
+        Assert.Equal("test1", prop2.GetValue(() => ""));
 
         Assert.Equal(2, raiseCol1.Count);
         Assert.Equal(2, raiseCol2.Count);
@@ -198,8 +205,8 @@ public class GetObjectAndSetObjectTest
             raiseCol2.Add(e);
         };
 
-        Assert.Null(prop1.GetObject(typeof(string)));
-        Assert.Null(prop2.GetObject(typeof(string)));
+        Assert.Null(prop1.GetObject(typeof(string), default));
+        Assert.Null(prop2.GetObject(typeof(string), default));
 
         Assert.True(prop1.SetObject(typeof(string), "test"));
         Assert.False(prop1.SetObject(typeof(string), "test"));
@@ -210,8 +217,8 @@ public class GetObjectAndSetObjectTest
         Assert.True(prop2.SetObject(typeof(string), "test1"));
         Assert.False(prop2.SetObject(typeof(string), "test1"));
 
-        Assert.Equal("test1", prop1.GetObject(typeof(string)));
-        Assert.Equal("test1", prop2.GetObject(typeof(string)));
+        Assert.Equal("test1", prop1.GetObject(typeof(string), default));
+        Assert.Equal("test1", prop2.GetObject(typeof(string), default));
 
         Assert.Equal(2, raiseCol1.Count);
         Assert.Equal(2, raiseCol2.Count);

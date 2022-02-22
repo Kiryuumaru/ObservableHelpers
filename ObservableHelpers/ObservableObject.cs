@@ -95,19 +95,20 @@ namespace ObservableHelpers
         /// Throws when <paramref name="key"/> is not provided.
         /// </exception>
         protected bool SetProperty<T>(
-            T? value,
+            T value,
             string? key = null,
             [CallerMemberName] string? propertyName = null,
             string? group = null,
-            Func<(T? oldValue, T? newValue), bool>? setValidate = null,
-            Action<(string? key, string? propertyName, string? group, T? oldValue, T? newValue, bool HasChanges)>? postAction = null)
+            Func<bool>? setValidate = null,
+            Action<(string? key, string? propertyName, string? group, T? oldValue, T? newValue, bool hasChanges)>? postAction = null)
         {
             bool hasChanges = false;
 
-            CreateOrUpdateNamedProperty(value, key, propertyName, group,
+            CreateOrUpdateNamedProperty(key, propertyName, group,
+                () => value,
                 args =>
                 {
-                    bool validated = setValidate?.Invoke((args.oldValue, value)) ?? true;
+                    bool validated = setValidate?.Invoke() ?? true;
                     if (validated && args.namedProperty.IsDefault)
                     {
                         args.namedProperty.IsDefault = false;
@@ -116,24 +117,24 @@ namespace ObservableHelpers
                 },
                 args =>
                 {
-                    bool validated = setValidate?.Invoke((args.oldValue, value)) ?? true;
+                    bool validated = setValidate?.Invoke() ?? true;
                     if (validated && args.namedProperty.IsDefault)
                     {
                         args.namedProperty.IsDefault = false;
                     }
                     return validated;
                 },
-                subPostAction =>
+                args =>
                 {
-                    hasChanges = subPostAction.hasChanges;
+                    hasChanges = args.hasChanges;
 
                     postAction?.Invoke((
-                        subPostAction.namedProperty.Key,
-                        subPostAction.namedProperty.PropertyName,
-                        subPostAction.namedProperty.Group,
-                        subPostAction.oldValue,
-                        subPostAction.newValue,
-                        subPostAction.hasChanges));
+                        args.namedProperty.Key,
+                        args.namedProperty.PropertyName,
+                        args.namedProperty.Group,
+                        args.oldValue,
+                        args.newValue,
+                        args.hasChanges));
                 });
 
 
@@ -146,9 +147,6 @@ namespace ObservableHelpers
         /// <typeparam name="T">
         /// The underlying type of the property to get.
         /// </typeparam>
-        /// <param name="defaultValue">
-        /// The default value sets and returned if the property is null.
-        /// </param>
         /// <param name="key">
         /// The key of the property value to get.
         /// </param>
@@ -157,9 +155,6 @@ namespace ObservableHelpers
         /// </param>
         /// <param name="group">
         /// The group of the property value to get.
-        /// </param>
-        /// <param name="setValidate">
-        /// The value set validator function.
         /// </param>
         /// <param name="postAction">
         /// The callback after operation.
@@ -171,36 +166,81 @@ namespace ObservableHelpers
         /// Throws when <paramref name="key"/> is not provided.
         /// </exception>
         protected T? GetProperty<T>(
-            T? defaultValue = default,
             string? key = null,
             [CallerMemberName] string? propertyName = null,
             string? group = null,
-            Func<(T? oldValue, T? newValue), bool>? setValidate = null,
-            Action<(string? key, string? propertyName, string? group, T? oldValue, T? newValue, bool HasChanges)>? postAction = null)
+            Action<(string? key, string? propertyName, string? group, T? oldValue, T? newValue, bool hasChanges)>? postAction = null)
         {
-            T? returnValue = default;
-
-            NamedProperty namedProperty = GetOrCreateNamedProperty(defaultValue, key, propertyName, group,
+            (NamedProperty namedProperty, T? returnValue) = CreateOrUpdateNamedProperty<T?>(key, propertyName, group,
+                () => default,
                 args =>
                 {
-                    bool validated = setValidate?.Invoke((args.oldValue, defaultValue)) ?? true;
-                    if (validated && !args.namedProperty.IsDefault)
+                    if (!args.namedProperty.IsDefault)
                     {
                         args.namedProperty.IsDefault = true;
                     }
-                    return validated;
+                    return true;
                 },
-                subPostAction =>
+                args => false,
+                args =>
                 {
-                    returnValue = subPostAction.newValue;
-
                     postAction?.Invoke((
-                        subPostAction.namedProperty.Key,
-                        subPostAction.namedProperty.PropertyName,
-                        subPostAction.namedProperty.Group,
-                        subPostAction.oldValue,
-                        subPostAction.newValue,
-                        subPostAction.hasChanges));
+                        args.namedProperty.Key,
+                        args.namedProperty.PropertyName,
+                        args.namedProperty.Group,
+                        args.oldValue,
+                        args.newValue,
+                        args.hasChanges));
+                });
+
+            return returnValue;
+        }
+
+        /// <summary>
+        /// Gets the property value.
+        /// </summary>
+        /// <typeparam name="T">
+        /// The underlying type of the property to get.
+        /// </typeparam>
+        /// <param name="defaultValueFactory">
+        /// The default value factory that sets and returned if the property is null.
+        /// </param>
+        /// <param name="key">
+        /// The key of the property value to get.
+        /// </param>
+        /// <param name="propertyName">
+        /// The name of the property value to get.
+        /// </param>
+        /// <param name="group">
+        /// The group of the property value to get.
+        /// </param>
+        /// <param name="postAction">
+        /// The callback after operation.
+        /// </param>
+        /// <returns>
+        /// The found <typeparamref name="T"/> property value.
+        /// </returns>
+        /// <exception cref="PropertyKeyAndNameNullException">
+        /// Throws when <paramref name="key"/> is not provided.
+        /// </exception>
+        protected T GetProperty<T>(
+            Func<T> defaultValueFactory,
+            string? key = null,
+            [CallerMemberName] string? propertyName = null,
+            string? group = null,
+            Action<(string? key, string? propertyName, string? group, T? oldValue, T newValue, bool hasChanges)>? postAction = null)
+        {
+            (NamedProperty namedProperty, T returnValue) = GetOrAddNamedProperty(key, propertyName, group,
+                defaultValueFactory,
+                args =>
+                {
+                    postAction?.Invoke((
+                        args.namedProperty.Key,
+                        args.namedProperty.PropertyName,
+                        args.namedProperty.Group,
+                        args.oldValue,
+                        args.newValue,
+                        args.hasChanges));
                 });
 
             return returnValue;
@@ -375,52 +415,8 @@ namespace ObservableHelpers
         }
 
         /// <summary>
-        /// The core implementation for getting the <see cref="NamedProperty"/> from the property collection with the provided <paramref name="key"/> and <paramref name="propertyName"/>, or adds a value to the collection by using the specified function if the property does not already exist.
-        /// </summary>
-        /// <remarks>
-        /// Both <paramref name="key"/> and <paramref name="propertyName"/> should not be null. If both are provided, <paramref name="key"/> will be used to find the property.
-        /// </remarks>
-        /// <param name="defaultValue">
-        /// The default value if the property is null.
-        /// </param>
-        /// <param name="key">
-        /// The key of the property to get.
-        /// </param>
-        /// <param name="propertyName">
-        /// The name of the property to get.
-        /// </param>
-        /// <param name="group">
-        /// The group of the property to get or add.
-        /// </param>
-        /// <param name="createValidation">
-        /// The function validation if create property is executed.
-        /// </param>
-        /// <param name="postAction">
-        /// The action after the get or add operation.
-        /// </param>
-        /// <returns>
-        /// The found <see cref="NamedProperty"/> from the property collection.
-        /// </returns>
-        /// <exception cref="PropertyKeyAndNameNullException">
-        /// Throws when both <paramref name="key"/> and <paramref name="propertyName"/> are not provided.
-        /// </exception>
-        protected NamedProperty GetOrCreateNamedProperty<T>(
-            T? defaultValue,
-            string? key,
-            string? propertyName,
-            string? group,
-            Func<(NamedProperty namedProperty, T? oldValue), bool>? createValidation = null,
-            Action<(NamedProperty namedProperty, T? oldValue, T? newValue, bool hasChanges)>? postAction = null)
-        {
-            return CreateOrUpdateNamedProperty(defaultValue, key, propertyName, group, createValidation, args => false, postAction);
-        }
-
-        /// <summary>
         /// The core implementation for creating the <see cref="NamedProperty"/> from the property collection with the provided <paramref name="key"/> and <paramref name="propertyName"/>, or updates a value to the collection by using the specified function if the property already exist.
         /// </summary>
-        /// <param name="value">
-        /// The value of the property to add or update.
-        /// </param>
         /// <param name="key">
         /// The key of the property to add or update.
         /// </param>
@@ -429,6 +425,9 @@ namespace ObservableHelpers
         /// </param>
         /// <param name="group">
         /// The group of the property to add or update.
+        /// </param>
+        /// <param name="valueFactory">
+        /// The value factory of the property to add or update.
         /// </param>
         /// <param name="addValidate">
         /// The function validation if add property is executed.
@@ -445,11 +444,11 @@ namespace ObservableHelpers
         /// <exception cref="PropertyKeyAndNameNullException">
         /// Throws when both <paramref name="key"/> and <paramref name="propertyName"/> are not provided.
         /// </exception>
-        protected NamedProperty CreateOrUpdateNamedProperty<T>(
-            T? value,
+        protected (NamedProperty namedProperty, T? value) CreateOrUpdateNamedProperty<T>(
             string? key,
             string? propertyName,
             string? group,
+            Func<T> valueFactory,
             Func<(NamedProperty namedProperty, T? oldValue), bool>? addValidate = null,
             Func<(NamedProperty namedProperty, T? oldValue), bool>? updateValidate = null,
             Action<(NamedProperty namedProperty, T? oldValue, T? newValue, bool hasChanges)>? postAction = null)
@@ -527,6 +526,7 @@ namespace ObservableHelpers
 
                         if (updateValidate?.Invoke((namedProperty, oldValue)) ?? true)
                         {
+                            T? value = valueFactory.Invoke();
                             if (namedProperty.Property.SetValue(value))
                             {
                                 newValue = value;
@@ -545,9 +545,10 @@ namespace ObservableHelpers
                 }
                 else
                 {
-                    namedProperty = RWLock.LockWrite(() =>
+                    (namedProperty, newValue) = RWLock.LockWrite(() =>
                     {
                         NamedProperty newNamedProperty = NamedPropertyFactory(key, propertyName, group);
+                        T? value = default;
                         if (addValidate?.Invoke((newNamedProperty, oldValue)) ?? true)
                         {
                             while (true)
@@ -568,14 +569,14 @@ namespace ObservableHelpers
                                 propertyNameDictionary[propertyName] = namedPropertyKey;
                             }
                             WireNamedProperty(newNamedProperty);
+                            value = valueFactory.Invoke();
                             if (!newNamedProperty.Property.SetValue(value))
                             {
                                 invokePropertyChanged = true;
                             }
-                            newValue = value;
                             hasChanges = true;
                         }
-                        return newNamedProperty;
+                        return (newNamedProperty, value);
                     });
                 }
 
@@ -589,7 +590,113 @@ namespace ObservableHelpers
                 RWLock.InvokeOnLockExit(() => OnPropertyChanged(ret.Key, ret.PropertyName, ret.Group));
             }
 
-            return ret;
+            return (ret, newValue);
+        }
+
+        /// <summary>
+        /// The core implementation for creating exact nullability typed of the <see cref="NamedProperty"/> from the property collection with the provided <paramref name="key"/> and <paramref name="propertyName"/>, or updates a value to the collection by using the specified function if the property already exist.
+        /// </summary>
+        /// <param name="key">
+        /// The key of the property to add or update.
+        /// </param>
+        /// <param name="propertyName">
+        /// The name of the property to add or update.
+        /// </param>
+        /// <param name="group">
+        /// The group of the property to add or update.
+        /// </param>
+        /// <param name="valueFactory">
+        /// The value factory of the property to add or update.
+        /// </param>
+        /// <param name="postAction">
+        /// The action after the add or update operation.
+        /// </param>
+        /// <returns>
+        /// The added or updated <see cref="NamedProperty"/> from the property collection.
+        /// </returns>
+        /// <exception cref="PropertyKeyAndNameNullException">
+        /// Throws when both <paramref name="key"/> and <paramref name="propertyName"/> are not provided.
+        /// </exception>
+        protected (NamedProperty namedProperty, T value) GetOrAddNamedProperty<T>(
+            string? key,
+            string? propertyName,
+            string? group,
+            Func<T> valueFactory,
+            Action<(NamedProperty namedProperty, T? oldValue, T newValue, bool hasChanges)>? postAction = null)
+        {
+            if (key == null && propertyName == null)
+            {
+                throw new PropertyKeyAndNameNullException();
+            }
+
+            T? oldValue = default;
+            //T? newValue = default;
+            bool hasChanges = false;
+            bool invokePropertyChanged = false;
+
+            (NamedProperty retProperty, T retValue) = RWLock.LockUpgradeableRead(() =>
+            {
+                NamedProperty? namedProperty = default;
+                T? newValue = default;
+
+                if (key != null && keyDictionary.TryGetValue(key, out int namedPropertyKey))
+                {
+                    namedProperty = namedProperties[namedPropertyKey];
+                }
+                else if (propertyName != null && propertyNameDictionary.TryGetValue(propertyName, out namedPropertyKey))
+                {
+                    namedProperty = namedProperties[namedPropertyKey];
+                }
+
+                if (namedProperty == null)
+                {
+                    (namedProperty, newValue) = RWLock.LockWrite(() =>
+                    {
+                        NamedProperty newNamedProperty = NamedPropertyFactory(key, propertyName, group);
+                        while (true)
+                        {
+                            namedPropertyKey = random.Next(int.MinValue, int.MaxValue);
+                            if (!namedProperties.ContainsKey(namedPropertyKey))
+                            {
+                                break;
+                            }
+                        }
+                        namedProperties[namedPropertyKey] = newNamedProperty;
+                        if (key != null)
+                        {
+                            keyDictionary[key] = namedPropertyKey;
+                        }
+                        if (propertyName != null)
+                        {
+                            propertyNameDictionary[propertyName] = namedPropertyKey;
+                        }
+                        WireNamedProperty(newNamedProperty);
+                        T value = valueFactory.Invoke();
+                        if (!newNamedProperty.Property.SetValue(value))
+                        {
+                            invokePropertyChanged = true;
+                        }
+                        hasChanges = true;
+                        return (newNamedProperty, value);
+                    });
+                }
+                else
+                {
+                    newValue = namedProperty.Property.GetValue(() => valueFactory.Invoke());
+                    oldValue = newValue;
+                }
+
+                postAction?.Invoke((namedProperty, oldValue, newValue, hasChanges));
+
+                return (namedProperty, newValue);
+            });
+
+            if (invokePropertyChanged)
+            {
+                RWLock.InvokeOnLockExit(() => OnPropertyChanged(retProperty.Key, retProperty.PropertyName, retProperty.Group));
+            }
+
+            return (retProperty, retValue);
         }
 
         /// <summary>

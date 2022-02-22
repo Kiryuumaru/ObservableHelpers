@@ -308,20 +308,20 @@ public class IndexerTest
         Assert.Equal(NotifyCollectionChangedAction.Replace, raiseCol[0].Action);
         Assert.Equal(2, raiseCol[0].OldStartingIndex);
         Assert.Equal(2, raiseCol[0].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("3", "three"), raiseCol[0].OldItems[0]);
-        Assert.Equal(KeyValuePair.Create("3", "threeUpdate"), raiseCol[0].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("3", "three"), raiseCol[0]?.OldItems?[0]);
+        Assert.Equal(KeyValuePair.Create("3", "threeUpdate"), raiseCol[0]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[1].Action);
         Assert.Equal(3, raiseCol[1].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("4", "four"), raiseCol[1].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("4", "four"), raiseCol[1]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[2].Action);
         Assert.Equal(4, raiseCol[2].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("5", "five"), raiseCol[2].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("5", "five"), raiseCol[2]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[3].Action);
         Assert.Equal(5, raiseCol[3].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("6", "six"), raiseCol[3].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("6", "six"), raiseCol[3]?.NewItems?[0]);
 
         Assert.Collection(dict,
             i => Assert.Equal(KeyValuePair.Create("1", "one"), i),
@@ -342,8 +342,10 @@ public class IndexerTest
             new KeyValuePair<string, string>("3", "three")
         });
 
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
         Assert.Throws<ArgumentNullException>(() => dict[null]);
         Assert.Throws<KeyNotFoundException>(() => dict["4"]);
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
 
         var dict2 = new ReadOnlyDictionary();
 
@@ -375,24 +377,24 @@ public class KeysTest
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[0].Action);
         Assert.Equal(0, raiseCol[0].NewStartingIndex);
-        Assert.Equal("1", raiseCol[0].NewItems[0]);
+        Assert.Equal("1", raiseCol[0]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[1].Action);
         Assert.Equal(1, raiseCol[1].NewStartingIndex);
-        Assert.Equal("2", raiseCol[1].NewItems[0]);
+        Assert.Equal("2", raiseCol[1]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[2].Action);
         Assert.Equal(2, raiseCol[2].NewStartingIndex);
-        Assert.Equal("3", raiseCol[2].NewItems[0]);
+        Assert.Equal("3", raiseCol[2]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[3].Action);
         Assert.Equal(2, raiseCol[3].NewStartingIndex);
-        Assert.Equal("2b", raiseCol[3].NewItems[0]);
+        Assert.Equal("2b", raiseCol[3]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[4].Action);
         Assert.Equal(3, raiseCol[4].NewStartingIndex);
-        Assert.Equal("2c", raiseCol[4].NewItems[0]);
-        Assert.Equal("2d", raiseCol[4].NewItems[1]);
+        Assert.Equal("2c", raiseCol[4]?.NewItems?[0]);
+        Assert.Equal("2d", raiseCol[4]?.NewItems?[1]);
 
         Assert.Collection(dict.Keys,
             i => Assert.Equal("1", i),
@@ -439,24 +441,24 @@ public class ValuesTest
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[0].Action);
         Assert.Equal(0, raiseCol[0].NewStartingIndex);
-        Assert.Equal("one", raiseCol[0].NewItems[0]);
+        Assert.Equal("one", raiseCol[0]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[1].Action);
         Assert.Equal(1, raiseCol[1].NewStartingIndex);
-        Assert.Equal("two", raiseCol[1].NewItems[0]);
+        Assert.Equal("two", raiseCol[1]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[2].Action);
         Assert.Equal(2, raiseCol[2].NewStartingIndex);
-        Assert.Equal("three", raiseCol[2].NewItems[0]);
+        Assert.Equal("three", raiseCol[2]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[3].Action);
         Assert.Equal(2, raiseCol[3].NewStartingIndex);
-        Assert.Equal("twob", raiseCol[3].NewItems[0]);
+        Assert.Equal("twob", raiseCol[3]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[4].Action);
         Assert.Equal(3, raiseCol[4].NewStartingIndex);
-        Assert.Equal("twoc", raiseCol[4].NewItems[0]);
-        Assert.Equal("twod", raiseCol[4].NewItems[1]);
+        Assert.Equal("twoc", raiseCol[4]?.NewItems?[0]);
+        Assert.Equal("twod", raiseCol[4]?.NewItems?[1]);
 
         Assert.Collection(dict.Values,
             i => Assert.Equal("one", i),
@@ -547,9 +549,11 @@ public class ConstructorTest
     [Fact]
     public void Throws()
     {
-        Assert.Throws<ArgumentNullException>(() => new ObservableDictionary<int, int>((IEnumerable<KeyValuePair<int, int>>)null));
-        Assert.Throws<ArgumentNullException>(() => new ObservableDictionary<int, int>((IEqualityComparer<int>)null));
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
+        Assert.Throws<ArgumentNullException>(() => new ObservableDictionary<int, int>((IEnumerable<KeyValuePair<int, int>>?)null));
+        Assert.Throws<ArgumentNullException>(() => new ObservableDictionary<int, int>((IEqualityComparer<int>?)null));
         Assert.Throws<ArgumentNullException>(() => new ObservableDictionary<int, int>(null, null));
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
     }
 }
 
@@ -575,15 +579,15 @@ public class AddTest
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[0].Action);
         Assert.Equal(0, raiseCol[0].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("1", "one"), raiseCol[0].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("1", "one"), raiseCol[0]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[1].Action);
         Assert.Equal(1, raiseCol[1].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("2", "two"), raiseCol[1].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("2", "two"), raiseCol[1]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[2].Action);
         Assert.Equal(2, raiseCol[2].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("3", "three"), raiseCol[2].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("3", "three"), raiseCol[2]?.NewItems?[0]);
 
         Assert.Collection(dict,
             i => Assert.Equal(KeyValuePair.Create("1", "one"), i),
@@ -602,8 +606,10 @@ public class AddTest
             new KeyValuePair<string, string>("4", "four")
         });
 
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
         Assert.Throws<ArgumentNullException>(() => dict.Add(null, "exists"));
         Assert.Throws<ArgumentException>(() => dict.Add("3", "exists"));
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
 
         var dict1 = new ReadOnlyDictionary();
 
@@ -640,13 +646,13 @@ public class AddRangeTest
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[0].Action);
         Assert.Equal(0, raiseCol[0].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("1", "one"), raiseCol[0].NewItems[0]);
-        Assert.Equal(KeyValuePair.Create("2", "two"), raiseCol[0].NewItems[1]);
+        Assert.Equal(KeyValuePair.Create("1", "one"), raiseCol[0]?.NewItems?[0]);
+        Assert.Equal(KeyValuePair.Create("2", "two"), raiseCol[0]?.NewItems?[1]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[1].Action);
         Assert.Equal(2, raiseCol[1].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("3", "three"), raiseCol[1].NewItems[0]);
-        Assert.Equal(KeyValuePair.Create("4", "four"), raiseCol[1].NewItems[1]);
+        Assert.Equal(KeyValuePair.Create("3", "three"), raiseCol[1]?.NewItems?[0]);
+        Assert.Equal(KeyValuePair.Create("4", "four"), raiseCol[1]?.NewItems?[1]);
 
         Assert.Collection(dict,
             i => Assert.Equal(KeyValuePair.Create("1", "one"), i),
@@ -660,8 +666,10 @@ public class AddRangeTest
     {
         var dict = new ObservableDictionary<string, string>();
 
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
         Assert.Throws<ArgumentNullException>(() => dict.AddRange(null));
-        Assert.Throws<ArgumentNullException>(() => dict.AddRange((IEnumerable<KeyValuePair<string, string>>)null));
+        Assert.Throws<ArgumentNullException>(() => dict.AddRange((IEnumerable<KeyValuePair<string, string>>?)null));
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
 
         var dict1 = new ReadOnlyDictionary();
 
@@ -697,27 +705,27 @@ public class AddOrUpdateTest
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[0].Action);
         Assert.Equal(0, raiseCol[0].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("1", "oneAdd"), raiseCol[0].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("1", "oneAdd"), raiseCol[0]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[1].Action);
         Assert.Equal(1, raiseCol[1].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("2", "twoAdd"), raiseCol[1].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("2", "twoAdd"), raiseCol[1]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[2].Action);
         Assert.Equal(2, raiseCol[2].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("3", "threeAdd"), raiseCol[2].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("3", "threeAdd"), raiseCol[2]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[3].Action);
         Assert.Equal(3, raiseCol[3].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("4", "fourAdd"), raiseCol[3].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("4", "fourAdd"), raiseCol[3]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[4].Action);
         Assert.Equal(4, raiseCol[4].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("5", "fiveAdd"), raiseCol[4].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("5", "fiveAdd"), raiseCol[4]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[5].Action);
         Assert.Equal(5, raiseCol[5].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("6", "sixAdd"), raiseCol[5].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("6", "sixAdd"), raiseCol[5]?.NewItems?[0]);
 
         Assert.Collection(dict,
             i => Assert.Equal(KeyValuePair.Create("1", "oneAdd"), i),
@@ -760,38 +768,38 @@ public class AddOrUpdateTest
         Assert.Equal(NotifyCollectionChangedAction.Replace, raiseCol[0].Action);
         Assert.Equal(0, raiseCol[0].OldStartingIndex);
         Assert.Equal(0, raiseCol[0].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("1", "one"), raiseCol[0].OldItems[0]);
-        Assert.Equal(KeyValuePair.Create("1", "oneAddOrUpdate"), raiseCol[0].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("1", "one"), raiseCol[0]?.OldItems?[0]);
+        Assert.Equal(KeyValuePair.Create("1", "oneAddOrUpdate"), raiseCol[0]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Replace, raiseCol[1].Action);
         Assert.Equal(1, raiseCol[1].OldStartingIndex);
         Assert.Equal(1, raiseCol[1].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("2", "two"), raiseCol[1].OldItems[0]);
-        Assert.Equal(KeyValuePair.Create("2", "twoAddOrUpdate"), raiseCol[1].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("2", "two"), raiseCol[1]?.OldItems?[0]);
+        Assert.Equal(KeyValuePair.Create("2", "twoAddOrUpdate"), raiseCol[1]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Replace, raiseCol[2].Action);
         Assert.Equal(2, raiseCol[2].OldStartingIndex);
         Assert.Equal(2, raiseCol[2].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("3", "three"), raiseCol[2].OldItems[0]);
-        Assert.Equal(KeyValuePair.Create("3", "threeUpdate"), raiseCol[2].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("3", "three"), raiseCol[2]?.OldItems?[0]);
+        Assert.Equal(KeyValuePair.Create("3", "threeUpdate"), raiseCol[2]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Replace, raiseCol[3].Action);
         Assert.Equal(3, raiseCol[3].OldStartingIndex);
         Assert.Equal(3, raiseCol[3].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("4", "four"), raiseCol[3].OldItems[0]);
-        Assert.Equal(KeyValuePair.Create("4", "fourUpdate"), raiseCol[3].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("4", "four"), raiseCol[3]?.OldItems?[0]);
+        Assert.Equal(KeyValuePair.Create("4", "fourUpdate"), raiseCol[3]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Replace, raiseCol[4].Action);
         Assert.Equal(4, raiseCol[4].OldStartingIndex);
         Assert.Equal(4, raiseCol[4].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("5", "five"), raiseCol[4].OldItems[0]);
-        Assert.Equal(KeyValuePair.Create("5", "fiveUpdate"), raiseCol[4].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("5", "five"), raiseCol[4]?.OldItems?[0]);
+        Assert.Equal(KeyValuePair.Create("5", "fiveUpdate"), raiseCol[4]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Replace, raiseCol[5].Action);
         Assert.Equal(5, raiseCol[5].OldStartingIndex);
         Assert.Equal(5, raiseCol[5].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("6", "six"), raiseCol[5].OldItems[0]);
-        Assert.Equal(KeyValuePair.Create("6", "sixUpdate"), raiseCol[5].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("6", "six"), raiseCol[5]?.OldItems?[0]);
+        Assert.Equal(KeyValuePair.Create("6", "sixUpdate"), raiseCol[5]?.NewItems?[0]);
 
         Assert.Collection(dict,
             i => Assert.Equal(KeyValuePair.Create("1", "oneAddOrUpdate"), i),
@@ -831,32 +839,32 @@ public class AddOrUpdateTest
         Assert.Equal(NotifyCollectionChangedAction.Replace, raiseCol[0].Action);
         Assert.Equal(0, raiseCol[0].OldStartingIndex);
         Assert.Equal(0, raiseCol[0].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("1", "one"), raiseCol[0].OldItems[0]);
-        Assert.Equal(KeyValuePair.Create("1", "oneAddOrUpdate"), raiseCol[0].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("1", "one"), raiseCol[0]?.OldItems?[0]);
+        Assert.Equal(KeyValuePair.Create("1", "oneAddOrUpdate"), raiseCol[0]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Replace, raiseCol[1].Action);
         Assert.Equal(1, raiseCol[1].OldStartingIndex);
         Assert.Equal(1, raiseCol[1].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("2", "two"), raiseCol[1].OldItems[0]);
-        Assert.Equal(KeyValuePair.Create("2", "twoAddOrUpdate"), raiseCol[1].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("2", "two"), raiseCol[1]?.OldItems?[0]);
+        Assert.Equal(KeyValuePair.Create("2", "twoAddOrUpdate"), raiseCol[1]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Replace, raiseCol[2].Action);
         Assert.Equal(2, raiseCol[2].OldStartingIndex);
         Assert.Equal(2, raiseCol[2].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("3", "three"), raiseCol[2].OldItems[0]);
-        Assert.Equal(KeyValuePair.Create("3", "threeUpdate"), raiseCol[2].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("3", "three"), raiseCol[2]?.OldItems?[0]);
+        Assert.Equal(KeyValuePair.Create("3", "threeUpdate"), raiseCol[2]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[3].Action);
         Assert.Equal(3, raiseCol[3].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("4", "fourAdd"), raiseCol[3].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("4", "fourAdd"), raiseCol[3]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[4].Action);
         Assert.Equal(4, raiseCol[4].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("5", "fiveAdd"), raiseCol[4].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("5", "fiveAdd"), raiseCol[4]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[5].Action);
         Assert.Equal(5, raiseCol[5].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("6", "sixAdd"), raiseCol[5].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("6", "sixAdd"), raiseCol[5]?.NewItems?[0]);
 
         Assert.Collection(dict,
             i => Assert.Equal(KeyValuePair.Create("1", "oneAddOrUpdate"), i),
@@ -877,18 +885,20 @@ public class AddOrUpdateTest
             new KeyValuePair<string, string>("3", "three")
         });
 
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
         Assert.Throws<ArgumentNullException>(() => dict.AddOrUpdate(null, "oneAddOrUpdate"));
         Assert.Throws<ArgumentNullException>(() => dict.AddOrUpdate(null, _ => "twoAddOrUpdate"));
-        Assert.Throws<ArgumentNullException>(() => dict.AddOrUpdate(null, (Func<string, string>)null));
+        Assert.Throws<ArgumentNullException>(() => dict.AddOrUpdate(null, (Func<string, string>?)null));
         Assert.Throws<ArgumentNullException>(() => dict.AddOrUpdate(null, "threeAdd", "threeUpdate"));
         Assert.Throws<ArgumentNullException>(() => dict.AddOrUpdate(null, _ => "fourAdd", "fourUpdate"));
-        Assert.Throws<ArgumentNullException>(() => dict.AddOrUpdate(null, (Func<string, string>)null, "fourUpdate"));
+        Assert.Throws<ArgumentNullException>(() => dict.AddOrUpdate(null, (Func<string, string>?)null, "fourUpdate"));
         Assert.Throws<ArgumentNullException>(() => dict.AddOrUpdate(null, "fiveAdd", _ => "fiveUpdate"));
-        Assert.Throws<ArgumentNullException>(() => dict.AddOrUpdate(null, "fiveAdd", (Func<(string key, string oldValue), string>)null));
+        Assert.Throws<ArgumentNullException>(() => dict.AddOrUpdate(null, "fiveAdd", (Func<(string key, string oldValue), string>?)null));
         Assert.Throws<ArgumentNullException>(() => dict.AddOrUpdate(null, _ => "sixAdd", _ => "sixUpdate"));
-        Assert.Throws<ArgumentNullException>(() => dict.AddOrUpdate(null, _ => "sixAdd", (Func<(string key, string oldValue), string>)null));
-        Assert.Throws<ArgumentNullException>(() => dict.AddOrUpdate(null, (Func<string, string>)null, _ => "sixUpdate"));
-        Assert.Throws<ArgumentNullException>(() => dict.AddOrUpdate(null, (Func<string, string>)null, (Func<(string key, string oldValue), string>)null));
+        Assert.Throws<ArgumentNullException>(() => dict.AddOrUpdate(null, _ => "sixAdd", (Func<(string key, string oldValue), string>?)null));
+        Assert.Throws<ArgumentNullException>(() => dict.AddOrUpdate(null, (Func<string, string>?)null, _ => "sixUpdate"));
+        Assert.Throws<ArgumentNullException>(() => dict.AddOrUpdate(null, (Func<string, string>?)null, (Func<(string key, string oldValue), string>?)null));
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
 
         var dict2 = new ReadOnlyDictionary();
 
@@ -932,7 +942,9 @@ public class ContainsKeyTest
             new KeyValuePair<string, string>("3", "three")
         });
 
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
         Assert.Throws<ArgumentNullException>(() => dict.ContainsKey(null));
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
     }
 }
 
@@ -1028,11 +1040,11 @@ public class GetOrAddTest
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[0].Action);
         Assert.Equal(4, raiseCol[0].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("5", "fiveAdd"), raiseCol[0].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("5", "fiveAdd"), raiseCol[0]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[1].Action);
         Assert.Equal(5, raiseCol[1].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("6", "sixAdd"), raiseCol[1].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("6", "sixAdd"), raiseCol[1]?.NewItems?[0]);
 
         Assert.Collection(dict,
             i => Assert.Equal(KeyValuePair.Create("1", "one"), i),
@@ -1068,11 +1080,11 @@ public class GetOrAddTest
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[0].Action);
         Assert.Equal(2, raiseCol[0].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("1", "oneAdd"), raiseCol[0].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("1", "oneAdd"), raiseCol[0]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[1].Action);
         Assert.Equal(3, raiseCol[1].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("3", "threeAdd"), raiseCol[1].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("3", "threeAdd"), raiseCol[1]?.NewItems?[0]);
 
         Assert.Collection(dict,
             i => Assert.Equal(KeyValuePair.Create("2", "two"), i),
@@ -1086,8 +1098,10 @@ public class GetOrAddTest
     {
         var dict = new ObservableDictionary<string, string>();
 
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
         Assert.Throws<ArgumentNullException>(() => dict.GetOrAdd(null, "one"));
-        Assert.Throws<ArgumentNullException>(() => dict.GetOrAdd("1", (Func<string, string>)null));
+        Assert.Throws<ArgumentNullException>(() => dict.GetOrAdd("1", (Func<string, string>?)null));
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
 
         var dict2 = new ReadOnlyDictionary();
 
@@ -1119,19 +1133,19 @@ public class InsertTest
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[0].Action);
         Assert.Equal(0, raiseCol[0].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("1", "one"), raiseCol[0].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("1", "one"), raiseCol[0]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[1].Action);
         Assert.Equal(0, raiseCol[1].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("2", "two"), raiseCol[1].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("2", "two"), raiseCol[1]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[2].Action);
         Assert.Equal(0, raiseCol[2].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("3", "three"), raiseCol[2].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("3", "three"), raiseCol[2]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[3].Action);
         Assert.Equal(0, raiseCol[3].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("4", "four"), raiseCol[3].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("4", "four"), raiseCol[3]?.NewItems?[0]);
 
         Assert.Collection(dict,
             i => Assert.Equal(KeyValuePair.Create("4", "four"), i),
@@ -1161,19 +1175,19 @@ public class InsertTest
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[0].Action);
         Assert.Equal(0, raiseCol[0].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("1", "one"), raiseCol[0].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("1", "one"), raiseCol[0]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[1].Action);
         Assert.Equal(1, raiseCol[1].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("2", "two"), raiseCol[1].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("2", "two"), raiseCol[1]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[2].Action);
         Assert.Equal(2, raiseCol[2].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("3", "three"), raiseCol[2].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("3", "three"), raiseCol[2]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[3].Action);
         Assert.Equal(3, raiseCol[3].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("4", "four"), raiseCol[3].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("4", "four"), raiseCol[3]?.NewItems?[0]);
 
         Assert.Collection(dict,
             i => Assert.Equal(KeyValuePair.Create("1", "one"), i),
@@ -1205,11 +1219,11 @@ public class InsertTest
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[0].Action);
         Assert.Equal(0, raiseCol[0].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("1", "one"), raiseCol[0].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("1", "one"), raiseCol[0]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[1].Action);
         Assert.Equal(2, raiseCol[1].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("3", "three"), raiseCol[1].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("3", "three"), raiseCol[1]?.NewItems?[0]);
 
         Assert.Collection(dict,
             i => Assert.Equal(KeyValuePair.Create("1", "one"), i),
@@ -1260,13 +1274,13 @@ public class InsertRangeTest
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[0].Action);
         Assert.Equal(0, raiseCol[0].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("1", "one"), raiseCol[0].NewItems[0]);
-        Assert.Equal(KeyValuePair.Create("2", "two"), raiseCol[0].NewItems[1]);
+        Assert.Equal(KeyValuePair.Create("1", "one"), raiseCol[0]?.NewItems?[0]);
+        Assert.Equal(KeyValuePair.Create("2", "two"), raiseCol[0]?.NewItems?[1]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[1].Action);
         Assert.Equal(0, raiseCol[1].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("3", "three"), raiseCol[1].NewItems[0]);
-        Assert.Equal(KeyValuePair.Create("4", "four"), raiseCol[1].NewItems[1]);
+        Assert.Equal(KeyValuePair.Create("3", "three"), raiseCol[1]?.NewItems?[0]);
+        Assert.Equal(KeyValuePair.Create("4", "four"), raiseCol[1]?.NewItems?[1]);
 
         Assert.Collection(dict,
             i => Assert.Equal(KeyValuePair.Create("3", "three"), i),
@@ -1294,13 +1308,13 @@ public class InsertRangeTest
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[0].Action);
         Assert.Equal(0, raiseCol[0].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("1", "one"), raiseCol[0].NewItems[0]);
-        Assert.Equal(KeyValuePair.Create("2", "two"), raiseCol[0].NewItems[1]);
+        Assert.Equal(KeyValuePair.Create("1", "one"), raiseCol[0]?.NewItems?[0]);
+        Assert.Equal(KeyValuePair.Create("2", "two"), raiseCol[0]?.NewItems?[1]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[1].Action);
         Assert.Equal(2, raiseCol[1].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("3", "three"), raiseCol[1].NewItems[0]);
-        Assert.Equal(KeyValuePair.Create("4", "four"), raiseCol[1].NewItems[1]);
+        Assert.Equal(KeyValuePair.Create("3", "three"), raiseCol[1]?.NewItems?[0]);
+        Assert.Equal(KeyValuePair.Create("4", "four"), raiseCol[1]?.NewItems?[1]);
 
         Assert.Collection(dict,
             i => Assert.Equal(KeyValuePair.Create("1", "one"), i),
@@ -1332,13 +1346,13 @@ public class InsertRangeTest
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[0].Action);
         Assert.Equal(1, raiseCol[0].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("2", "two"), raiseCol[0].NewItems[0]);
-        Assert.Equal(KeyValuePair.Create("3", "three"), raiseCol[0].NewItems[1]);
+        Assert.Equal(KeyValuePair.Create("2", "two"), raiseCol[0]?.NewItems?[0]);
+        Assert.Equal(KeyValuePair.Create("3", "three"), raiseCol[0]?.NewItems?[1]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[1].Action);
         Assert.Equal(4, raiseCol[1].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("5", "five"), raiseCol[1].NewItems[0]);
-        Assert.Equal(KeyValuePair.Create("6", "six"), raiseCol[1].NewItems[1]);
+        Assert.Equal(KeyValuePair.Create("5", "five"), raiseCol[1]?.NewItems?[0]);
+        Assert.Equal(KeyValuePair.Create("6", "six"), raiseCol[1]?.NewItems?[1]);
 
         Assert.Collection(dict,
             i => Assert.Equal(KeyValuePair.Create("1", "one"), i),
@@ -1360,8 +1374,10 @@ public class InsertRangeTest
             new KeyValuePair<string, string>("4", "four")
         });
 
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
         Assert.Throws<ArgumentNullException>(() => dict.InsertRange(-1, null));
-        Assert.Throws<ArgumentNullException>(() => dict.InsertRange(-1, (IEnumerable<KeyValuePair<string, string>>)null));
+        Assert.Throws<ArgumentNullException>(() => dict.InsertRange(-1, (IEnumerable<KeyValuePair<string, string>>?)null));
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
         Assert.Throws<ArgumentOutOfRangeException>(() => dict.InsertRange(-1, KeyValuePair.Create("5", "five"), KeyValuePair.Create("6", "six")));
         Assert.Throws<ArgumentOutOfRangeException>(() => dict.InsertRange(5, new KeyValuePair<string, string>[] { KeyValuePair.Create("7", "seven"), KeyValuePair.Create("8", "eight") } as IEnumerable<KeyValuePair<string, string>>));
         Assert.Throws<ArgumentException>(() => dict.InsertRange(0, KeyValuePair.Create("1", "one"), KeyValuePair.Create("9", "nine")));
@@ -1402,11 +1418,11 @@ public class RemoveTest
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[0].Action);
         Assert.Equal(0, raiseCol[0].OldStartingIndex);
-        Assert.Equal(KeyValuePair.Create("1", "one"), raiseCol[0].OldItems[0]);
+        Assert.Equal(KeyValuePair.Create("1", "one"), raiseCol[0]?.OldItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[1].Action);
         Assert.Equal(1, raiseCol[1].OldStartingIndex);
-        Assert.Equal(KeyValuePair.Create("3", "three"), raiseCol[1].OldItems[0]);
+        Assert.Equal(KeyValuePair.Create("3", "three"), raiseCol[1]?.OldItems?[0]);
 
         Assert.Collection(dict,
             i => Assert.Equal(KeyValuePair.Create("2", "two"), i),
@@ -1442,19 +1458,19 @@ public class RemoveTest
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[0].Action);
         Assert.Equal(3, raiseCol[0].OldStartingIndex);
-        Assert.Equal(KeyValuePair.Create("4", "four"), raiseCol[0].OldItems[0]);
+        Assert.Equal(KeyValuePair.Create("4", "four"), raiseCol[0]?.OldItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[1].Action);
         Assert.Equal(2, raiseCol[1].OldStartingIndex);
-        Assert.Equal(KeyValuePair.Create("3", "three"), raiseCol[1].OldItems[0]);
+        Assert.Equal(KeyValuePair.Create("3", "three"), raiseCol[1]?.OldItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[2].Action);
         Assert.Equal(1, raiseCol[2].OldStartingIndex);
-        Assert.Equal(KeyValuePair.Create("2", "two"), raiseCol[2].OldItems[0]);
+        Assert.Equal(KeyValuePair.Create("2", "two"), raiseCol[2]?.OldItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[3].Action);
         Assert.Equal(0, raiseCol[3].OldStartingIndex);
-        Assert.Equal(KeyValuePair.Create("1", "one"), raiseCol[3].OldItems[0]);
+        Assert.Equal(KeyValuePair.Create("1", "one"), raiseCol[3]?.OldItems?[0]);
     }
 
     [Fact]
@@ -1468,7 +1484,9 @@ public class RemoveTest
             new KeyValuePair<string, string>("4", "four")
         });
 
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
         Assert.Throws<ArgumentNullException>(() => dict.Remove(null));
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
 
         var dict2 = new ReadOnlyDictionary();
 
@@ -1504,11 +1522,11 @@ public class TryAddTest
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[0].Action);
         Assert.Equal(4, raiseCol[0].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("5", "fiveAdd"), raiseCol[0].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("5", "fiveAdd"), raiseCol[0]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[1].Action);
         Assert.Equal(5, raiseCol[1].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("6", "sixAdd"), raiseCol[1].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("6", "sixAdd"), raiseCol[1]?.NewItems?[0]);
 
         Assert.Collection(dict,
             i => Assert.Equal(KeyValuePair.Create("1", "one"), i),
@@ -1530,9 +1548,11 @@ public class TryAddTest
             new KeyValuePair<string, string>("4", "four")
         });
 
-        Assert.Throws<ArgumentNullException>(() => dict.TryAdd(KeyValuePair.Create((string)null, "fiveAdd")));
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
+        Assert.Throws<ArgumentNullException>(() => dict.TryAdd(KeyValuePair.Create<string, string>(null, "fiveAdd")));
         Assert.Throws<ArgumentNullException>(() => dict.TryAdd(null, "sixAdd"));
         Assert.Throws<ArgumentNullException>(() => dict.TryAdd(null, _ => "sevenAdd"));
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
 
         var dict2 = new ReadOnlyDictionary();
 
@@ -1556,9 +1576,9 @@ public class TryGetValueTest
         });
 
         Assert.True(dict.TryGetValue("1"));
-        Assert.True(dict.TryGetValue("2", out string twoValue));
+        Assert.True(dict.TryGetValue("2", out string? twoValue));
         Assert.False(dict.TryGetValue("5"));
-        Assert.False(dict.TryGetValue("6", out string sixValue));
+        Assert.False(dict.TryGetValue("6", out string? sixValue));
 
         Assert.Equal("two", twoValue);
         Assert.Null(sixValue);
@@ -1575,8 +1595,10 @@ public class TryGetValueTest
             new KeyValuePair<string, string>("4", "four")
         });
 
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
         Assert.Throws<ArgumentNullException>(() => dict.TryGetValue(null));
-        Assert.Throws<ArgumentNullException>(() => dict.TryGetValue(null, out string nullValue));
+        Assert.Throws<ArgumentNullException>(() => dict.TryGetValue(null, out string? nullValue));
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
     }
 }
 
@@ -1601,12 +1623,12 @@ public class TryRemoveTest
             raiseCol.Add(e);
         };
 
-        Assert.True(dict.TryRemove(KeyValuePair.Create("4", ""), out KeyValuePair<string, string> fourValue1));
-        Assert.True(dict.TryRemove("3", out string threeValue1));
+        Assert.True(dict.TryRemove(KeyValuePair.Create("4", ""), out KeyValuePair<string, string?> fourValue1));
+        Assert.True(dict.TryRemove("3", out string? threeValue1));
         Assert.True(dict.TryRemove(KeyValuePair.Create("2", "")));
         Assert.True(dict.TryRemove("1"));
-        Assert.False(dict.TryRemove(KeyValuePair.Create("4", ""), out KeyValuePair<string, string> fourValue2));
-        Assert.False(dict.TryRemove("3", out string threeValue2));
+        Assert.False(dict.TryRemove(KeyValuePair.Create("4", ""), out KeyValuePair<string, string?> fourValue2));
+        Assert.False(dict.TryRemove("3", out string? threeValue2));
         Assert.False(dict.TryRemove(KeyValuePair.Create("2", "")));
         Assert.False(dict.TryRemove("1"));
 
@@ -1615,19 +1637,19 @@ public class TryRemoveTest
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[0].Action);
         Assert.Equal(3, raiseCol[0].OldStartingIndex);
-        Assert.Equal(KeyValuePair.Create("4", "four"), raiseCol[0].OldItems[0]);
+        Assert.Equal(KeyValuePair.Create("4", "four"), raiseCol[0]?.OldItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[1].Action);
         Assert.Equal(2, raiseCol[1].OldStartingIndex);
-        Assert.Equal(KeyValuePair.Create("3", "three"), raiseCol[1].OldItems[0]);
+        Assert.Equal(KeyValuePair.Create("3", "three"), raiseCol[1]?.OldItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[2].Action);
         Assert.Equal(1, raiseCol[2].OldStartingIndex);
-        Assert.Equal(KeyValuePair.Create("2", "two"), raiseCol[2].OldItems[0]);
+        Assert.Equal(KeyValuePair.Create("2", "two"), raiseCol[2]?.OldItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[3].Action);
         Assert.Equal(0, raiseCol[3].OldStartingIndex);
-        Assert.Equal(KeyValuePair.Create("1", "one"), raiseCol[3].OldItems[0]);
+        Assert.Equal(KeyValuePair.Create("1", "one"), raiseCol[3]?.OldItems?[0]);
 
         Assert.Collection(dict,
             i => Assert.Equal(KeyValuePair.Create("5", "five"), i),
@@ -1653,54 +1675,54 @@ public class TryRemoveTest
             raiseCol.Add(e);
         };
 
-        Assert.True(dict.TryRemove(KeyValuePair.Create("6", ""), out KeyValuePair<string, string> sixValue1));
-        Assert.True(dict.TryRemove(KeyValuePair.Create("5", ""), out KeyValuePair<string, string> fiveValue1));
-        Assert.True(dict.TryRemove(KeyValuePair.Create("4", ""), out KeyValuePair<string, string> fourValue1));
-        Assert.True(dict.TryRemove("3", out string threeValue1));
+        Assert.True(dict.TryRemove(KeyValuePair.Create("6", ""), out KeyValuePair<string, string?> sixValue1));
+        Assert.True(dict.TryRemove(KeyValuePair.Create("5", ""), out KeyValuePair<string, string?> fiveValue1));
+        Assert.True(dict.TryRemove(KeyValuePair.Create("4", ""), out KeyValuePair<string, string?> fourValue1));
+        Assert.True(dict.TryRemove("3", out string? threeValue1));
         Assert.True(dict.TryRemove(KeyValuePair.Create("2", "")));
         Assert.True(dict.TryRemove("1"));
-        Assert.False(dict.TryRemove(KeyValuePair.Create("6", ""), out KeyValuePair<string, string> sixValue2));
-        Assert.False(dict.TryRemove(KeyValuePair.Create("5", ""), out KeyValuePair<string, string> fiveValue2));
-        Assert.False(dict.TryRemove(KeyValuePair.Create("4", ""), out KeyValuePair<string, string> fourValue2));
-        Assert.False(dict.TryRemove("3", out string threeValue2));
+        Assert.False(dict.TryRemove(KeyValuePair.Create("6", ""), out KeyValuePair<string, string?> sixValue2));
+        Assert.False(dict.TryRemove(KeyValuePair.Create("5", ""), out KeyValuePair<string, string?> fiveValue2));
+        Assert.False(dict.TryRemove(KeyValuePair.Create("4", ""), out KeyValuePair<string, string?> fourValue2));
+        Assert.False(dict.TryRemove("3", out string? threeValue2));
         Assert.False(dict.TryRemove(KeyValuePair.Create("2", "")));
         Assert.False(dict.TryRemove("1"));
 
         Assert.Equal("three", threeValue1);
-        Assert.Equal(KeyValuePair.Create("4", "four"), fourValue1);
-        Assert.Equal(KeyValuePair.Create("5", "five"), fiveValue1);
-        Assert.Equal(KeyValuePair.Create("6", "six"), sixValue1);
+        Assert.Equal(KeyValuePair.Create<string, string?>("4", "four"), fourValue1);
+        Assert.Equal(KeyValuePair.Create<string, string?>("5", "five"), fiveValue1);
+        Assert.Equal(KeyValuePair.Create<string, string?>("6", "six"), sixValue1);
         Assert.Null(threeValue2);
-        Assert.Equal(KeyValuePair.Create("4", (string)null), fourValue2);
-        Assert.Equal(KeyValuePair.Create("5", (string)null), fiveValue2);
-        Assert.Equal(KeyValuePair.Create("6", (string)null), sixValue2);
+        Assert.Equal(KeyValuePair.Create("4", (string?)null), fourValue2);
+        Assert.Equal(KeyValuePair.Create("5", (string?)null), fiveValue2);
+        Assert.Equal(KeyValuePair.Create("6", (string?)null), sixValue2);
 
         Assert.Empty(dict);
         Assert.Equal(6, raiseCol.Count);
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[0].Action);
         Assert.Equal(5, raiseCol[0].OldStartingIndex);
-        Assert.Equal(KeyValuePair.Create("6", "six"), raiseCol[0].OldItems[0]);
+        Assert.Equal(KeyValuePair.Create("6", "six"), raiseCol[0]?.OldItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[1].Action);
         Assert.Equal(4, raiseCol[1].OldStartingIndex);
-        Assert.Equal(KeyValuePair.Create("5", "five"), raiseCol[1].OldItems[0]);
+        Assert.Equal(KeyValuePair.Create("5", "five"), raiseCol[1]?.OldItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[2].Action);
         Assert.Equal(3, raiseCol[2].OldStartingIndex);
-        Assert.Equal(KeyValuePair.Create("4", "four"), raiseCol[2].OldItems[0]);
+        Assert.Equal(KeyValuePair.Create("4", "four"), raiseCol[2]?.OldItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[3].Action);
         Assert.Equal(2, raiseCol[3].OldStartingIndex);
-        Assert.Equal(KeyValuePair.Create("3", "three"), raiseCol[3].OldItems[0]);
+        Assert.Equal(KeyValuePair.Create("3", "three"), raiseCol[3]?.OldItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[4].Action);
         Assert.Equal(1, raiseCol[4].OldStartingIndex);
-        Assert.Equal(KeyValuePair.Create("2", "two"), raiseCol[4].OldItems[0]);
+        Assert.Equal(KeyValuePair.Create("2", "two"), raiseCol[4]?.OldItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[5].Action);
         Assert.Equal(0, raiseCol[5].OldStartingIndex);
-        Assert.Equal(KeyValuePair.Create("1", "one"), raiseCol[5].OldItems[0]);
+        Assert.Equal(KeyValuePair.Create("1", "one"), raiseCol[5]?.OldItems?[0]);
     }
 
     [Fact]
@@ -1714,17 +1736,19 @@ public class TryRemoveTest
             new KeyValuePair<string, string>("4", "four")
         });
 
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
         Assert.Throws<ArgumentNullException>(() => dict.TryRemove(null));
-        Assert.Throws<ArgumentNullException>(() => dict.TryRemove(KeyValuePair.Create((string)null, "")));
-        Assert.Throws<ArgumentNullException>(() => dict.TryRemove(null, out string nullValue1));
-        Assert.Throws<ArgumentNullException>(() => dict.TryRemove(KeyValuePair.Create((string)null, ""), out KeyValuePair<string, string> nullValue2));
+        Assert.Throws<ArgumentNullException>(() => dict.TryRemove(KeyValuePair.Create<string, string>(null, "")));
+        Assert.Throws<ArgumentNullException>(() => dict.TryRemove(null, out string? nullValue1));
+        Assert.Throws<ArgumentNullException>(() => dict.TryRemove(KeyValuePair.Create<string, string>(null, ""), out KeyValuePair<string, string?> nullValue2));
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
 
         var dict2 = new ReadOnlyDictionary();
 
         Assert.Throws<NotSupportedException>(() => dict2.TryRemove("1"));
         Assert.Throws<NotSupportedException>(() => dict2.TryRemove(KeyValuePair.Create("2", "")));
-        Assert.Throws<NotSupportedException>(() => dict2.TryRemove("3", out string threeValue));
-        Assert.Throws<NotSupportedException>(() => dict2.TryRemove(KeyValuePair.Create("4", ""), out KeyValuePair<string, string> fourValue));
+        Assert.Throws<NotSupportedException>(() => dict2.TryRemove("3", out string? threeValue));
+        Assert.Throws<NotSupportedException>(() => dict2.TryRemove(KeyValuePair.Create("4", ""), out KeyValuePair<string, string?> fourValue));
     }
 }
 
@@ -1788,38 +1812,38 @@ public class TryUpdateTest
         Assert.Equal(NotifyCollectionChangedAction.Replace, raiseCol[0].Action);
         Assert.Equal(6, raiseCol[0].OldStartingIndex);
         Assert.Equal(6, raiseCol[0].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("7", "seven"), raiseCol[0].OldItems[0]);
-        Assert.Equal(KeyValuePair.Create("7", "sevenUpdate"), raiseCol[0].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("7", "seven"), raiseCol[0]?.OldItems?[0]);
+        Assert.Equal(KeyValuePair.Create("7", "sevenUpdate"), raiseCol[0]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Replace, raiseCol[1].Action);
         Assert.Equal(5, raiseCol[1].OldStartingIndex);
         Assert.Equal(5, raiseCol[1].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("6", "six"), raiseCol[1].OldItems[0]);
-        Assert.Equal(KeyValuePair.Create("6", "sixUpdate"), raiseCol[1].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("6", "six"), raiseCol[1]?.OldItems?[0]);
+        Assert.Equal(KeyValuePair.Create("6", "sixUpdate"), raiseCol[1]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Replace, raiseCol[2].Action);
         Assert.Equal(4, raiseCol[2].OldStartingIndex);
         Assert.Equal(4, raiseCol[2].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("5", "five"), raiseCol[2].OldItems[0]);
-        Assert.Equal(KeyValuePair.Create("5", "fiveUpdate"), raiseCol[2].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("5", "five"), raiseCol[2]?.OldItems?[0]);
+        Assert.Equal(KeyValuePair.Create("5", "fiveUpdate"), raiseCol[2]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Replace, raiseCol[3].Action);
         Assert.Equal(3, raiseCol[3].OldStartingIndex);
         Assert.Equal(3, raiseCol[3].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("4", "four"), raiseCol[3].OldItems[0]);
-        Assert.Equal(KeyValuePair.Create("4", "fourUpdate"), raiseCol[3].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("4", "four"), raiseCol[3]?.OldItems?[0]);
+        Assert.Equal(KeyValuePair.Create("4", "fourUpdate"), raiseCol[3]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Replace, raiseCol[4].Action);
         Assert.Equal(2, raiseCol[4].OldStartingIndex);
         Assert.Equal(2, raiseCol[4].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("3", "three"), raiseCol[4].OldItems[0]);
-        Assert.Equal(KeyValuePair.Create("3", "threeUpdate"), raiseCol[4].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("3", "three"), raiseCol[4]?.OldItems?[0]);
+        Assert.Equal(KeyValuePair.Create("3", "threeUpdate"), raiseCol[4]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Replace, raiseCol[5].Action);
         Assert.Equal(1, raiseCol[5].OldStartingIndex);
         Assert.Equal(1, raiseCol[5].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("2", "two"), raiseCol[5].OldItems[0]);
-        Assert.Equal(KeyValuePair.Create("2", "twoUpdate"), raiseCol[5].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("2", "two"), raiseCol[5]?.OldItems?[0]);
+        Assert.Equal(KeyValuePair.Create("2", "twoUpdate"), raiseCol[5]?.NewItems?[0]);
 
         Assert.Collection(dict,
             i => Assert.Equal(KeyValuePair.Create("1", "one"), i),
@@ -1987,38 +2011,38 @@ public class TryUpdateTest
         Assert.Equal(NotifyCollectionChangedAction.Replace, raiseCol[0].Action);
         Assert.Equal(6, raiseCol[0].OldStartingIndex);
         Assert.Equal(6, raiseCol[0].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("7", "seven"), raiseCol[0].OldItems[0]);
-        Assert.Equal(KeyValuePair.Create("7", "sevenUpdate"), raiseCol[0].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("7", "seven"), raiseCol[0]?.OldItems?[0]);
+        Assert.Equal(KeyValuePair.Create("7", "sevenUpdate"), raiseCol[0]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Replace, raiseCol[1].Action);
         Assert.Equal(5, raiseCol[1].OldStartingIndex);
         Assert.Equal(5, raiseCol[1].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("6", "six"), raiseCol[1].OldItems[0]);
-        Assert.Equal(KeyValuePair.Create("6", "sixUpdate"), raiseCol[1].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("6", "six"), raiseCol[1]?.OldItems?[0]);
+        Assert.Equal(KeyValuePair.Create("6", "sixUpdate"), raiseCol[1]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Replace, raiseCol[2].Action);
         Assert.Equal(4, raiseCol[2].OldStartingIndex);
         Assert.Equal(4, raiseCol[2].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("5", "five"), raiseCol[2].OldItems[0]);
-        Assert.Equal(KeyValuePair.Create("5", "fiveUpdate"), raiseCol[2].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("5", "five"), raiseCol[2]?.OldItems?[0]);
+        Assert.Equal(KeyValuePair.Create("5", "fiveUpdate"), raiseCol[2]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Replace, raiseCol[3].Action);
         Assert.Equal(3, raiseCol[3].OldStartingIndex);
         Assert.Equal(3, raiseCol[3].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("4", "four"), raiseCol[3].OldItems[0]);
-        Assert.Equal(KeyValuePair.Create("4", "fourUpdate"), raiseCol[3].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("4", "four"), raiseCol[3]?.OldItems?[0]);
+        Assert.Equal(KeyValuePair.Create("4", "fourUpdate"), raiseCol[3]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Replace, raiseCol[4].Action);
         Assert.Equal(2, raiseCol[4].OldStartingIndex);
         Assert.Equal(2, raiseCol[4].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("3", "three"), raiseCol[4].OldItems[0]);
-        Assert.Equal(KeyValuePair.Create("3", "threeUpdate"), raiseCol[4].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("3", "three"), raiseCol[4]?.OldItems?[0]);
+        Assert.Equal(KeyValuePair.Create("3", "threeUpdate"), raiseCol[4]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Replace, raiseCol[5].Action);
         Assert.Equal(1, raiseCol[5].OldStartingIndex);
         Assert.Equal(1, raiseCol[5].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("2", "two"), raiseCol[5].OldItems[0]);
-        Assert.Equal(KeyValuePair.Create("2", "twoUpdate"), raiseCol[5].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("2", "two"), raiseCol[5]?.OldItems?[0]);
+        Assert.Equal(KeyValuePair.Create("2", "twoUpdate"), raiseCol[5]?.NewItems?[0]);
 
         Assert.Collection(dict,
             i => Assert.Equal(KeyValuePair.Create("1", "one"), i),
@@ -2046,6 +2070,7 @@ public class TryUpdateTest
             new KeyValuePair<string, string>("8", "eight")
         });
 
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
         Assert.Throws<ArgumentNullException>(() => dict.TryUpdate(null, "sevenUpdate"));
         Assert.Throws<ArgumentNullException>(() => dict.TryUpdate(null, "sixUpdate", "sixx"));
         Assert.Throws<ArgumentNullException>(() => dict.TryUpdate(null, "fiveUpdate", args =>
@@ -2055,19 +2080,19 @@ public class TryUpdateTest
             Assert.Equal("fiveUpdate", args.newValue);
             return true;
         }));
-        Assert.Throws<ArgumentNullException>(() => dict.TryUpdate(null, "fiveUpdate", (Func<(string key, string newValue, string oldValue), bool>)null));
+        Assert.Throws<ArgumentNullException>(() => dict.TryUpdate(null, "fiveUpdate", (Func<(string key, string newValue, string oldValue), bool>?)null));
         Assert.Throws<ArgumentNullException>(() => dict.TryUpdate(null, key =>
         {
             Assert.Equal("4", key);
             return "fourUpdate";
         }));
-        Assert.Throws<ArgumentNullException>(() => dict.TryUpdate(null, (Func<string, string>)null));
+        Assert.Throws<ArgumentNullException>(() => dict.TryUpdate(null, (Func<string, string>?)null));
         Assert.Throws<ArgumentNullException>(() => dict.TryUpdate(null, key =>
         {
             Assert.Equal("3", key);
             return "threeUpdate";
         }, "threex"));
-        Assert.Throws<ArgumentNullException>(() => dict.TryUpdate(null, (Func<string, string>)null, "threex"));
+        Assert.Throws<ArgumentNullException>(() => dict.TryUpdate(null, (Func<string, string>?)null, "threex"));
         Assert.Throws<ArgumentNullException>(() => dict.TryUpdate(null, key =>
         {
             Assert.Equal("2", key);
@@ -2079,7 +2104,7 @@ public class TryUpdateTest
             Assert.Equal("twoUpdate", args.newValue);
             return true;
         }));
-        Assert.Throws<ArgumentNullException>(() => dict.TryUpdate(null, (Func<string, string>)null, args =>
+        Assert.Throws<ArgumentNullException>(() => dict.TryUpdate(null, (Func<string, string>?)null, args =>
         {
             Assert.Equal("2", args.key);
             Assert.Equal("two", args.oldValue);
@@ -2090,8 +2115,9 @@ public class TryUpdateTest
         {
             Assert.Equal("2", key);
             return "twoUpdate";
-        }, (Func<(string key, string newValue, string oldValue), bool>)null));
-        Assert.Throws<ArgumentNullException>(() => dict.TryUpdate(null, (Func<string, string>)null, (Func<(string key, string newValue, string oldValue), bool>)null));
+        }, (Func<(string key, string newValue, string oldValue), bool>?)null));
+        Assert.Throws<ArgumentNullException>(() => dict.TryUpdate(null, (Func<string, string>?)null, (Func<(string key, string newValue, string oldValue), bool>?)null));
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
 
         var dict2 = new ReadOnlyDictionary();
 
@@ -2188,38 +2214,38 @@ public class UpdateTest
         Assert.Equal(NotifyCollectionChangedAction.Replace, raiseCol[0].Action);
         Assert.Equal(6, raiseCol[0].OldStartingIndex);
         Assert.Equal(6, raiseCol[0].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("7", "seven"), raiseCol[0].OldItems[0]);
-        Assert.Equal(KeyValuePair.Create("7", "sevenUpdate"), raiseCol[0].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("7", "seven"), raiseCol[0]?.OldItems?[0]);
+        Assert.Equal(KeyValuePair.Create("7", "sevenUpdate"), raiseCol[0]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Replace, raiseCol[1].Action);
         Assert.Equal(5, raiseCol[1].OldStartingIndex);
         Assert.Equal(5, raiseCol[1].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("6", "six"), raiseCol[1].OldItems[0]);
-        Assert.Equal(KeyValuePair.Create("6", "sixUpdate"), raiseCol[1].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("6", "six"), raiseCol[1]?.OldItems?[0]);
+        Assert.Equal(KeyValuePair.Create("6", "sixUpdate"), raiseCol[1]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Replace, raiseCol[2].Action);
         Assert.Equal(4, raiseCol[2].OldStartingIndex);
         Assert.Equal(4, raiseCol[2].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("5", "five"), raiseCol[2].OldItems[0]);
-        Assert.Equal(KeyValuePair.Create("5", "fiveUpdate"), raiseCol[2].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("5", "five"), raiseCol[2]?.OldItems?[0]);
+        Assert.Equal(KeyValuePair.Create("5", "fiveUpdate"), raiseCol[2]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Replace, raiseCol[3].Action);
         Assert.Equal(3, raiseCol[3].OldStartingIndex);
         Assert.Equal(3, raiseCol[3].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("4", "four"), raiseCol[3].OldItems[0]);
-        Assert.Equal(KeyValuePair.Create("4", "fourUpdate"), raiseCol[3].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("4", "four"), raiseCol[3]?.OldItems?[0]);
+        Assert.Equal(KeyValuePair.Create("4", "fourUpdate"), raiseCol[3]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Replace, raiseCol[4].Action);
         Assert.Equal(2, raiseCol[4].OldStartingIndex);
         Assert.Equal(2, raiseCol[4].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("3", "three"), raiseCol[4].OldItems[0]);
-        Assert.Equal(KeyValuePair.Create("3", "threeUpdate"), raiseCol[4].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("3", "three"), raiseCol[4]?.OldItems?[0]);
+        Assert.Equal(KeyValuePair.Create("3", "threeUpdate"), raiseCol[4]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Replace, raiseCol[5].Action);
         Assert.Equal(1, raiseCol[5].OldStartingIndex);
         Assert.Equal(1, raiseCol[5].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("2", "two"), raiseCol[5].OldItems[0]);
-        Assert.Equal(KeyValuePair.Create("2", "twoUpdate"), raiseCol[5].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("2", "two"), raiseCol[5]?.OldItems?[0]);
+        Assert.Equal(KeyValuePair.Create("2", "twoUpdate"), raiseCol[5]?.NewItems?[0]);
 
         Assert.Collection(dict,
             i => Assert.Equal(KeyValuePair.Create("1", "one"), i),
@@ -2387,38 +2413,38 @@ public class UpdateTest
         Assert.Equal(NotifyCollectionChangedAction.Replace, raiseCol[0].Action);
         Assert.Equal(6, raiseCol[0].OldStartingIndex);
         Assert.Equal(6, raiseCol[0].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("7", "seven"), raiseCol[0].OldItems[0]);
-        Assert.Equal(KeyValuePair.Create("7", "sevenUpdate"), raiseCol[0].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("7", "seven"), raiseCol[0]?.OldItems?[0]);
+        Assert.Equal(KeyValuePair.Create("7", "sevenUpdate"), raiseCol[0]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Replace, raiseCol[1].Action);
         Assert.Equal(5, raiseCol[1].OldStartingIndex);
         Assert.Equal(5, raiseCol[1].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("6", "six"), raiseCol[1].OldItems[0]);
-        Assert.Equal(KeyValuePair.Create("6", "sixUpdate"), raiseCol[1].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("6", "six"), raiseCol[1]?.OldItems?[0]);
+        Assert.Equal(KeyValuePair.Create("6", "sixUpdate"), raiseCol[1]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Replace, raiseCol[2].Action);
         Assert.Equal(4, raiseCol[2].OldStartingIndex);
         Assert.Equal(4, raiseCol[2].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("5", "five"), raiseCol[2].OldItems[0]);
-        Assert.Equal(KeyValuePair.Create("5", "fiveUpdate"), raiseCol[2].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("5", "five"), raiseCol[2]?.OldItems?[0]);
+        Assert.Equal(KeyValuePair.Create("5", "fiveUpdate"), raiseCol[2]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Replace, raiseCol[3].Action);
         Assert.Equal(3, raiseCol[3].OldStartingIndex);
         Assert.Equal(3, raiseCol[3].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("4", "four"), raiseCol[3].OldItems[0]);
-        Assert.Equal(KeyValuePair.Create("4", "fourUpdate"), raiseCol[3].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("4", "four"), raiseCol[3]?.OldItems?[0]);
+        Assert.Equal(KeyValuePair.Create("4", "fourUpdate"), raiseCol[3]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Replace, raiseCol[4].Action);
         Assert.Equal(2, raiseCol[4].OldStartingIndex);
         Assert.Equal(2, raiseCol[4].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("3", "three"), raiseCol[4].OldItems[0]);
-        Assert.Equal(KeyValuePair.Create("3", "threeUpdate"), raiseCol[4].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("3", "three"), raiseCol[4]?.OldItems?[0]);
+        Assert.Equal(KeyValuePair.Create("3", "threeUpdate"), raiseCol[4]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Replace, raiseCol[5].Action);
         Assert.Equal(1, raiseCol[5].OldStartingIndex);
         Assert.Equal(1, raiseCol[5].NewStartingIndex);
-        Assert.Equal(KeyValuePair.Create("2", "two"), raiseCol[5].OldItems[0]);
-        Assert.Equal(KeyValuePair.Create("2", "twoUpdate"), raiseCol[5].NewItems[0]);
+        Assert.Equal(KeyValuePair.Create("2", "two"), raiseCol[5]?.OldItems?[0]);
+        Assert.Equal(KeyValuePair.Create("2", "twoUpdate"), raiseCol[5]?.NewItems?[0]);
 
         Assert.Collection(dict,
             i => Assert.Equal(KeyValuePair.Create("1", "one"), i),
@@ -2446,6 +2472,7 @@ public class UpdateTest
             new KeyValuePair<string, string>("8", "eight")
         });
 
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
         Assert.Throws<ArgumentNullException>(() => dict.Update(null, "sevenUpdate"));
         Assert.Throws<ArgumentNullException>(() => dict.Update(null, "sixUpdate", "sixx"));
         Assert.Throws<ArgumentNullException>(() => dict.Update(null, "fiveUpdate", args =>
@@ -2455,19 +2482,19 @@ public class UpdateTest
             Assert.Equal("fiveUpdate", args.newValue);
             return true;
         }));
-        Assert.Throws<ArgumentNullException>(() => dict.Update(null, "fiveUpdate", (Func<(string key, string newValue, string oldValue), bool>)null));
+        Assert.Throws<ArgumentNullException>(() => dict.Update(null, "fiveUpdate", (Func<(string key, string newValue, string oldValue), bool>?)null));
         Assert.Throws<ArgumentNullException>(() => dict.Update(null, key =>
         {
             Assert.Equal("4", key);
             return "fourUpdate";
         }));
-        Assert.Throws<ArgumentNullException>(() => dict.Update(null, (Func<string, string>)null));
+        Assert.Throws<ArgumentNullException>(() => dict.Update(null, (Func<string, string>?)null));
         Assert.Throws<ArgumentNullException>(() => dict.Update(null, key =>
         {
             Assert.Equal("3", key);
             return "threeUpdate";
         }, "threex"));
-        Assert.Throws<ArgumentNullException>(() => dict.Update(null, (Func<string, string>)null, "threex"));
+        Assert.Throws<ArgumentNullException>(() => dict.Update(null, (Func<string, string>?)null, "threex"));
         Assert.Throws<ArgumentNullException>(() => dict.Update(null, key =>
         {
             Assert.Equal("2", key);
@@ -2479,7 +2506,7 @@ public class UpdateTest
             Assert.Equal("twoUpdate", args.newValue);
             return true;
         }));
-        Assert.Throws<ArgumentNullException>(() => dict.Update(null, (Func<string, string>)null, args =>
+        Assert.Throws<ArgumentNullException>(() => dict.Update(null, (Func<string, string>?)null, args =>
         {
             Assert.Equal("2", args.key);
             Assert.Equal("two", args.oldValue);
@@ -2490,8 +2517,9 @@ public class UpdateTest
         {
             Assert.Equal("2", key);
             return "twoUpdate";
-        }, (Func<(string key, string newValue, string oldValue), bool>)null));
-        Assert.Throws<ArgumentNullException>(() => dict.Update(null, (Func<string, string>)null, (Func<(string key, string newValue, string oldValue), bool>)null));
+        }, (Func<(string key, string newValue, string oldValue), bool>?)null));
+        Assert.Throws<ArgumentNullException>(() => dict.Update(null, (Func<string, string>?)null, (Func<(string key, string newValue, string oldValue), bool>?)null));
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
 
         var dict2 = new ReadOnlyDictionary();
 

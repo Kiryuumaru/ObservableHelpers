@@ -204,8 +204,8 @@ public class IndexerTest
         Assert.Equal(NotifyCollectionChangedAction.Replace, raiseCol[0].Action);
         Assert.Equal(2, raiseCol[0].OldStartingIndex);
         Assert.Equal(2, raiseCol[0].NewStartingIndex);
-        Assert.Equal(3, raiseCol[0].OldItems[0]);
-        Assert.Equal(33, raiseCol[0].NewItems[0]);
+        Assert.Equal(3, raiseCol[0]?.OldItems?[0]);
+        Assert.Equal(33, raiseCol[0]?.NewItems?[0]);
 
         Assert.Collection(col,
             i => Assert.Equal(1, i),
@@ -299,7 +299,9 @@ public class ConstructorTest
     [Fact]
     public void Throws()
     {
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
         Assert.Throws<ArgumentNullException>(() => new ObservableCollection<int>(null));
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
     }
 }
 
@@ -325,15 +327,15 @@ public class AddTest
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[0].Action);
         Assert.Equal(0, raiseCol[0].NewStartingIndex);
-        Assert.Equal(1, raiseCol[0].NewItems[0]);
+        Assert.Equal(1, raiseCol[0]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[1].Action);
         Assert.Equal(1, raiseCol[1].NewStartingIndex);
-        Assert.Equal(2, raiseCol[1].NewItems[0]);
+        Assert.Equal(2, raiseCol[1]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[2].Action);
         Assert.Equal(2, raiseCol[2].NewStartingIndex);
-        Assert.Equal(3, raiseCol[2].NewItems[0]);
+        Assert.Equal(3, raiseCol[2]?.NewItems?[0]);
 
         Assert.Collection(col,
             i => Assert.Equal(1, i),
@@ -371,13 +373,13 @@ public class AddRangeTest
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[0].Action);
         Assert.Equal(0, raiseCol[0].NewStartingIndex);
-        Assert.Equal(1, raiseCol[0].NewItems[0]);
-        Assert.Equal(2, raiseCol[0].NewItems[1]);
+        Assert.Equal(1, raiseCol[0]?.NewItems?[0]);
+        Assert.Equal(2, raiseCol[0]?.NewItems?[1]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[1].Action);
         Assert.Equal(2, raiseCol[1].NewStartingIndex);
-        Assert.Equal(3, raiseCol[1].NewItems[0]);
-        Assert.Equal(4, raiseCol[1].NewItems[1]);
+        Assert.Equal(3, raiseCol[1]?.NewItems?[0]);
+        Assert.Equal(4, raiseCol[1]?.NewItems?[1]);
 
         Assert.Collection(col,
             i => Assert.Equal(1, i),
@@ -391,8 +393,10 @@ public class AddRangeTest
     {
         var col = new ObservableCollection<int>();
 
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
         Assert.Throws<ArgumentNullException>(() => col.AddRange(null));
-        Assert.Throws<ArgumentNullException>(() => col.AddRange((IEnumerable<int>)null));
+        Assert.Throws<ArgumentNullException>(() => col.AddRange((IEnumerable<int>?)null));
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
 
         var col1 = new ReadOnlyCollection();
 
@@ -564,19 +568,19 @@ public class InsertTest
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[0].Action);
         Assert.Equal(0, raiseCol[0].NewStartingIndex);
-        Assert.Equal(1, raiseCol[0].NewItems[0]);
+        Assert.Equal(1, raiseCol[0]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[1].Action);
         Assert.Equal(0, raiseCol[1].NewStartingIndex);
-        Assert.Equal(2, raiseCol[1].NewItems[0]);
+        Assert.Equal(2, raiseCol[1]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[2].Action);
         Assert.Equal(0, raiseCol[2].NewStartingIndex);
-        Assert.Equal(3, raiseCol[2].NewItems[0]);
+        Assert.Equal(3, raiseCol[2]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[3].Action);
         Assert.Equal(0, raiseCol[3].NewStartingIndex);
-        Assert.Equal(4, raiseCol[3].NewItems[0]);
+        Assert.Equal(4, raiseCol[3]?.NewItems?[0]);
 
         Assert.Collection(col,
             i => Assert.Equal(4, i),
@@ -605,19 +609,19 @@ public class InsertTest
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[0].Action);
         Assert.Equal(0, raiseCol[0].NewStartingIndex);
-        Assert.Equal(1, raiseCol[0].NewItems[0]);
+        Assert.Equal(1, raiseCol[0]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[1].Action);
         Assert.Equal(1, raiseCol[1].NewStartingIndex);
-        Assert.Equal(2, raiseCol[1].NewItems[0]);
+        Assert.Equal(2, raiseCol[1]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[2].Action);
         Assert.Equal(2, raiseCol[2].NewStartingIndex);
-        Assert.Equal(3, raiseCol[2].NewItems[0]);
+        Assert.Equal(3, raiseCol[2]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[3].Action);
         Assert.Equal(3, raiseCol[3].NewStartingIndex);
-        Assert.Equal(4, raiseCol[3].NewItems[0]);
+        Assert.Equal(4, raiseCol[3]?.NewItems?[0]);
 
         Assert.Collection(col,
             i => Assert.Equal(1, i),
@@ -645,11 +649,11 @@ public class InsertTest
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[0].Action);
         Assert.Equal(0, raiseCol[0].NewStartingIndex);
-        Assert.Equal(1, raiseCol[0].NewItems[0]);
+        Assert.Equal(1, raiseCol[0]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[1].Action);
         Assert.Equal(2, raiseCol[1].NewStartingIndex);
-        Assert.Equal(3, raiseCol[1].NewItems[0]);
+        Assert.Equal(3, raiseCol[1]?.NewItems?[0]);
 
         Assert.Collection(col,
             i => Assert.Equal(1, i),
@@ -693,13 +697,13 @@ public class InsertRange
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[0].Action);
         Assert.Equal(0, raiseCol[0].NewStartingIndex);
-        Assert.Equal(1, raiseCol[0].NewItems[0]);
-        Assert.Equal(2, raiseCol[0].NewItems[1]);
+        Assert.Equal(1, raiseCol[0]?.NewItems?[0]);
+        Assert.Equal(2, raiseCol[0]?.NewItems?[1]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[1].Action);
         Assert.Equal(0, raiseCol[1].NewStartingIndex);
-        Assert.Equal(3, raiseCol[1].NewItems[0]);
-        Assert.Equal(4, raiseCol[1].NewItems[1]);
+        Assert.Equal(3, raiseCol[1]?.NewItems?[0]);
+        Assert.Equal(4, raiseCol[1]?.NewItems?[1]);
 
         Assert.Collection(col,
             i => Assert.Equal(3, i),
@@ -726,13 +730,13 @@ public class InsertRange
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[0].Action);
         Assert.Equal(0, raiseCol[0].NewStartingIndex);
-        Assert.Equal(1, raiseCol[0].NewItems[0]);
-        Assert.Equal(2, raiseCol[0].NewItems[1]);
+        Assert.Equal(1, raiseCol[0]?.NewItems?[0]);
+        Assert.Equal(2, raiseCol[0]?.NewItems?[1]);
 
         Assert.Equal(NotifyCollectionChangedAction.Add, raiseCol[1].Action);
         Assert.Equal(2, raiseCol[1].NewStartingIndex);
-        Assert.Equal(3, raiseCol[1].NewItems[0]);
-        Assert.Equal(4, raiseCol[1].NewItems[1]);
+        Assert.Equal(3, raiseCol[1]?.NewItems?[0]);
+        Assert.Equal(4, raiseCol[1]?.NewItems?[1]);
 
         Assert.Collection(col,
             i => Assert.Equal(1, i),
@@ -746,8 +750,10 @@ public class InsertRange
     {
         var col = new ObservableCollection<int>(new int[] { 1, 2, 3, 4 });
 
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
         Assert.Throws<ArgumentNullException>(() => col.InsertRange(4, null));
-        Assert.Throws<ArgumentNullException>(() => col.InsertRange(4, (IEnumerable<int>)null));
+        Assert.Throws<ArgumentNullException>(() => col.InsertRange(4, (IEnumerable<int>?)null));
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
         Assert.Throws<ArgumentOutOfRangeException>(() => col.InsertRange(5, 1));
         Assert.Throws<ArgumentOutOfRangeException>(() => col.InsertRange(-1, 1));
 
@@ -780,20 +786,20 @@ public class MoveTest
         Assert.Equal(NotifyCollectionChangedAction.Move, raiseCol[0].Action);
         Assert.Equal(3, raiseCol[0].OldStartingIndex);
         Assert.Equal(0, raiseCol[0].NewStartingIndex);
-        Assert.Equal(4, raiseCol[0].OldItems[0]);
-        Assert.Equal(4, raiseCol[0].NewItems[0]);
+        Assert.Equal(4, raiseCol[0]?.OldItems?[0]);
+        Assert.Equal(4, raiseCol[0]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Move, raiseCol[1].Action);
         Assert.Equal(3, raiseCol[1].OldStartingIndex);
         Assert.Equal(1, raiseCol[1].NewStartingIndex);
-        Assert.Equal(3, raiseCol[1].OldItems[0]);
-        Assert.Equal(3, raiseCol[1].NewItems[0]);
+        Assert.Equal(3, raiseCol[1]?.OldItems?[0]);
+        Assert.Equal(3, raiseCol[1]?.NewItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Move, raiseCol[2].Action);
         Assert.Equal(3, raiseCol[2].OldStartingIndex);
         Assert.Equal(2, raiseCol[2].NewStartingIndex);
-        Assert.Equal(2, raiseCol[2].OldItems[0]);
-        Assert.Equal(2, raiseCol[2].NewItems[0]);
+        Assert.Equal(2, raiseCol[2]?.OldItems?[0]);
+        Assert.Equal(2, raiseCol[2]?.NewItems?[0]);
 
         Assert.Collection(col,
             i => Assert.Equal(4, i),
@@ -839,7 +845,9 @@ public class ObservableFilterTest
         var col = new ObservableCollection<int>(new int[] { 1, 2, 3, 4 });
         var col2 = col.ObservableFilter(i => i % 2 == 0);
 
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
         Assert.Throws<ArgumentNullException>(() => col2.ObservableFilter(null));
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
     }
 }
 
@@ -864,11 +872,11 @@ public class RemoveTest
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[0].Action);
         Assert.Equal(0, raiseCol[0].OldStartingIndex);
-        Assert.Equal(1, raiseCol[0].OldItems[0]);
+        Assert.Equal(1, raiseCol[0]?.OldItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[1].Action);
         Assert.Equal(1, raiseCol[1].OldStartingIndex);
-        Assert.Equal(3, raiseCol[1].OldItems[0]);
+        Assert.Equal(3, raiseCol[1]?.OldItems?[0]);
 
         Assert.Collection(col,
             i => Assert.Equal(2, i),
@@ -896,19 +904,19 @@ public class RemoveTest
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[0].Action);
         Assert.Equal(0, raiseCol[0].OldStartingIndex);
-        Assert.Equal(1, raiseCol[0].OldItems[0]);
+        Assert.Equal(1, raiseCol[0]?.OldItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[1].Action);
         Assert.Equal(0, raiseCol[1].OldStartingIndex);
-        Assert.Equal(2, raiseCol[1].OldItems[0]);
+        Assert.Equal(2, raiseCol[1]?.OldItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[2].Action);
         Assert.Equal(0, raiseCol[2].OldStartingIndex);
-        Assert.Equal(3, raiseCol[2].OldItems[0]);
+        Assert.Equal(3, raiseCol[2]?.OldItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[3].Action);
         Assert.Equal(0, raiseCol[3].OldStartingIndex);
-        Assert.Equal(4, raiseCol[3].OldItems[0]);
+        Assert.Equal(4, raiseCol[3]?.OldItems?[0]);
     }
 
     [Fact]
@@ -941,11 +949,11 @@ public class RemoveAtTest
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[0].Action);
         Assert.Equal(0, raiseCol[0].OldStartingIndex);
-        Assert.Equal(1, raiseCol[0].OldItems[0]);
+        Assert.Equal(1, raiseCol[0]?.OldItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[1].Action);
         Assert.Equal(1, raiseCol[1].OldStartingIndex);
-        Assert.Equal(3, raiseCol[1].OldItems[0]);
+        Assert.Equal(3, raiseCol[1]?.OldItems?[0]);
 
         Assert.Collection(col,
             i => Assert.Equal(2, i),
@@ -973,19 +981,19 @@ public class RemoveAtTest
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[0].Action);
         Assert.Equal(0, raiseCol[0].OldStartingIndex);
-        Assert.Equal(1, raiseCol[0].OldItems[0]);
+        Assert.Equal(1, raiseCol[0]?.OldItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[1].Action);
         Assert.Equal(0, raiseCol[1].OldStartingIndex);
-        Assert.Equal(2, raiseCol[1].OldItems[0]);
+        Assert.Equal(2, raiseCol[1]?.OldItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[2].Action);
         Assert.Equal(0, raiseCol[2].OldStartingIndex);
-        Assert.Equal(3, raiseCol[2].OldItems[0]);
+        Assert.Equal(3, raiseCol[2]?.OldItems?[0]);
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[3].Action);
         Assert.Equal(0, raiseCol[3].OldStartingIndex);
-        Assert.Equal(4, raiseCol[3].OldItems[0]);
+        Assert.Equal(4, raiseCol[3]?.OldItems?[0]);
     }
 
     [Fact]
@@ -1026,8 +1034,8 @@ public class RemoveRangeTest
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[0].Action);
         Assert.Equal(2, raiseCol[0].OldStartingIndex);
-        Assert.Equal(3, raiseCol[0].OldItems[0]);
-        Assert.Equal(4, raiseCol[0].OldItems[1]);
+        Assert.Equal(3, raiseCol[0]?.OldItems?[0]);
+        Assert.Equal(4, raiseCol[0]?.OldItems?[1]);
 
         Assert.Collection(col,
             i => Assert.Equal(1, i),
@@ -1049,10 +1057,10 @@ public class RemoveRangeTest
 
         Assert.Equal(NotifyCollectionChangedAction.Remove, raiseCol[0].Action);
         Assert.Equal(0, raiseCol[0].OldStartingIndex);
-        Assert.Equal(1, raiseCol[0].OldItems[0]);
-        Assert.Equal(2, raiseCol[0].OldItems[1]);
-        Assert.Equal(3, raiseCol[0].OldItems[2]);
-        Assert.Equal(4, raiseCol[0].OldItems[3]);
+        Assert.Equal(1, raiseCol[0]?.OldItems?[0]);
+        Assert.Equal(2, raiseCol[0]?.OldItems?[1]);
+        Assert.Equal(3, raiseCol[0]?.OldItems?[2]);
+        Assert.Equal(4, raiseCol[0]?.OldItems?[3]);
 
         Assert.Empty(col);
         Assert.Single(raiseCol);
