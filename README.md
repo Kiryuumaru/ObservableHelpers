@@ -37,6 +37,12 @@ namespace YourNamespace
     {
         public string Name
         {
+            get => GetProperty(() => "Default Dinosaur");
+            set => SetProperty(value);
+        }
+
+        public string? Family
+        {
             get => GetProperty<string>();
             set => SetProperty(value);
         }
