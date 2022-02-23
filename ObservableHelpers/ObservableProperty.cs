@@ -68,7 +68,11 @@ namespace ObservableHelpers
         /// </returns>
         public T? GetValue<T>()
         {
-            return (T?)GetObject(typeof(T));
+            if (GetObject(typeof(T)) is T value)
+            {
+                return value;
+            }
+            return default;
         }
 
         /// <summary>
