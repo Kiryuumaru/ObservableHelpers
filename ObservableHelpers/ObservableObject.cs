@@ -33,24 +33,19 @@ namespace ObservableHelpers
         /// </summary>
         public ObservableObject()
         {
-            InitializeProperties();
+
         }
+
+        #endregion
+
+        #region Methods
 
         /// <summary>
-        /// Creates new instance of the <see cref="ObservableObject"/> class.
+        /// Initializes properties with their default values by invoking get property method.
         /// </summary>
-        /// <param name="prePropertiesInitialization">
-        /// Action that will be executed before properties initialization.
-        /// </param>
-        public ObservableObject(Action prePropertiesInitialization)
+        protected void InitializeProperties()
         {
-            prePropertiesInitialization?.Invoke();
-            InitializeProperties();
-        }
-
-        private void InitializeProperties()
-        {
-            foreach (PropertyInfo property in GetType().GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static))
+            foreach (PropertyInfo property in GetType().GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance))
             {
                 try
                 {
@@ -59,10 +54,6 @@ namespace ObservableHelpers
                 catch { }
             }
         }
-
-        #endregion
-
-        #region Methods
 
         /// <summary>
         /// Sets the property value.

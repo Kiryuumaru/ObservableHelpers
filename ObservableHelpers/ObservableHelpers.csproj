@@ -17,8 +17,8 @@
     <RepositoryUrl>https://github.com/Kiryuumaru/ObservableHelpers</RepositoryUrl>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageReleaseNotes>* Fixed null pointer on ObservableProperty GetValue call.</PackageReleaseNotes>
-    <Version>1.5.1</Version>
+    <PackageReleaseNotes>* Disabled default property initialization on ObservableObject.</PackageReleaseNotes>
+    <Version>1.5.2</Version>
   </PropertyGroup>
 
   <ItemGroup>
