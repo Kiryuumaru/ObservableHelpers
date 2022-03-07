@@ -17,8 +17,8 @@
     <RepositoryUrl>https://github.com/Kiryuumaru/ObservableHelpers</RepositoryUrl>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageReleaseNotes>* ObservableObject property changed group to array group.</PackageReleaseNotes>
-    <Version>1.5.3</Version>
+    <PackageReleaseNotes>* Fixed ObservableObject property group logic.</PackageReleaseNotes>
+    <Version>1.5.4</Version>
   </PropertyGroup>
 
   <ItemGroup>

@@ -17,7 +17,7 @@ public class SampleObject : ObservableObject
 
     public DateTime SampleProp2
     {
-        get => GetProperty<DateTime>(group: new string[] { "group" });
+        get => GetProperty<DateTime>(groups: new string[] { "group" });
         set => SetProperty(value);
     }
 
@@ -35,7 +35,7 @@ public class SampleObject : ObservableObject
 
     public DateTime SampleKeyProp2
     {
-        get => GetProperty<DateTime>(() => default, "keySample2", group: new string[] { "group" });
+        get => GetProperty<DateTime>(() => default, "keySample2", groups: new string[] { "group" });
         set => SetProperty(value, "keySample2");
     }
 
@@ -198,47 +198,47 @@ public class GetPropertyTest : SampleObject
         Assert.Equal(3, group1.Count());
         Assert.Equal(2, group2.Count());
 
-        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp1) && i.Group == null && i.Property.Value == default);
-        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp2) && (i.Group?.Contains("group") ?? false) && (i.Property as ObservableProperty<DateTime>)?.Value == default);
-        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp3) && i.Group == null && i.Property.Value?.ToString() == "defaultValue");
-        Assert.Contains(group0, i => i.Key == "keySample1" && i.PropertyName == nameof(SampleKeyProp1) && i.Group == null && i.Property.Value == default);
-        Assert.Contains(group0, i => i.Key == "keySample2" && i.PropertyName == nameof(SampleKeyProp2) && (i.Group?.Contains("group") ?? false) && (i.Property as ObservableProperty<DateTime>)?.Value == default);
-        Assert.Contains(group0, i => i.Key == "keySample3" && i.PropertyName == nameof(SampleKeyProp3) && i.Group == null && i.Property.Value?.ToString() == "defaultValue");
-        Assert.Contains(group0, i => i.PropertyName == "Sample1" && i.Key == null && i.Group == null && i.Property.Value?.ToString() == null);
-        Assert.Contains(group0, i => i.PropertyName == "Sample2" && i.Key == null && i.Group == null && i.Property.Value?.ToString() == null);
-        Assert.Contains(group0, i => i.PropertyName == "Sample3" && i.Key == null && i.Group == null && i.Property.Value?.ToString() == "sampleDefault2");
-        Assert.Contains(group1, i => i.PropertyName == "Sample4" && i.Key == null && (i.Group?.Contains("group1") ?? false) && i.Property.Value?.ToString() == "groupDefault1");
-        Assert.Contains(group1, i => i.PropertyName == "Sample5" && i.Key == null && (i.Group?.Contains("group1") ?? false) && i.Property.Value?.ToString() == "groupDefault2");
-        Assert.Contains(group1, i => i.PropertyName == "Sample6" && i.Key == null && (i.Group?.Contains("group1") ?? false) && i.Property.Value?.ToString() == "groupDefault3");
-        Assert.Contains(group2, i => i.PropertyName == "Sample7" && i.Key == null && (i.Group?.Contains("group2") ?? false) && i.Property.Value?.ToString() == "groupDefault4");
-        Assert.Contains(group2, i => i.PropertyName == "Sample8" && i.Key == null && (i.Group?.Contains("group2") ?? false) && i.Property.Value?.ToString() == "groupDefault5");
+        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp1) && i.Groups == null && i.Property.Value == default);
+        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp2) && (i.Groups?.Contains("group") ?? false) && (i.Property as ObservableProperty<DateTime>)?.Value == default);
+        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp3) && i.Groups == null && i.Property.Value?.ToString() == "defaultValue");
+        Assert.Contains(group0, i => i.Key == "keySample1" && i.PropertyName == nameof(SampleKeyProp1) && i.Groups == null && i.Property.Value == default);
+        Assert.Contains(group0, i => i.Key == "keySample2" && i.PropertyName == nameof(SampleKeyProp2) && (i.Groups?.Contains("group") ?? false) && (i.Property as ObservableProperty<DateTime>)?.Value == default);
+        Assert.Contains(group0, i => i.Key == "keySample3" && i.PropertyName == nameof(SampleKeyProp3) && i.Groups == null && i.Property.Value?.ToString() == "defaultValue");
+        Assert.Contains(group0, i => i.PropertyName == "Sample1" && i.Key == null && i.Groups == null && i.Property.Value?.ToString() == null);
+        Assert.Contains(group0, i => i.PropertyName == "Sample2" && i.Key == null && i.Groups == null && i.Property.Value?.ToString() == null);
+        Assert.Contains(group0, i => i.PropertyName == "Sample3" && i.Key == null && i.Groups == null && i.Property.Value?.ToString() == "sampleDefault2");
+        Assert.Contains(group1, i => i.PropertyName == "Sample4" && i.Key == null && (i.Groups?.Contains("group1") ?? false) && i.Property.Value?.ToString() == "groupDefault1");
+        Assert.Contains(group1, i => i.PropertyName == "Sample5" && i.Key == null && (i.Groups?.Contains("group1") ?? false) && i.Property.Value?.ToString() == "groupDefault2");
+        Assert.Contains(group1, i => i.PropertyName == "Sample6" && i.Key == null && (i.Groups?.Contains("group1") ?? false) && i.Property.Value?.ToString() == "groupDefault3");
+        Assert.Contains(group2, i => i.PropertyName == "Sample7" && i.Key == null && (i.Groups?.Contains("group2") ?? false) && i.Property.Value?.ToString() == "groupDefault4");
+        Assert.Contains(group2, i => i.PropertyName == "Sample8" && i.Key == null && (i.Groups?.Contains("group2") ?? false) && i.Property.Value?.ToString() == "groupDefault5");
 
         Assert.Equal(8, raiseCol.Count);
 
         Assert.Equal("Sample1", raiseCol[0].PropertyName);
         Assert.Null(raiseCol[0].Key);
-        Assert.Null(raiseCol[0].Group);
+        Assert.Null(raiseCol[0].Groups);
         Assert.Equal("Sample2", raiseCol[1].PropertyName);
         Assert.Null(raiseCol[1].Key);
-        Assert.Null(raiseCol[1].Group);
+        Assert.Null(raiseCol[1].Groups);
         Assert.Equal("Sample3", raiseCol[2].PropertyName);
         Assert.Null(raiseCol[2].Key);
-        Assert.Null(raiseCol[2].Group);
+        Assert.Null(raiseCol[2].Groups);
         Assert.Equal("Sample4", raiseCol[3].PropertyName);
         Assert.Null(raiseCol[3].Key);
-        Assert.Equal("group1", raiseCol[3].Group?[0]);
+        Assert.Equal("group1", raiseCol[3].Groups?[0]);
         Assert.Equal("Sample5", raiseCol[4].PropertyName);
         Assert.Null(raiseCol[4].Key);
-        Assert.Equal("group1", raiseCol[4].Group?[0]);
+        Assert.Equal("group1", raiseCol[4].Groups?[0]);
         Assert.Equal("Sample6", raiseCol[5].PropertyName);
         Assert.Null(raiseCol[5].Key);
-        Assert.Equal("group1", raiseCol[5].Group?[0]);
+        Assert.Equal("group1", raiseCol[5].Groups?[0]);
         Assert.Equal("Sample7", raiseCol[6].PropertyName);
         Assert.Null(raiseCol[6].Key);
-        Assert.Equal("group2", raiseCol[6].Group?[0]);
+        Assert.Equal("group2", raiseCol[6].Groups?[0]);
         Assert.Equal("Sample8", raiseCol[7].PropertyName);
         Assert.Null(raiseCol[7].Key);
-        Assert.Equal("group2", raiseCol[7].Group?[0]);
+        Assert.Equal("group2", raiseCol[7].Groups?[0]);
     }
 
     [Fact]
@@ -372,47 +372,47 @@ public class GetPropertyTest : SampleObject
         Assert.Equal(3, group1.Count());
         Assert.Equal(2, group2.Count());
 
-        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp1) && i.Group == null && i.Property.Value == default);
-        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp2) && (i.Group?.Contains("group") ?? false) && (i.Property as ObservableProperty<DateTime>)?.Value == default);
-        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp3) && i.Group == null && i.Property.Value?.ToString() == "defaultValue");
-        Assert.Contains(group0, i => i.Key == "keySample1" && i.PropertyName == nameof(SampleKeyProp1) && i.Group == null && i.Property.Value == default);
-        Assert.Contains(group0, i => i.Key == "keySample2" && i.PropertyName == nameof(SampleKeyProp2) && (i.Group?.Contains("group") ?? false) && (i.Property as ObservableProperty<DateTime>)?.Value == default);
-        Assert.Contains(group0, i => i.Key == "keySample3" && i.PropertyName == nameof(SampleKeyProp3) && i.Group == null && i.Property.Value?.ToString() == "defaultValue");
-        Assert.Contains(group0, i => i.Key == "sample1" && i.PropertyName == null && i.Group == null && i.Property.Value?.ToString() == null);
-        Assert.Contains(group0, i => i.Key == "sample2" && i.PropertyName == null && i.Group == null && i.Property.Value?.ToString() == null);
-        Assert.Contains(group0, i => i.Key == "sample3" && i.PropertyName == null && i.Group == null && i.Property.Value?.ToString() == "sampleDefault2");
-        Assert.Contains(group0, i => i.Key == "sample4" && i.PropertyName == null && (i.Group?.Contains("group1") ?? false) && i.Property.Value?.ToString() == "groupDefault1");
-        Assert.Contains(group1, i => i.Key == "sample5" && i.PropertyName == null && (i.Group?.Contains("group1") ?? false) && i.Property.Value?.ToString() == "groupDefault2");
-        Assert.Contains(group1, i => i.Key == "sample6" && i.PropertyName == null && (i.Group?.Contains("group1") ?? false) && i.Property.Value?.ToString() == "groupDefault3");
-        Assert.Contains(group2, i => i.Key == "sample7" && i.PropertyName == null && (i.Group?.Contains("group2") ?? false) && i.Property.Value?.ToString() == "groupDefault4");
-        Assert.Contains(group2, i => i.Key == "sample8" && i.PropertyName == null && (i.Group?.Contains("group2") ?? false) && i.Property.Value?.ToString() == "groupDefault5");
+        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp1) && i.Groups == null && i.Property.Value == default);
+        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp2) && (i.Groups?.Contains("group") ?? false) && (i.Property as ObservableProperty<DateTime>)?.Value == default);
+        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp3) && i.Groups == null && i.Property.Value?.ToString() == "defaultValue");
+        Assert.Contains(group0, i => i.Key == "keySample1" && i.PropertyName == nameof(SampleKeyProp1) && i.Groups == null && i.Property.Value == default);
+        Assert.Contains(group0, i => i.Key == "keySample2" && i.PropertyName == nameof(SampleKeyProp2) && (i.Groups?.Contains("group") ?? false) && (i.Property as ObservableProperty<DateTime>)?.Value == default);
+        Assert.Contains(group0, i => i.Key == "keySample3" && i.PropertyName == nameof(SampleKeyProp3) && i.Groups == null && i.Property.Value?.ToString() == "defaultValue");
+        Assert.Contains(group0, i => i.Key == "sample1" && i.PropertyName == null && i.Groups == null && i.Property.Value?.ToString() == null);
+        Assert.Contains(group0, i => i.Key == "sample2" && i.PropertyName == null && i.Groups == null && i.Property.Value?.ToString() == null);
+        Assert.Contains(group0, i => i.Key == "sample3" && i.PropertyName == null && i.Groups == null && i.Property.Value?.ToString() == "sampleDefault2");
+        Assert.Contains(group0, i => i.Key == "sample4" && i.PropertyName == null && (i.Groups?.Contains("group1") ?? false) && i.Property.Value?.ToString() == "groupDefault1");
+        Assert.Contains(group1, i => i.Key == "sample5" && i.PropertyName == null && (i.Groups?.Contains("group1") ?? false) && i.Property.Value?.ToString() == "groupDefault2");
+        Assert.Contains(group1, i => i.Key == "sample6" && i.PropertyName == null && (i.Groups?.Contains("group1") ?? false) && i.Property.Value?.ToString() == "groupDefault3");
+        Assert.Contains(group2, i => i.Key == "sample7" && i.PropertyName == null && (i.Groups?.Contains("group2") ?? false) && i.Property.Value?.ToString() == "groupDefault4");
+        Assert.Contains(group2, i => i.Key == "sample8" && i.PropertyName == null && (i.Groups?.Contains("group2") ?? false) && i.Property.Value?.ToString() == "groupDefault5");
 
         Assert.Equal(8, raiseCol.Count);
 
         Assert.Null(raiseCol[0].PropertyName);
         Assert.Equal("sample1", raiseCol[0].Key);
-        Assert.Null(raiseCol[0].Group);
+        Assert.Null(raiseCol[0].Groups);
         Assert.Null(raiseCol[1].PropertyName);
         Assert.Equal("sample2", raiseCol[1].Key);
-        Assert.Null(raiseCol[1].Group);
+        Assert.Null(raiseCol[1].Groups);
         Assert.Null(raiseCol[2].PropertyName);
         Assert.Equal("sample3", raiseCol[2].Key);
-        Assert.Null(raiseCol[2].Group);
+        Assert.Null(raiseCol[2].Groups);
         Assert.Null(raiseCol[3].PropertyName);
         Assert.Equal("sample4", raiseCol[3].Key);
-        Assert.Equal("group1", raiseCol[3].Group?[0]);
+        Assert.Equal("group1", raiseCol[3].Groups?[0]);
         Assert.Null(raiseCol[4].PropertyName);
         Assert.Equal("sample5", raiseCol[4].Key);
-        Assert.Equal("group1", raiseCol[4].Group?[0]);
+        Assert.Equal("group1", raiseCol[4].Groups?[0]);
         Assert.Null(raiseCol[5].PropertyName);
         Assert.Equal("sample6", raiseCol[5].Key);
-        Assert.Equal("group1", raiseCol[5].Group?[0]);
+        Assert.Equal("group1", raiseCol[5].Groups?[0]);
         Assert.Null(raiseCol[6].PropertyName);
         Assert.Equal("sample7", raiseCol[6].Key);
-        Assert.Equal("group2", raiseCol[6].Group?[0]);
+        Assert.Equal("group2", raiseCol[6].Groups?[0]);
         Assert.Null(raiseCol[7].PropertyName);
         Assert.Equal("sample8", raiseCol[7].Key);
-        Assert.Equal("group2", raiseCol[7].Group?[0]);
+        Assert.Equal("group2", raiseCol[7].Groups?[0]);
     }
 
     [Fact]
@@ -546,47 +546,47 @@ public class GetPropertyTest : SampleObject
         Assert.Equal(3, group1.Count());
         Assert.Equal(2, group2.Count());
 
-        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp1) && i.Group == null && i.Property.Value == default);
-        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp2) && (i.Group?.Contains("group") ?? false) && (i.Property as ObservableProperty<DateTime>)?.Value == default);
-        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp3) && i.Group == null && i.Property.Value?.ToString() == "defaultValue");
-        Assert.Contains(group0, i => i.Key == "keySample1" && i.PropertyName == nameof(SampleKeyProp1) && i.Group == null && i.Property.Value == default);
-        Assert.Contains(group0, i => i.Key == "keySample2" && i.PropertyName == nameof(SampleKeyProp2) && (i.Group?.Contains("group") ?? false) && (i.Property as ObservableProperty<DateTime>)?.Value == default);
-        Assert.Contains(group0, i => i.Key == "keySample3" && i.PropertyName == nameof(SampleKeyProp3) && i.Group == null && i.Property.Value?.ToString() == "defaultValue");
-        Assert.Contains(group0, i => i.Key == "sample1" && i.PropertyName == "Sample1" && i.Group == null && i.Property.Value?.ToString() == null);
-        Assert.Contains(group0, i => i.Key == "sample2" && i.PropertyName == "Sample2" && i.Group == null && i.Property.Value?.ToString() == null);
-        Assert.Contains(group0, i => i.Key == "sample3" && i.PropertyName == "Sample3" && i.Group == null && i.Property.Value?.ToString() == "sampleDefault2");
-        Assert.Contains(group0, i => i.Key == "sample4" && i.PropertyName == "Sample4" && (i.Group?.Contains("group1") ?? false) && i.Property.Value?.ToString() == "groupDefault1");
-        Assert.Contains(group1, i => i.Key == "sample5" && i.PropertyName == "Sample5" && (i.Group?.Contains("group1") ?? false) && i.Property.Value?.ToString() == "groupDefault2");
-        Assert.Contains(group1, i => i.Key == "sample6" && i.PropertyName == "Sample6" && (i.Group?.Contains("group1") ?? false) && i.Property.Value?.ToString() == "groupDefault3");
-        Assert.Contains(group2, i => i.Key == "sample7" && i.PropertyName == "Sample7" && (i.Group?.Contains("group2") ?? false) && i.Property.Value?.ToString() == "groupDefault4");
-        Assert.Contains(group2, i => i.Key == "sample8" && i.PropertyName == "Sample8" && (i.Group?.Contains("group2") ?? false) && i.Property.Value?.ToString() == "groupDefault5");
+        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp1) && i.Groups == null && i.Property.Value == default);
+        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp2) && (i.Groups?.Contains("group") ?? false) && (i.Property as ObservableProperty<DateTime>)?.Value == default);
+        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp3) && i.Groups == null && i.Property.Value?.ToString() == "defaultValue");
+        Assert.Contains(group0, i => i.Key == "keySample1" && i.PropertyName == nameof(SampleKeyProp1) && i.Groups == null && i.Property.Value == default);
+        Assert.Contains(group0, i => i.Key == "keySample2" && i.PropertyName == nameof(SampleKeyProp2) && (i.Groups?.Contains("group") ?? false) && (i.Property as ObservableProperty<DateTime>)?.Value == default);
+        Assert.Contains(group0, i => i.Key == "keySample3" && i.PropertyName == nameof(SampleKeyProp3) && i.Groups == null && i.Property.Value?.ToString() == "defaultValue");
+        Assert.Contains(group0, i => i.Key == "sample1" && i.PropertyName == "Sample1" && i.Groups == null && i.Property.Value?.ToString() == null);
+        Assert.Contains(group0, i => i.Key == "sample2" && i.PropertyName == "Sample2" && i.Groups == null && i.Property.Value?.ToString() == null);
+        Assert.Contains(group0, i => i.Key == "sample3" && i.PropertyName == "Sample3" && i.Groups == null && i.Property.Value?.ToString() == "sampleDefault2");
+        Assert.Contains(group0, i => i.Key == "sample4" && i.PropertyName == "Sample4" && (i.Groups?.Contains("group1") ?? false) && i.Property.Value?.ToString() == "groupDefault1");
+        Assert.Contains(group1, i => i.Key == "sample5" && i.PropertyName == "Sample5" && (i.Groups?.Contains("group1") ?? false) && i.Property.Value?.ToString() == "groupDefault2");
+        Assert.Contains(group1, i => i.Key == "sample6" && i.PropertyName == "Sample6" && (i.Groups?.Contains("group1") ?? false) && i.Property.Value?.ToString() == "groupDefault3");
+        Assert.Contains(group2, i => i.Key == "sample7" && i.PropertyName == "Sample7" && (i.Groups?.Contains("group2") ?? false) && i.Property.Value?.ToString() == "groupDefault4");
+        Assert.Contains(group2, i => i.Key == "sample8" && i.PropertyName == "Sample8" && (i.Groups?.Contains("group2") ?? false) && i.Property.Value?.ToString() == "groupDefault5");
 
         Assert.Equal(8, raiseCol.Count);
 
         Assert.Equal("Sample1", raiseCol[0].PropertyName);
         Assert.Equal("sample1", raiseCol[0].Key);
-        Assert.Null(raiseCol[0].Group);
+        Assert.Null(raiseCol[0].Groups);
         Assert.Equal("Sample2", raiseCol[1].PropertyName);
         Assert.Equal("sample2", raiseCol[1].Key);
-        Assert.Null(raiseCol[1].Group);
+        Assert.Null(raiseCol[1].Groups);
         Assert.Equal("Sample3", raiseCol[2].PropertyName);
         Assert.Equal("sample3", raiseCol[2].Key);
-        Assert.Null(raiseCol[2].Group);
+        Assert.Null(raiseCol[2].Groups);
         Assert.Equal("Sample4", raiseCol[3].PropertyName);
         Assert.Equal("sample4", raiseCol[3].Key);
-        Assert.Equal("group1", raiseCol[3].Group?[0]);
+        Assert.Equal("group1", raiseCol[3].Groups?[0]);
         Assert.Equal("Sample5", raiseCol[4].PropertyName);
         Assert.Equal("sample5", raiseCol[4].Key);
-        Assert.Equal("group1", raiseCol[4].Group?[0]);
+        Assert.Equal("group1", raiseCol[4].Groups?[0]);
         Assert.Equal("Sample6", raiseCol[5].PropertyName);
         Assert.Equal("sample6", raiseCol[5].Key);
-        Assert.Equal("group1", raiseCol[5].Group?[0]);
+        Assert.Equal("group1", raiseCol[5].Groups?[0]);
         Assert.Equal("Sample7", raiseCol[6].PropertyName);
         Assert.Equal("sample7", raiseCol[6].Key);
-        Assert.Equal("group2", raiseCol[6].Group?[0]);
+        Assert.Equal("group2", raiseCol[6].Groups?[0]);
         Assert.Equal("Sample8", raiseCol[7].PropertyName);
         Assert.Equal("sample8", raiseCol[7].Key);
-        Assert.Equal("group2", raiseCol[7].Group?[0]);
+        Assert.Equal("group2", raiseCol[7].Groups?[0]);
     }
 }
 
@@ -755,42 +755,42 @@ public class SetPropertyTest : SampleObject
         Assert.Equal(3, group1.Count());
         Assert.Equal(2, group2.Count());
 
-        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp1) && i.Group == null && i.Property.Value == default);
-        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp2) && (i.Group?.Contains("group") ?? false) && (i.Property as ObservableProperty<DateTime>)?.Value == default);
-        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp3) && i.Group == null && i.Property.Value?.ToString() == "defaultValue");
-        Assert.Contains(group0, i => i.Key == "keySample1" && i.PropertyName == nameof(SampleKeyProp1) && i.Group == null && i.Property.Value == default);
-        Assert.Contains(group0, i => i.Key == "keySample2" && i.PropertyName == nameof(SampleKeyProp2) && (i.Group?.Contains("group") ?? false) && (i.Property as ObservableProperty<DateTime>)?.Value == default);
-        Assert.Contains(group0, i => i.Key == "keySample3" && i.PropertyName == nameof(SampleKeyProp3) && i.Group == null && i.Property.Value?.ToString() == "defaultValue");
-        Assert.Contains(group0, i => i.PropertyName == "Sample3" && i.Key == null && i.Group == null && i.Property.Value?.ToString() == "sampleDefault3");
-        Assert.Contains(group1, i => i.PropertyName == "Sample4" && i.Key == null && (i.Group?.Contains("group1") ?? false) && i.Property.Value?.ToString() == "groupDefault1");
-        Assert.Contains(group1, i => i.PropertyName == "Sample5" && i.Key == null && (i.Group?.Contains("group1") ?? false) && i.Property.Value?.ToString() == "groupDefault2");
-        Assert.Contains(group1, i => i.PropertyName == "Sample6" && i.Key == null && (i.Group?.Contains("group1") ?? false) && i.Property.Value?.ToString() == "groupDefault3");
-        Assert.Contains(group2, i => i.PropertyName == "Sample7" && i.Key == null && (i.Group?.Contains("group2") ?? false) && i.Property.Value?.ToString() == "groupDefault4");
-        Assert.Contains(group2, i => i.PropertyName == "Sample8" && i.Key == null && (i.Group?.Contains("group2") ?? false) && i.Property.Value?.ToString() == "groupDefault5");
+        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp1) && i.Groups == null && i.Property.Value == default);
+        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp2) && (i.Groups?.Contains("group") ?? false) && (i.Property as ObservableProperty<DateTime>)?.Value == default);
+        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp3) && i.Groups == null && i.Property.Value?.ToString() == "defaultValue");
+        Assert.Contains(group0, i => i.Key == "keySample1" && i.PropertyName == nameof(SampleKeyProp1) && i.Groups == null && i.Property.Value == default);
+        Assert.Contains(group0, i => i.Key == "keySample2" && i.PropertyName == nameof(SampleKeyProp2) && (i.Groups?.Contains("group") ?? false) && (i.Property as ObservableProperty<DateTime>)?.Value == default);
+        Assert.Contains(group0, i => i.Key == "keySample3" && i.PropertyName == nameof(SampleKeyProp3) && i.Groups == null && i.Property.Value?.ToString() == "defaultValue");
+        Assert.Contains(group0, i => i.PropertyName == "Sample3" && i.Key == null && i.Groups == null && i.Property.Value?.ToString() == "sampleDefault3");
+        Assert.Contains(group1, i => i.PropertyName == "Sample4" && i.Key == null && (i.Groups?.Contains("group1") ?? false) && i.Property.Value?.ToString() == "groupDefault1");
+        Assert.Contains(group1, i => i.PropertyName == "Sample5" && i.Key == null && (i.Groups?.Contains("group1") ?? false) && i.Property.Value?.ToString() == "groupDefault2");
+        Assert.Contains(group1, i => i.PropertyName == "Sample6" && i.Key == null && (i.Groups?.Contains("group1") ?? false) && i.Property.Value?.ToString() == "groupDefault3");
+        Assert.Contains(group2, i => i.PropertyName == "Sample7" && i.Key == null && (i.Groups?.Contains("group2") ?? false) && i.Property.Value?.ToString() == "groupDefault4");
+        Assert.Contains(group2, i => i.PropertyName == "Sample8" && i.Key == null && (i.Groups?.Contains("group2") ?? false) && i.Property.Value?.ToString() == "groupDefault5");
 
         Assert.Equal(7, raiseCol.Count);
 
         Assert.Equal("Sample3", raiseCol[0].PropertyName);
         Assert.Null(raiseCol[0].Key);
-        Assert.Null(raiseCol[0].Group);
+        Assert.Null(raiseCol[0].Groups);
         Assert.Equal("Sample3", raiseCol[1].PropertyName);
         Assert.Null(raiseCol[1].Key);
-        Assert.Null(raiseCol[1].Group);
+        Assert.Null(raiseCol[1].Groups);
         Assert.Equal("Sample4", raiseCol[2].PropertyName);
         Assert.Null(raiseCol[2].Key);
-        Assert.Equal("group1", raiseCol[2].Group?[0]);
+        Assert.Equal("group1", raiseCol[2].Groups?[0]);
         Assert.Equal("Sample5", raiseCol[3].PropertyName);
         Assert.Null(raiseCol[3].Key);
-        Assert.Equal("group1", raiseCol[3].Group?[0]);
+        Assert.Equal("group1", raiseCol[3].Groups?[0]);
         Assert.Equal("Sample6", raiseCol[4].PropertyName);
         Assert.Null(raiseCol[4].Key);
-        Assert.Equal("group1", raiseCol[4].Group?[0]);
+        Assert.Equal("group1", raiseCol[4].Groups?[0]);
         Assert.Equal("Sample7", raiseCol[5].PropertyName);
         Assert.Null(raiseCol[5].Key);
-        Assert.Equal("group2", raiseCol[5].Group?[0]);
+        Assert.Equal("group2", raiseCol[5].Groups?[0]);
         Assert.Equal("Sample8", raiseCol[6].PropertyName);
         Assert.Null(raiseCol[6].Key);
-        Assert.Equal("group2", raiseCol[6].Group?[0]);
+        Assert.Equal("group2", raiseCol[6].Groups?[0]);
     }
 
     [Fact]
@@ -956,42 +956,42 @@ public class SetPropertyTest : SampleObject
         Assert.Equal(3, group1.Count());
         Assert.Equal(2, group2.Count());
 
-        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp1) && i.Group == null && i.Property.Value == default);
-        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp2) && (i.Group?.Contains("group") ?? false) && (i.Property as ObservableProperty<DateTime>)?.Value == default);
-        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp3) && i.Group == null && i.Property.Value?.ToString() == "defaultValue");
-        Assert.Contains(group0, i => i.Key == "keySample1" && i.PropertyName == nameof(SampleKeyProp1) && i.Group == null && i.Property.Value == default);
-        Assert.Contains(group0, i => i.Key == "keySample2" && i.PropertyName == nameof(SampleKeyProp2) && (i.Group?.Contains("group") ?? false) && (i.Property as ObservableProperty<DateTime>)?.Value == default);
-        Assert.Contains(group0, i => i.Key == "keySample3" && i.PropertyName == nameof(SampleKeyProp3) && i.Group == null && i.Property.Value?.ToString() == "defaultValue");
-        Assert.Contains(group0, i => i.Key == "sample3" && i.PropertyName == null && i.Group == null && i.Property.Value?.ToString() == "sampleDefault3");
-        Assert.Contains(group1, i => i.Key == "sample4" && i.PropertyName == null && (i.Group?.Contains("group1") ?? false) && i.Property.Value?.ToString() == "groupDefault1");
-        Assert.Contains(group1, i => i.Key == "sample5" && i.PropertyName == null && (i.Group?.Contains("group1") ?? false) && i.Property.Value?.ToString() == "groupDefault2");
-        Assert.Contains(group1, i => i.Key == "sample6" && i.PropertyName == null && (i.Group?.Contains("group1") ?? false) && i.Property.Value?.ToString() == "groupDefault3");
-        Assert.Contains(group2, i => i.Key == "sample7" && i.PropertyName == null && (i.Group?.Contains("group2") ?? false) && i.Property.Value?.ToString() == "groupDefault4");
-        Assert.Contains(group2, i => i.Key == "sample8" && i.PropertyName == null && (i.Group?.Contains("group2") ?? false) && i.Property.Value?.ToString() == "groupDefault5");
+        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp1) && i.Groups == null && i.Property.Value == default);
+        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp2) && (i.Groups?.Contains("group") ?? false) && (i.Property as ObservableProperty<DateTime>)?.Value == default);
+        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp3) && i.Groups == null && i.Property.Value?.ToString() == "defaultValue");
+        Assert.Contains(group0, i => i.Key == "keySample1" && i.PropertyName == nameof(SampleKeyProp1) && i.Groups == null && i.Property.Value == default);
+        Assert.Contains(group0, i => i.Key == "keySample2" && i.PropertyName == nameof(SampleKeyProp2) && (i.Groups?.Contains("group") ?? false) && (i.Property as ObservableProperty<DateTime>)?.Value == default);
+        Assert.Contains(group0, i => i.Key == "keySample3" && i.PropertyName == nameof(SampleKeyProp3) && i.Groups == null && i.Property.Value?.ToString() == "defaultValue");
+        Assert.Contains(group0, i => i.Key == "sample3" && i.PropertyName == null && i.Groups == null && i.Property.Value?.ToString() == "sampleDefault3");
+        Assert.Contains(group1, i => i.Key == "sample4" && i.PropertyName == null && (i.Groups?.Contains("group1") ?? false) && i.Property.Value?.ToString() == "groupDefault1");
+        Assert.Contains(group1, i => i.Key == "sample5" && i.PropertyName == null && (i.Groups?.Contains("group1") ?? false) && i.Property.Value?.ToString() == "groupDefault2");
+        Assert.Contains(group1, i => i.Key == "sample6" && i.PropertyName == null && (i.Groups?.Contains("group1") ?? false) && i.Property.Value?.ToString() == "groupDefault3");
+        Assert.Contains(group2, i => i.Key == "sample7" && i.PropertyName == null && (i.Groups?.Contains("group2") ?? false) && i.Property.Value?.ToString() == "groupDefault4");
+        Assert.Contains(group2, i => i.Key == "sample8" && i.PropertyName == null && (i.Groups?.Contains("group2") ?? false) && i.Property.Value?.ToString() == "groupDefault5");
 
         Assert.Equal(7, raiseCol.Count);
 
         Assert.Null(raiseCol[0].PropertyName);
         Assert.Equal("sample3", raiseCol[0].Key);
-        Assert.Null(raiseCol[0].Group);
+        Assert.Null(raiseCol[0].Groups);
         Assert.Null(raiseCol[1].PropertyName);
         Assert.Equal("sample3", raiseCol[1].Key);
-        Assert.Null(raiseCol[1].Group);
+        Assert.Null(raiseCol[1].Groups);
         Assert.Null(raiseCol[2].PropertyName);
         Assert.Equal("sample4", raiseCol[2].Key);
-        Assert.Equal("group1", raiseCol[2].Group?[0]);
+        Assert.Equal("group1", raiseCol[2].Groups?[0]);
         Assert.Null(raiseCol[3].PropertyName);
         Assert.Equal("sample5", raiseCol[3].Key);
-        Assert.Equal("group1", raiseCol[3].Group?[0]);
+        Assert.Equal("group1", raiseCol[3].Groups?[0]);
         Assert.Null(raiseCol[4].PropertyName);
         Assert.Equal("sample6", raiseCol[4].Key);
-        Assert.Equal("group1", raiseCol[4].Group?[0]);
+        Assert.Equal("group1", raiseCol[4].Groups?[0]);
         Assert.Null(raiseCol[5].PropertyName);
         Assert.Equal("sample7", raiseCol[5].Key);
-        Assert.Equal("group2", raiseCol[5].Group?[0]);
+        Assert.Equal("group2", raiseCol[5].Groups?[0]);
         Assert.Null(raiseCol[6].PropertyName);
         Assert.Equal("sample8", raiseCol[6].Key);
-        Assert.Equal("group2", raiseCol[6].Group?[0]);
+        Assert.Equal("group2", raiseCol[6].Groups?[0]);
     }
 
     [Fact]
@@ -1157,42 +1157,42 @@ public class SetPropertyTest : SampleObject
         Assert.Equal(3, group1.Count());
         Assert.Equal(2, group2.Count());
 
-        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp1) && i.Group == null && i.Property.Value == default);
-        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp2) && (i.Group?.Contains("group") ?? false) && (i.Property as ObservableProperty<DateTime>)?.Value == default);
-        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp3) && i.Group == null && i.Property.Value?.ToString() == "defaultValue");
-        Assert.Contains(group0, i => i.Key == "keySample1" && i.PropertyName == nameof(SampleKeyProp1) && i.Group == null && i.Property.Value == default);
-        Assert.Contains(group0, i => i.Key == "keySample2" && i.PropertyName == nameof(SampleKeyProp2) && (i.Group?.Contains("group") ?? false) && (i.Property as ObservableProperty<DateTime>)?.Value == default);
-        Assert.Contains(group0, i => i.Key == "keySample3" && i.PropertyName == nameof(SampleKeyProp3) && i.Group == null && i.Property.Value?.ToString() == "defaultValue");
-        Assert.Contains(group0, i => i.Key == "sample3" && i.PropertyName == "Sample3" && i.Group == null && i.Property.Value?.ToString() == "sampleDefault3");
-        Assert.Contains(group1, i => i.Key == "sample4" && i.PropertyName == "Sample4" && (i.Group?.Contains("group1") ?? false) && i.Property.Value?.ToString() == "groupDefault1");
-        Assert.Contains(group1, i => i.Key == "sample5" && i.PropertyName == "Sample5" && (i.Group?.Contains("group1") ?? false) && i.Property.Value?.ToString() == "groupDefault2");
-        Assert.Contains(group1, i => i.Key == "sample6" && i.PropertyName == "Sample6" && (i.Group?.Contains("group1") ?? false) && i.Property.Value?.ToString() == "groupDefault3");
-        Assert.Contains(group2, i => i.Key == "sample7" && i.PropertyName == "Sample7" && (i.Group?.Contains("group2") ?? false) && i.Property.Value?.ToString() == "groupDefault4");
-        Assert.Contains(group2, i => i.Key == "sample8" && i.PropertyName == "Sample8" && (i.Group?.Contains("group2") ?? false) && i.Property.Value?.ToString() == "groupDefault5");
+        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp1) && i.Groups == null && i.Property.Value == default);
+        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp2) && (i.Groups?.Contains("group") ?? false) && (i.Property as ObservableProperty<DateTime>)?.Value == default);
+        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp3) && i.Groups == null && i.Property.Value?.ToString() == "defaultValue");
+        Assert.Contains(group0, i => i.Key == "keySample1" && i.PropertyName == nameof(SampleKeyProp1) && i.Groups == null && i.Property.Value == default);
+        Assert.Contains(group0, i => i.Key == "keySample2" && i.PropertyName == nameof(SampleKeyProp2) && (i.Groups?.Contains("group") ?? false) && (i.Property as ObservableProperty<DateTime>)?.Value == default);
+        Assert.Contains(group0, i => i.Key == "keySample3" && i.PropertyName == nameof(SampleKeyProp3) && i.Groups == null && i.Property.Value?.ToString() == "defaultValue");
+        Assert.Contains(group0, i => i.Key == "sample3" && i.PropertyName == "Sample3" && i.Groups == null && i.Property.Value?.ToString() == "sampleDefault3");
+        Assert.Contains(group1, i => i.Key == "sample4" && i.PropertyName == "Sample4" && (i.Groups?.Contains("group1") ?? false) && i.Property.Value?.ToString() == "groupDefault1");
+        Assert.Contains(group1, i => i.Key == "sample5" && i.PropertyName == "Sample5" && (i.Groups?.Contains("group1") ?? false) && i.Property.Value?.ToString() == "groupDefault2");
+        Assert.Contains(group1, i => i.Key == "sample6" && i.PropertyName == "Sample6" && (i.Groups?.Contains("group1") ?? false) && i.Property.Value?.ToString() == "groupDefault3");
+        Assert.Contains(group2, i => i.Key == "sample7" && i.PropertyName == "Sample7" && (i.Groups?.Contains("group2") ?? false) && i.Property.Value?.ToString() == "groupDefault4");
+        Assert.Contains(group2, i => i.Key == "sample8" && i.PropertyName == "Sample8" && (i.Groups?.Contains("group2") ?? false) && i.Property.Value?.ToString() == "groupDefault5");
 
         Assert.Equal(7, raiseCol.Count);
 
         Assert.Equal("Sample3", raiseCol[0].PropertyName);
         Assert.Equal("sample3", raiseCol[0].Key);
-        Assert.Null(raiseCol[0].Group);
+        Assert.Null(raiseCol[0].Groups);
         Assert.Equal("Sample3", raiseCol[1].PropertyName);
         Assert.Equal("sample3", raiseCol[1].Key);
-        Assert.Null(raiseCol[1].Group);
+        Assert.Null(raiseCol[1].Groups);
         Assert.Equal("Sample4", raiseCol[2].PropertyName);
         Assert.Equal("sample4", raiseCol[2].Key);
-        Assert.Equal("group1", raiseCol[2].Group?[0]);
+        Assert.Equal("group1", raiseCol[2].Groups?[0]);
         Assert.Equal("Sample5", raiseCol[3].PropertyName);
         Assert.Equal("sample5", raiseCol[3].Key);
-        Assert.Equal("group1", raiseCol[3].Group?[0]);
+        Assert.Equal("group1", raiseCol[3].Groups?[0]);
         Assert.Equal("Sample6", raiseCol[4].PropertyName);
         Assert.Equal("sample6", raiseCol[4].Key);
-        Assert.Equal("group1", raiseCol[4].Group?[0]);
+        Assert.Equal("group1", raiseCol[4].Groups?[0]);
         Assert.Equal("Sample7", raiseCol[5].PropertyName);
         Assert.Equal("sample7", raiseCol[5].Key);
-        Assert.Equal("group2", raiseCol[5].Group?[0]);
+        Assert.Equal("group2", raiseCol[5].Groups?[0]);
         Assert.Equal("Sample8", raiseCol[6].PropertyName);
         Assert.Equal("sample8", raiseCol[6].Key);
-        Assert.Equal("group2", raiseCol[6].Group?[0]);
+        Assert.Equal("group2", raiseCol[6].Groups?[0]);
     }
 }
 
@@ -1228,36 +1228,36 @@ public class RemoveTest : SampleObject
 
         Assert.Equal(6, group0.Count());
 
-        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp1) && i.Group == null && i.Property.Value?.ToString() == "set1");
-        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp2) && (i.Group?.Contains("group") ?? false) && (i.Property as ObservableProperty<DateTime>)?.Value == default);
-        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp3) && i.Group == null && i.Property.Value?.ToString() == "defaultValue");
-        Assert.Contains(group0, i => i.Key == "keySample1" && i.PropertyName == nameof(SampleKeyProp1) && i.Group == null && i.Property.Value == default);
-        Assert.Contains(group0, i => i.Key == "keySample2" && i.PropertyName == nameof(SampleKeyProp2) && (i.Group?.Contains("group") ?? false) && (i.Property as ObservableProperty<DateTime>)?.Value == default);
-        Assert.Contains(group0, i => i.Key == "keySample3" && i.PropertyName == nameof(SampleKeyProp3) && i.Group == null && i.Property.Value?.ToString() == "defaultValue");
+        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp1) && i.Groups == null && i.Property.Value?.ToString() == "set1");
+        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp2) && (i.Groups?.Contains("group") ?? false) && (i.Property as ObservableProperty<DateTime>)?.Value == default);
+        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp3) && i.Groups == null && i.Property.Value?.ToString() == "defaultValue");
+        Assert.Contains(group0, i => i.Key == "keySample1" && i.PropertyName == nameof(SampleKeyProp1) && i.Groups == null && i.Property.Value == default);
+        Assert.Contains(group0, i => i.Key == "keySample2" && i.PropertyName == nameof(SampleKeyProp2) && (i.Groups?.Contains("group") ?? false) && (i.Property as ObservableProperty<DateTime>)?.Value == default);
+        Assert.Contains(group0, i => i.Key == "keySample3" && i.PropertyName == nameof(SampleKeyProp3) && i.Groups == null && i.Property.Value?.ToString() == "defaultValue");
 
         Assert.Equal(7, raiseCol.Count);
 
         Assert.Equal(nameof(SampleProp1), raiseCol[0].PropertyName);
         Assert.Null(raiseCol[0].Key);
-        Assert.Null(raiseCol[0].Group);
+        Assert.Null(raiseCol[0].Groups);
         Assert.Equal(nameof(SampleProp2), raiseCol[1].PropertyName);
         Assert.Null(raiseCol[1].Key);
-        Assert.Equal("group", raiseCol[1].Group?[0]);
+        Assert.Equal("group", raiseCol[1].Groups?[0]);
         Assert.Equal(nameof(SampleProp3), raiseCol[2].PropertyName);
         Assert.Null(raiseCol[2].Key);
-        Assert.Null(raiseCol[2].Group);
+        Assert.Null(raiseCol[2].Groups);
         Assert.Equal(nameof(SampleProp2), raiseCol[3].PropertyName);
         Assert.Null(raiseCol[3].Key);
-        Assert.Equal("group", raiseCol[3].Group?[0]);
+        Assert.Equal("group", raiseCol[3].Groups?[0]);
         Assert.Equal(nameof(SampleProp3), raiseCol[4].PropertyName);
         Assert.Null(raiseCol[4].Key);
-        Assert.Null(raiseCol[4].Group);
+        Assert.Null(raiseCol[4].Groups);
         Assert.Equal(nameof(SampleProp2), raiseCol[5].PropertyName);
         Assert.Null(raiseCol[5].Key);
-        Assert.Equal("group", raiseCol[5].Group?[0]);
+        Assert.Equal("group", raiseCol[5].Groups?[0]);
         Assert.Equal(nameof(SampleProp3), raiseCol[6].PropertyName);
         Assert.Null(raiseCol[6].Key);
-        Assert.Null(raiseCol[6].Group);
+        Assert.Null(raiseCol[6].Groups);
     }
 
     [Fact]
@@ -1290,36 +1290,36 @@ public class RemoveTest : SampleObject
 
         Assert.Equal(6, group0.Count());
 
-        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp1) && i.Group == null && i.Property.Value == default);
-        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp2) && (i.Group?.Contains("group") ?? false) && (i.Property as ObservableProperty<DateTime>)?.Value == default);
-        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp3) && i.Group == null && i.Property.Value?.ToString() == "defaultValue");
-        Assert.Contains(group0, i => i.Key == "keySample1" && i.PropertyName == nameof(SampleKeyProp1) && i.Group == null && i.Property.Value?.ToString() == "set1");
-        Assert.Contains(group0, i => i.Key == "keySample2" && i.PropertyName == nameof(SampleKeyProp2) && (i.Group?.Contains("group") ?? false) && (i.Property as ObservableProperty<DateTime>)?.Value == default);
-        Assert.Contains(group0, i => i.Key == "keySample3" && i.PropertyName == nameof(SampleKeyProp3) && i.Group == null && i.Property.Value?.ToString() == "defaultValue");
+        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp1) && i.Groups == null && i.Property.Value == default);
+        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp2) && (i.Groups?.Contains("group") ?? false) && (i.Property as ObservableProperty<DateTime>)?.Value == default);
+        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp3) && i.Groups == null && i.Property.Value?.ToString() == "defaultValue");
+        Assert.Contains(group0, i => i.Key == "keySample1" && i.PropertyName == nameof(SampleKeyProp1) && i.Groups == null && i.Property.Value?.ToString() == "set1");
+        Assert.Contains(group0, i => i.Key == "keySample2" && i.PropertyName == nameof(SampleKeyProp2) && (i.Groups?.Contains("group") ?? false) && (i.Property as ObservableProperty<DateTime>)?.Value == default);
+        Assert.Contains(group0, i => i.Key == "keySample3" && i.PropertyName == nameof(SampleKeyProp3) && i.Groups == null && i.Property.Value?.ToString() == "defaultValue");
 
         Assert.Equal(7, raiseCol.Count);
 
         Assert.Equal(nameof(SampleKeyProp1), raiseCol[0].PropertyName);
         Assert.Equal("keySample1", raiseCol[0].Key);
-        Assert.Null(raiseCol[0].Group);
+        Assert.Null(raiseCol[0].Groups);
         Assert.Equal(nameof(SampleKeyProp2), raiseCol[1].PropertyName);
         Assert.Equal("keySample2", raiseCol[1].Key);
-        Assert.Equal("group", raiseCol[1].Group?[0]);
+        Assert.Equal("group", raiseCol[1].Groups?[0]);
         Assert.Equal(nameof(SampleKeyProp3), raiseCol[2].PropertyName);
         Assert.Equal("keySample3", raiseCol[2].Key);
-        Assert.Null(raiseCol[2].Group);
+        Assert.Null(raiseCol[2].Groups);
         Assert.Equal(nameof(SampleKeyProp2), raiseCol[3].PropertyName);
         Assert.Equal("keySample2", raiseCol[3].Key);
-        Assert.Equal("group", raiseCol[3].Group?[0]);
+        Assert.Equal("group", raiseCol[3].Groups?[0]);
         Assert.Equal(nameof(SampleKeyProp3), raiseCol[4].PropertyName);
         Assert.Equal("keySample3", raiseCol[4].Key);
-        Assert.Null(raiseCol[4].Group);
+        Assert.Null(raiseCol[4].Groups);
         Assert.Equal(nameof(SampleKeyProp2), raiseCol[5].PropertyName);
         Assert.Equal("keySample2", raiseCol[5].Key);
-        Assert.Equal("group", raiseCol[5].Group?[0]);
+        Assert.Equal("group", raiseCol[5].Groups?[0]);
         Assert.Equal(nameof(SampleKeyProp3), raiseCol[6].PropertyName);
         Assert.Equal("keySample3", raiseCol[6].Key);
-        Assert.Null(raiseCol[6].Group);
+        Assert.Null(raiseCol[6].Groups);
     }
 
     [Fact]
@@ -1360,57 +1360,57 @@ public class RemoveTest : SampleObject
 
         Assert.Equal(6, group0.Count());
 
-        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp1) && i.Group == null && i.Property.Value?.ToString() == "set1");
-        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp2) && (i.Group?.Contains("group") ?? false) && (i.Property as ObservableProperty<DateTime>)?.Value == default);
-        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp3) && i.Group == null && i.Property.Value?.ToString() == "defaultValue");
-        Assert.Contains(group0, i => i.Key == "keySample1" && i.PropertyName == nameof(SampleKeyProp1) && i.Group == null && i.Property.Value?.ToString() == "set1");
-        Assert.Contains(group0, i => i.Key == "keySample2" && i.PropertyName == nameof(SampleKeyProp2) && (i.Group?.Contains("group") ?? false) && (i.Property as ObservableProperty<DateTime>)?.Value == default);
-        Assert.Contains(group0, i => i.Key == "keySample3" && i.PropertyName == nameof(SampleKeyProp3) && i.Group == null && i.Property.Value?.ToString() == "defaultValue");
+        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp1) && i.Groups == null && i.Property.Value?.ToString() == "set1");
+        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp2) && (i.Groups?.Contains("group") ?? false) && (i.Property as ObservableProperty<DateTime>)?.Value == default);
+        Assert.Contains(group0, i => i.Key == null && i.PropertyName == nameof(SampleProp3) && i.Groups == null && i.Property.Value?.ToString() == "defaultValue");
+        Assert.Contains(group0, i => i.Key == "keySample1" && i.PropertyName == nameof(SampleKeyProp1) && i.Groups == null && i.Property.Value?.ToString() == "set1");
+        Assert.Contains(group0, i => i.Key == "keySample2" && i.PropertyName == nameof(SampleKeyProp2) && (i.Groups?.Contains("group") ?? false) && (i.Property as ObservableProperty<DateTime>)?.Value == default);
+        Assert.Contains(group0, i => i.Key == "keySample3" && i.PropertyName == nameof(SampleKeyProp3) && i.Groups == null && i.Property.Value?.ToString() == "defaultValue");
 
         Assert.Equal(14, raiseCol.Count);
 
         Assert.Equal(nameof(SampleProp1), raiseCol[0].PropertyName);
         Assert.Null(raiseCol[0].Key);
-        Assert.Null(raiseCol[0].Group);
+        Assert.Null(raiseCol[0].Groups);
         Assert.Equal(nameof(SampleProp2), raiseCol[1].PropertyName);
         Assert.Null(raiseCol[1].Key);
-        Assert.Equal("group", raiseCol[1].Group?[0]);
+        Assert.Equal("group", raiseCol[1].Groups?[0]);
         Assert.Equal(nameof(SampleProp3), raiseCol[2].PropertyName);
         Assert.Null(raiseCol[2].Key);
-        Assert.Null(raiseCol[2].Group);
+        Assert.Null(raiseCol[2].Groups);
         Assert.Equal(nameof(SampleKeyProp1), raiseCol[3].PropertyName);
         Assert.Equal("keySample1", raiseCol[3].Key);
-        Assert.Null(raiseCol[3].Group);
+        Assert.Null(raiseCol[3].Groups);
         Assert.Equal(nameof(SampleKeyProp2), raiseCol[4].PropertyName);
         Assert.Equal("keySample2", raiseCol[4].Key);
-        Assert.Equal("group", raiseCol[4].Group?[0]);
+        Assert.Equal("group", raiseCol[4].Groups?[0]);
         Assert.Equal(nameof(SampleKeyProp3), raiseCol[5].PropertyName);
         Assert.Equal("keySample3", raiseCol[5].Key);
-        Assert.Null(raiseCol[5].Group);
+        Assert.Null(raiseCol[5].Groups);
         Assert.Equal(nameof(SampleProp2), raiseCol[6].PropertyName);
         Assert.Null(raiseCol[6].Key);
-        Assert.Equal("group", raiseCol[6].Group?[0]);
+        Assert.Equal("group", raiseCol[6].Groups?[0]);
         Assert.Equal(nameof(SampleProp3), raiseCol[7].PropertyName);
         Assert.Null(raiseCol[7].Key);
-        Assert.Null(raiseCol[7].Group);
+        Assert.Null(raiseCol[7].Groups);
         Assert.Equal(nameof(SampleKeyProp2), raiseCol[8].PropertyName);
         Assert.Equal("keySample2", raiseCol[8].Key);
-        Assert.Equal("group", raiseCol[8].Group?[0]);
+        Assert.Equal("group", raiseCol[8].Groups?[0]);
         Assert.Equal(nameof(SampleKeyProp3), raiseCol[9].PropertyName);
         Assert.Equal("keySample3", raiseCol[9].Key);
-        Assert.Null(raiseCol[9].Group);
+        Assert.Null(raiseCol[9].Groups);
         Assert.Equal(nameof(SampleProp2), raiseCol[10].PropertyName);
         Assert.Null(raiseCol[10].Key);
-        Assert.Equal("group", raiseCol[10].Group?[0]);
+        Assert.Equal("group", raiseCol[10].Groups?[0]);
         Assert.Equal(nameof(SampleProp3), raiseCol[11].PropertyName);
         Assert.Null(raiseCol[11].Key);
-        Assert.Null(raiseCol[11].Group);
+        Assert.Null(raiseCol[11].Groups);
         Assert.Equal(nameof(SampleKeyProp2), raiseCol[12].PropertyName);
         Assert.Equal("keySample2", raiseCol[12].Key);
-        Assert.Equal("group", raiseCol[12].Group?[0]);
+        Assert.Equal("group", raiseCol[12].Groups?[0]);
         Assert.Equal(nameof(SampleKeyProp3), raiseCol[13].PropertyName);
         Assert.Equal("keySample3", raiseCol[13].Key);
-        Assert.Null(raiseCol[13].Group);
+        Assert.Null(raiseCol[13].Groups);
     }
 }
 
@@ -1481,15 +1481,15 @@ public class GetRawPropertiesTest : SampleObject
         Assert.Equal(6, all.Count());
         Assert.Equal(2, group.Count());
 
-        Assert.Contains(all, i => i.Key == null && i.PropertyName == nameof(SampleProp1) && i.Group == null && i.Property.Value?.ToString() == "set1");
-        Assert.Contains(all, i => i.Key == null && i.PropertyName == nameof(SampleProp2) && (i.Group?.Contains("group") ?? false) && i.Property.GetValue<DateTime>() == date1);
-        Assert.Contains(all, i => i.Key == null && i.PropertyName == nameof(SampleProp3) && i.Group == null && i.Property.Value?.ToString() == "set3");
-        Assert.Contains(all, i => i.Key == "keySample1" && i.PropertyName == nameof(SampleKeyProp1) && i.Group == null && i.Property.Value?.ToString() == "set1");
-        Assert.Contains(all, i => i.Key == "keySample2" && i.PropertyName == nameof(SampleKeyProp2) && (i.Group?.Contains("group") ?? false) && i.Property.GetValue<DateTime>() == date1);
-        Assert.Contains(all, i => i.Key == "keySample3" && i.PropertyName == nameof(SampleKeyProp3) && i.Group == null && i.Property.Value?.ToString() == "set3");
+        Assert.Contains(all, i => i.Key == null && i.PropertyName == nameof(SampleProp1) && i.Groups == null && i.Property.Value?.ToString() == "set1");
+        Assert.Contains(all, i => i.Key == null && i.PropertyName == nameof(SampleProp2) && (i.Groups?.Contains("group") ?? false) && i.Property.GetValue<DateTime>() == date1);
+        Assert.Contains(all, i => i.Key == null && i.PropertyName == nameof(SampleProp3) && i.Groups == null && i.Property.Value?.ToString() == "set3");
+        Assert.Contains(all, i => i.Key == "keySample1" && i.PropertyName == nameof(SampleKeyProp1) && i.Groups == null && i.Property.Value?.ToString() == "set1");
+        Assert.Contains(all, i => i.Key == "keySample2" && i.PropertyName == nameof(SampleKeyProp2) && (i.Groups?.Contains("group") ?? false) && i.Property.GetValue<DateTime>() == date1);
+        Assert.Contains(all, i => i.Key == "keySample3" && i.PropertyName == nameof(SampleKeyProp3) && i.Groups == null && i.Property.Value?.ToString() == "set3");
 
-        Assert.Contains(group, i => i.Key == null && i.PropertyName == nameof(SampleProp2) && (i.Group?.Contains("group") ?? false) && i.Property.GetValue<DateTime>() == date1);
-        Assert.Contains(group, i => i.Key == "keySample2" && i.PropertyName == nameof(SampleKeyProp2) && (i.Group?.Contains("group") ?? false) && i.Property.GetValue<DateTime>() == date1);
+        Assert.Contains(group, i => i.Key == null && i.PropertyName == nameof(SampleProp2) && (i.Groups?.Contains("group") ?? false) && i.Property.GetValue<DateTime>() == date1);
+        Assert.Contains(group, i => i.Key == "keySample2" && i.PropertyName == nameof(SampleKeyProp2) && (i.Groups?.Contains("group") ?? false) && i.Property.GetValue<DateTime>() == date1);
     }
 }
 

@@ -70,8 +70,8 @@ namespace ObservableHelpers
         /// <param name="propertyName">
         /// The name of the property to set.
         /// </param>
-        /// <param name="group">
-        /// The group of the property to set.
+        /// <param name="groups">
+        /// The groups of the property to set.
         /// </param>
         /// <param name="setValidate">
         /// The value set validator function.
@@ -89,13 +89,13 @@ namespace ObservableHelpers
             T value,
             string? key = null,
             [CallerMemberName] string? propertyName = null,
-            string[]? group = null,
+            string[]? groups = null,
             Func<bool>? setValidate = null,
-            Action<(string? key, string? propertyName, string[]? group, T? oldValue, T? newValue, bool hasChanges)>? postAction = null)
+            Action<(string? key, string? propertyName, string[]? groups, T? oldValue, T? newValue, bool hasChanges)>? postAction = null)
         {
             bool hasChanges = false;
 
-            CreateOrUpdateNamedProperty(key, propertyName, group,
+            CreateOrUpdateNamedProperty(key, propertyName, groups,
                 () => value,
                 args =>
                 {
@@ -122,7 +122,7 @@ namespace ObservableHelpers
                     postAction?.Invoke((
                         args.namedProperty.Key,
                         args.namedProperty.PropertyName,
-                        args.namedProperty.Group,
+                        args.namedProperty.Groups,
                         args.oldValue,
                         args.newValue,
                         args.hasChanges));
@@ -144,8 +144,8 @@ namespace ObservableHelpers
         /// <param name="propertyName">
         /// The name of the property value to get.
         /// </param>
-        /// <param name="group">
-        /// The group of the property value to get.
+        /// <param name="groups">
+        /// The groups of the property value to get.
         /// </param>
         /// <param name="postAction">
         /// The callback after operation.
@@ -159,10 +159,10 @@ namespace ObservableHelpers
         protected T? GetProperty<T>(
             string? key = null,
             [CallerMemberName] string? propertyName = null,
-            string[]? group = null,
-            Action<(string? key, string? propertyName, string[]? group, T? oldValue, T? newValue, bool hasChanges)>? postAction = null)
+            string[]? groups = null,
+            Action<(string? key, string? propertyName, string[]? groups, T? oldValue, T? newValue, bool hasChanges)>? postAction = null)
         {
-            (NamedProperty namedProperty, T? returnValue) = CreateOrUpdateNamedProperty<T?>(key, propertyName, group,
+            (NamedProperty namedProperty, T? returnValue) = CreateOrUpdateNamedProperty<T?>(key, propertyName, groups,
                 () => default,
                 args =>
                 {
@@ -178,7 +178,7 @@ namespace ObservableHelpers
                     postAction?.Invoke((
                         args.namedProperty.Key,
                         args.namedProperty.PropertyName,
-                        args.namedProperty.Group,
+                        args.namedProperty.Groups,
                         args.oldValue,
                         args.newValue,
                         args.hasChanges));
@@ -202,8 +202,8 @@ namespace ObservableHelpers
         /// <param name="propertyName">
         /// The name of the property value to get.
         /// </param>
-        /// <param name="group">
-        /// The group of the property value to get.
+        /// <param name="groups">
+        /// The groups of the property value to get.
         /// </param>
         /// <param name="postAction">
         /// The callback after operation.
@@ -218,17 +218,17 @@ namespace ObservableHelpers
             Func<T> defaultValueFactory,
             string? key = null,
             [CallerMemberName] string? propertyName = null,
-            string[]? group = null,
-            Action<(string? key, string? propertyName, string[]? group, T? oldValue, T newValue, bool hasChanges)>? postAction = null)
+            string[]? groups = null,
+            Action<(string? key, string? propertyName, string[]? groups, T? oldValue, T newValue, bool hasChanges)>? postAction = null)
         {
-            (NamedProperty namedProperty, T returnValue) = GetOrAddNamedProperty(key, propertyName, group,
+            (NamedProperty namedProperty, T returnValue) = GetOrAddNamedProperty(key, propertyName, groups,
                 defaultValueFactory,
                 args =>
                 {
                     postAction?.Invoke((
                         args.namedProperty.Key,
                         args.namedProperty.PropertyName,
-                        args.namedProperty.Group,
+                        args.namedProperty.Groups,
                         args.oldValue,
                         args.newValue,
                         args.hasChanges));
@@ -320,7 +320,7 @@ namespace ObservableHelpers
             {
                 return group == null ?
                     namedProperties.Values.ToList() :
-                    namedProperties.Values.Where(i => i.Group?.Contains(group) ?? false).ToList();
+                    namedProperties.Values.Where(i => i.Groups?.Contains(group) ?? false).ToList();
             });
         }
 
@@ -328,7 +328,7 @@ namespace ObservableHelpers
         /// Gets the raw properties <see cref="NamedProperty"/> from the property collection with the provided <paramref name="groupPredicate"/>.
         /// </summary>
         /// <param name="groupPredicate">
-        /// The group predicate used to filter the properties to get.
+        /// The groups predicate used to filter the properties to get.
         /// </param>
         /// <returns>
         /// The raw properties.
@@ -364,7 +364,7 @@ namespace ObservableHelpers
                 }
                 if (e.PropertyName == nameof(namedProperty.Property.Value))
                 {
-                    OnPropertyChanged(namedProperty.Key, namedProperty.PropertyName, namedProperty.Group);
+                    OnPropertyChanged(namedProperty.Key, namedProperty.PropertyName, namedProperty.Groups);
                 }
             });
 
@@ -436,8 +436,8 @@ namespace ObservableHelpers
         /// <param name="propertyName">
         /// The name of the property to add or update.
         /// </param>
-        /// <param name="group">
-        /// The group of the property to add or update.
+        /// <param name="groups">
+        /// The groups of the property to add or update.
         /// </param>
         /// <param name="valueFactory">
         /// The value factory of the property to add or update.
@@ -460,7 +460,7 @@ namespace ObservableHelpers
         protected (NamedProperty namedProperty, T? value) CreateOrUpdateNamedProperty<T>(
             string? key,
             string? propertyName,
-            string[]? group,
+            string[]? groups,
             Func<T> valueFactory,
             Func<(NamedProperty namedProperty, T? oldValue), bool>? addValidate = null,
             Func<(NamedProperty namedProperty, T? oldValue), bool>? updateValidate = null,
@@ -531,13 +531,34 @@ namespace ObservableHelpers
                             }
                         }
 
-                        if (group != null)
+                        if (groups != null)
                         {
-                            if (namedProperty.Group == null ||
-                                !namedProperty.Group.SequenceEqual(group))
+                            if (namedProperty.Groups == null)
                             {
-                                namedProperty.Group = group;
+                                namedProperty.Groups = groups;
                                 hasChanges = true;
+                            }
+                            else if (!IsGroupsEqual(namedProperty.Groups, groups))
+                            {
+                                List<string> toAddGroups = new();
+                                foreach (string group in groups)
+                                {
+                                    if (!namedProperty.Groups.Contains(group))
+                                    {
+                                        toAddGroups.Add(group);
+                                    }
+                                }
+                                if (toAddGroups.Count != 0)
+                                {
+                                    string[] newGroups = new string[namedProperty.Groups.Length + toAddGroups.Count];
+                                    Array.Copy(namedProperty.Groups, 0, newGroups, 0, namedProperty.Groups.Length);
+                                    for (int i = 0; i < toAddGroups.Count; i++)
+                                    {
+                                        newGroups[namedProperty.Groups.Length + i] = toAddGroups[i];
+                                    }
+                                    namedProperty.Groups = newGroups;
+                                    hasChanges = true;
+                                }
                             }
                         }
 
@@ -564,7 +585,7 @@ namespace ObservableHelpers
                 {
                     (namedProperty, newValue) = RWLock.LockWrite(() =>
                     {
-                        NamedProperty newNamedProperty = NamedPropertyFactory(key, propertyName, group);
+                        NamedProperty newNamedProperty = NamedPropertyFactory(key, propertyName, groups);
                         T? value = default;
                         if (addValidate?.Invoke((newNamedProperty, oldValue)) ?? true)
                         {
@@ -604,7 +625,7 @@ namespace ObservableHelpers
 
             if (invokePropertyChanged)
             {
-                RWLock.InvokeOnLockExit(() => OnPropertyChanged(ret.Key, ret.PropertyName, ret.Group));
+                RWLock.InvokeOnLockExit(() => OnPropertyChanged(ret.Key, ret.PropertyName, ret.Groups));
             }
 
             return (ret, newValue);
@@ -619,8 +640,8 @@ namespace ObservableHelpers
         /// <param name="propertyName">
         /// The name of the property to add or update.
         /// </param>
-        /// <param name="group">
-        /// The group of the property to add or update.
+        /// <param name="groups">
+        /// The groups of the property to add or update.
         /// </param>
         /// <param name="valueFactory">
         /// The value factory of the property to add or update.
@@ -637,7 +658,7 @@ namespace ObservableHelpers
         protected (NamedProperty namedProperty, T value) GetOrAddNamedProperty<T>(
             string? key,
             string? propertyName,
-            string[]? group,
+            string[]? groups,
             Func<T> valueFactory,
             Action<(NamedProperty namedProperty, T? oldValue, T newValue, bool hasChanges)>? postAction = null)
         {
@@ -669,7 +690,7 @@ namespace ObservableHelpers
                 {
                     (namedProperty, newValue) = RWLock.LockWrite(() =>
                     {
-                        NamedProperty newNamedProperty = NamedPropertyFactory(key, propertyName, group);
+                        NamedProperty newNamedProperty = NamedPropertyFactory(key, propertyName, groups);
                         while (true)
                         {
                             namedPropertyKey = random.Next(int.MinValue, int.MaxValue);
@@ -710,7 +731,7 @@ namespace ObservableHelpers
 
             if (invokePropertyChanged)
             {
-                RWLock.InvokeOnLockExit(() => OnPropertyChanged(retProperty.Key, retProperty.PropertyName, retProperty.Group));
+                RWLock.InvokeOnLockExit(() => OnPropertyChanged(retProperty.Key, retProperty.PropertyName, retProperty.Groups));
             }
 
             return (retProperty, retValue);
@@ -875,15 +896,15 @@ namespace ObservableHelpers
         /// <param name="propertyName">
         /// The name of the property to create.
         /// </param>
-        /// <param name="group">
-        /// The group of the property to create.
+        /// <param name="groups">
+        /// The groups of the property to create.
         /// </param>
         /// <returns>
         /// The created instance of <see cref="NamedProperty"/>.
         /// </returns>
-        protected virtual NamedProperty NamedPropertyFactory(string? key, string? propertyName, string[]? group)
+        protected virtual NamedProperty NamedPropertyFactory(string? key, string? propertyName, string[]? groups)
         {
-            return new NamedProperty(new ObservableProperty(), key, propertyName, group);
+            return new NamedProperty(new ObservableProperty(), key, propertyName, groups);
         }
 
         private bool RemoveProperty(string? key, string? propertyName)
@@ -931,7 +952,7 @@ namespace ObservableHelpers
             {
                 if (namedProperty != null)
                 {
-                    RWLock.InvokeOnLockExit(() => OnPropertyChanged(namedProperty.Key, namedProperty.PropertyName, namedProperty.Group));
+                    RWLock.InvokeOnLockExit(() => OnPropertyChanged(namedProperty.Key, namedProperty.PropertyName, namedProperty.Groups));
                     return true;
                 }
             }
@@ -960,14 +981,50 @@ namespace ObservableHelpers
             });
         }
 
-        private void OnPropertyChanged(string? key, string? propertyName, string[]? group)
+        private void OnPropertyChanged(string? key, string? propertyName, string[]? groups)
         {
             if (IsDisposed)
             {
                 return;
             }
 
-            OnPropertyChanged(new ObjectPropertyChangesEventArgs(key, propertyName, group));
+            OnPropertyChanged(new ObjectPropertyChangesEventArgs(key, propertyName, groups));
+        }
+
+        private static bool IsGroupsEqual(string[]? groups1, string[]? groups2)
+        {
+            if (groups1 == groups2)
+            {
+                return true;
+            }
+            else if (groups1 == null || groups2 == null)
+            {
+                return false;
+            }
+            var cnt = new Dictionary<string, int>();
+            foreach (string s in groups1)
+            {
+                if (cnt.ContainsKey(s))
+                {
+                    cnt[s]++;
+                }
+                else
+                {
+                    cnt.Add(s, 1);
+                }
+            }
+            foreach (string s in groups2)
+            {
+                if (cnt.ContainsKey(s))
+                {
+                    cnt[s]--;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            return cnt.Values.All(c => c == 0);
         }
 
         #endregion
@@ -1009,7 +1066,7 @@ namespace ObservableHelpers
         #region Helper Classes
 
         /// <summary>
-        /// Provides the property with key, name and group.
+        /// Provides the property with key, name and groups.
         /// </summary>
         public class NamedProperty
         {
@@ -1031,9 +1088,9 @@ namespace ObservableHelpers
             public string? PropertyName { get; internal set; }
 
             /// <summary>
-            /// Gets or sets the group of the <see cref="Property"/>
+            /// Gets or sets the groups of the <see cref="Property"/>
             /// </summary>
-            public string[]? Group { get; internal set; }
+            public string[]? Groups { get; internal set; }
 
             /// <summary>
             /// Gets or sets <c>true</c> if the property is from default value; otherwise <c>false</c>.
@@ -1051,12 +1108,12 @@ namespace ObservableHelpers
                 ObservableProperty property,
                 string? key,
                 string? propertyName,
-                string[]? group)
+                string[]? groups)
             {
                 Property = property;
                 Key = key;
                 PropertyName = propertyName;
-                Group = group;
+                Groups = groups;
             }
 
             #endregion
@@ -1086,9 +1143,9 @@ namespace ObservableHelpers
             public string? Key { get; }
 
             /// <summary>
-            /// Gets the group of the property that changed.
+            /// Gets the groups of the property that changed.
             /// </summary>
-            public string[]? Group { get; }
+            public string[]? Groups { get; }
 
             #endregion
 
@@ -1097,11 +1154,11 @@ namespace ObservableHelpers
             internal ObjectPropertyChangesEventArgs(
                 string? key,
                 string? propertyName,
-                string[]? group)
+                string[]? groups)
                 : base(propertyName)
             {
                 Key = key;
-                Group = group;
+                Groups = groups;
             }
 
             #endregion
