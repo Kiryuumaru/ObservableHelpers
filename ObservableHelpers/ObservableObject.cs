@@ -89,9 +89,9 @@ namespace ObservableHelpers
             T value,
             string? key = null,
             [CallerMemberName] string? propertyName = null,
-            string? group = null,
+            string[]? group = null,
             Func<bool>? setValidate = null,
-            Action<(string? key, string? propertyName, string? group, T? oldValue, T? newValue, bool hasChanges)>? postAction = null)
+            Action<(string? key, string? propertyName, string[]? group, T? oldValue, T? newValue, bool hasChanges)>? postAction = null)
         {
             bool hasChanges = false;
 
@@ -159,8 +159,8 @@ namespace ObservableHelpers
         protected T? GetProperty<T>(
             string? key = null,
             [CallerMemberName] string? propertyName = null,
-            string? group = null,
-            Action<(string? key, string? propertyName, string? group, T? oldValue, T? newValue, bool hasChanges)>? postAction = null)
+            string[]? group = null,
+            Action<(string? key, string? propertyName, string[]? group, T? oldValue, T? newValue, bool hasChanges)>? postAction = null)
         {
             (NamedProperty namedProperty, T? returnValue) = CreateOrUpdateNamedProperty<T?>(key, propertyName, group,
                 () => default,
@@ -218,8 +218,8 @@ namespace ObservableHelpers
             Func<T> defaultValueFactory,
             string? key = null,
             [CallerMemberName] string? propertyName = null,
-            string? group = null,
-            Action<(string? key, string? propertyName, string? group, T? oldValue, T newValue, bool hasChanges)>? postAction = null)
+            string[]? group = null,
+            Action<(string? key, string? propertyName, string[]? group, T? oldValue, T newValue, bool hasChanges)>? postAction = null)
         {
             (NamedProperty namedProperty, T returnValue) = GetOrAddNamedProperty(key, propertyName, group,
                 defaultValueFactory,
@@ -320,8 +320,30 @@ namespace ObservableHelpers
             {
                 return group == null ?
                     namedProperties.Values.ToList() :
-                    namedProperties.Values.Where(i => i.Group == group).ToList();
+                    namedProperties.Values.Where(i => i.Group?.Contains(group) ?? false).ToList();
             });
+        }
+
+        /// <summary>
+        /// Gets the raw properties <see cref="NamedProperty"/> from the property collection with the provided <paramref name="groupPredicate"/>.
+        /// </summary>
+        /// <param name="groupPredicate">
+        /// The group predicate used to filter the properties to get.
+        /// </param>
+        /// <returns>
+        /// The raw properties.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="groupPredicate"/> is a <c>null</c> reference.
+        /// </exception>
+        protected IEnumerable<NamedProperty> GetRawProperties(Func<NamedProperty, bool> groupPredicate)
+        {
+            if (groupPredicate == null)
+            {
+                throw new ArgumentNullException(nameof(groupPredicate));
+            }
+
+            return RWLock.LockRead(namedProperties.Values.Where(i => groupPredicate.Invoke(i)).ToList);
         }
 
         /// <summary>
@@ -438,7 +460,7 @@ namespace ObservableHelpers
         protected (NamedProperty namedProperty, T? value) CreateOrUpdateNamedProperty<T>(
             string? key,
             string? propertyName,
-            string? group,
+            string[]? group,
             Func<T> valueFactory,
             Func<(NamedProperty namedProperty, T? oldValue), bool>? addValidate = null,
             Func<(NamedProperty namedProperty, T? oldValue), bool>? updateValidate = null,
@@ -509,10 +531,14 @@ namespace ObservableHelpers
                             }
                         }
 
-                        if (group != null && namedProperty.Group != group)
+                        if (group != null)
                         {
-                            namedProperty.Group = group;
-                            hasChanges = true;
+                            if (namedProperty.Group == null ||
+                                !namedProperty.Group.SequenceEqual(group))
+                            {
+                                namedProperty.Group = group;
+                                hasChanges = true;
+                            }
                         }
 
                         if (updateValidate?.Invoke((namedProperty, oldValue)) ?? true)
@@ -611,7 +637,7 @@ namespace ObservableHelpers
         protected (NamedProperty namedProperty, T value) GetOrAddNamedProperty<T>(
             string? key,
             string? propertyName,
-            string? group,
+            string[]? group,
             Func<T> valueFactory,
             Action<(NamedProperty namedProperty, T? oldValue, T newValue, bool hasChanges)>? postAction = null)
         {
@@ -855,7 +881,7 @@ namespace ObservableHelpers
         /// <returns>
         /// The created instance of <see cref="NamedProperty"/>.
         /// </returns>
-        protected virtual NamedProperty NamedPropertyFactory(string? key, string? propertyName, string? group)
+        protected virtual NamedProperty NamedPropertyFactory(string? key, string? propertyName, string[]? group)
         {
             return new NamedProperty(new ObservableProperty(), key, propertyName, group);
         }
@@ -934,7 +960,7 @@ namespace ObservableHelpers
             });
         }
 
-        private void OnPropertyChanged(string? key, string? propertyName, string? group)
+        private void OnPropertyChanged(string? key, string? propertyName, string[]? group)
         {
             if (IsDisposed)
             {
@@ -1007,7 +1033,7 @@ namespace ObservableHelpers
             /// <summary>
             /// Gets or sets the group of the <see cref="Property"/>
             /// </summary>
-            public string? Group { get; internal set; }
+            public string[]? Group { get; internal set; }
 
             /// <summary>
             /// Gets or sets <c>true</c> if the property is from default value; otherwise <c>false</c>.
@@ -1025,7 +1051,7 @@ namespace ObservableHelpers
                 ObservableProperty property,
                 string? key,
                 string? propertyName,
-                string? group)
+                string[]? group)
             {
                 Property = property;
                 Key = key;
@@ -1040,7 +1066,7 @@ namespace ObservableHelpers
             /// <inheritdoc/>
             public override string ToString()
             {
-                return "(" + (Key ?? "null") + ", " + (PropertyName ?? "null") + ", " + (Group ?? "null") + ") = " + (Property?.Value?.ToString() ?? "null");
+                return "(" + (Key ?? "null") + ", " + (PropertyName ?? "null") + ") = " + (Property?.Value?.ToString() ?? "null");
             }
 
             #endregion
@@ -1062,7 +1088,7 @@ namespace ObservableHelpers
             /// <summary>
             /// Gets the group of the property that changed.
             /// </summary>
-            public string? Group { get; }
+            public string[]? Group { get; }
 
             #endregion
 
@@ -1071,7 +1097,7 @@ namespace ObservableHelpers
             internal ObjectPropertyChangesEventArgs(
                 string? key,
                 string? propertyName,
-                string? group)
+                string[]? group)
                 : base(propertyName)
             {
                 Key = key;
