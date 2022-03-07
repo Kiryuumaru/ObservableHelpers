@@ -15,12 +15,12 @@ public abstract class ObservableCollectionSyncContext :
     /// <summary>
     /// Event raised on the current syncronization context when the collection changes.
     /// </summary>
-    public virtual event NotifyCollectionChangedEventHandler? CollectionChanged;
+    public event NotifyCollectionChangedEventHandler? CollectionChanged;
 
     /// <summary>
     /// Event raised on the callers thread instead of the current syncronization context thread when the collection changes.
     /// </summary>
-    public virtual event NotifyCollectionChangedEventHandler? ImmediateCollectionChanged;
+    public event NotifyCollectionChangedEventHandler? ImmediateCollectionChanged;
 
     #endregion
 
@@ -111,7 +111,7 @@ public abstract class ObservableCollectionSyncContext :
     /// <param name="index">
     /// The index of the item being replaced.
     /// </param>
-    protected void OnCollectionReplace(object? oldItem, IList? newItems, int index)
+    protected void OnCollectionReplace(object? oldItem, IList newItems, int index)
     {
         OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, newItems, new object?[] { oldItem }, index));
     }
@@ -128,7 +128,7 @@ public abstract class ObservableCollectionSyncContext :
     /// <param name="index">
     /// The index of the item being replaced.
     /// </param>
-    protected void OnCollectionReplace(IList? oldItems, object? newItem, int index)
+    protected void OnCollectionReplace(IList oldItems, object? newItem, int index)
     {
         OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, new object?[] { newItem }, oldItems, index));
     }
@@ -145,7 +145,7 @@ public abstract class ObservableCollectionSyncContext :
     /// <param name="index">
     /// The index of the item being replaced.
     /// </param>
-    protected void OnCollectionReplace(IList? oldItems, IList? newItems, int index)
+    protected void OnCollectionReplace(IList oldItems, IList newItems, int index)
     {
         OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, newItems, oldItems, index));
     }

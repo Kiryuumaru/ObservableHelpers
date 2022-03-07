@@ -4,6 +4,10 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 
+#if NETSTANDARD2_1_OR_GREATER || NET5_0_OR_GREATER
+using System.Diagnostics.CodeAnalysis;
+#endif
+
 namespace ObservableHelpers
 {
     /// <summary>
@@ -283,7 +287,11 @@ namespace ObservableHelpers
         /// <exception cref="NotSupportedException">
         /// The <see cref="ObservableQueue{T}"/> is read-only.
         /// </exception>
+#if NETSTANDARD2_1_OR_GREATER || NET5_0_OR_GREATER
+        public bool TryDequeue([MaybeNullWhen(false)] out T result)
+#else
         public bool TryDequeue(out T? result)
+#endif
         {
             result = default;
 
@@ -419,7 +427,11 @@ namespace ObservableHelpers
         /// <returns>
         /// <c>true</c> if an object was returned successfully; otherwise, <c>false</c>.
         /// </returns>
+#if NETSTANDARD2_1_OR_GREATER || NET5_0_OR_GREATER
+        public bool TryPeek([MaybeNullWhen(false)] out T result)
+#else
         public bool TryPeek(out T? result)
+#endif
         {
             result = default;
 
@@ -463,41 +475,49 @@ namespace ObservableHelpers
         }
 
         /// <inheritdoc/>
+#if NETSTANDARD2_1_OR_GREATER
+#pragma warning disable CS8769 // Nullability of reference types in type of parameter doesn't match implemented member (possibly because of nullability attributes).
+        bool IProducerConsumerCollection<T>.TryTake([MaybeNullWhen(false)] out T item)
+#pragma warning restore CS8769 // Nullability of reference types in type of parameter doesn't match implemented member (possibly because of nullability attributes).
+#elif NET5_0_OR_GREATER
+        bool IProducerConsumerCollection<T>.TryTake([MaybeNullWhen(false)] out T item)
+#else
 #pragma warning disable CS8769 // Nullability of reference types in type of parameter doesn't match implemented member (possibly because of nullability attributes).
         bool IProducerConsumerCollection<T>.TryTake(out T? item)
 #pragma warning restore CS8769 // Nullability of reference types in type of parameter doesn't match implemented member (possibly because of nullability attributes).
+#endif
         {
             return TryDequeue(out item);
         }
 
-        #endregion
+#endregion
 
-        #region Helper Classes
+#region Helper Classes
 
         /// <summary>
         /// Enumerates the elements of a <see cref="ObservableQueue{T}"/>.
         /// </summary>
         public struct QueueEnumerator : IEnumerator<T>
         {
-            #region Properties
+#region Properties
 
             /// <inheritdoc/>
             public T Current => enumerator.Current;
 
             private readonly IEnumerator<T> enumerator;
 
-            #endregion
+#endregion
 
-            #region Initializers
+#region Initializers
 
             internal QueueEnumerator(ObservableQueue<T> queue)
             {
                 enumerator = queue.Items.GetEnumerator();
             }
 
-            #endregion
+#endregion
 
-            #region Methods
+#region Methods
 
             /// <inheritdoc/>
             public bool MoveNext() => enumerator.MoveNext();
@@ -508,15 +528,15 @@ namespace ObservableHelpers
             /// <inheritdoc/>
             public void Dispose() => enumerator.Dispose();
 
-            #endregion
+#endregion
 
-            #region IEnumerator Members
+#region IEnumerator Members
 
             object? IEnumerator.Current => enumerator.Current;
 
-            #endregion
+#endregion
         }
 
-        #endregion
+#endregion
     }
 }

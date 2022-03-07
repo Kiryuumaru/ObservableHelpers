@@ -1,11 +1,14 @@
-﻿using ObservableHelpers.Abstraction;
-using SynchronizationContextHelpers;
+﻿using SynchronizationContextHelpers;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Threading;
+
+#if NETSTANDARD2_1_OR_GREATER || NET5_0_OR_GREATER
+using System.Diagnostics.CodeAnalysis;
+#endif
 
 namespace ObservableHelpers.Utilities
 {
@@ -20,7 +23,7 @@ namespace ObservableHelpers.Utilities
         IReadOnlyList<T>,
         ICollection
     {
-        #region Properties
+#region Properties
 
         /// <summary>
         /// Gets the element at the specified index.
@@ -74,9 +77,9 @@ namespace ObservableHelpers.Utilities
         // here so as to avoid a dependency on PresentationFramework.dll.
         private protected const string IndexerName = "Item[]";
 
-        #endregion
+#endregion
 
-        #region Initializers
+#region Initializers
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ObservableCollectionBase{T}"/> class that contains empty elements and has sufficient capacity to accommodate the number of elements copied.
@@ -105,9 +108,9 @@ namespace ObservableHelpers.Utilities
             Items = collectionWrapperFactory.Invoke(this);
         }
 
-        #endregion
+#endregion
 
-        #region Members
+#region Members
 
         /// <summary>
         /// Determines whether the <see cref="ObservableCollectionBase{T}"/> contains a specific <paramref name="item"/>.
@@ -266,7 +269,7 @@ namespace ObservableHelpers.Utilities
                 return filter;
             });
 
-            void Filter_ImmediateCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+            void Filter_ImmediateCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
             {
                 filter.RWLock.LockWrite(() =>
                 {
@@ -292,7 +295,11 @@ namespace ObservableHelpers.Utilities
         /// <returns>
         /// <c>true</c> if operation was executed; otherwise <c>false</c>.
         /// </returns>
+#if NETSTANDARD2_1_OR_GREATER || NET5_0_OR_GREATER
+        protected bool ClearItems([MaybeNullWhen(false)] out IEnumerable<T> oldItems)
+#else
         protected bool ClearItems(out IEnumerable<T>? oldItems)
+#endif
         {
             if (ClearItemsOperationInvoke(out oldItems))
             {
@@ -311,7 +318,11 @@ namespace ObservableHelpers.Utilities
         /// <returns>
         /// <c>true</c> if operation was executed; otherwise <c>false</c>.
         /// </returns>
+#if NETSTANDARD2_1_OR_GREATER || NET5_0_OR_GREATER
+        protected bool ClearItemsOperationInvoke([MaybeNullWhen(false)] out IEnumerable<T> oldItems)
+#else
         protected bool ClearItemsOperationInvoke(out IEnumerable<T>? oldItems)
+#endif
         {
             IEnumerable<T>? proxy = default;
             bool ret = RWLock.LockWrite(() =>
@@ -538,7 +549,7 @@ namespace ObservableHelpers.Utilities
                 }
                 else
                 {
-                    OnCollectionAdd(items.ToList(), index);
+                    OnCollectionAdd(items?.ToList(), index);
                 }
             });
         }
@@ -561,7 +572,11 @@ namespace ObservableHelpers.Utilities
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="oldIndex"/> or <paramref name="newIndex"/> is less than zero. -or- is greater than or equal to <see cref="ObservableCollectionBase{T}.Count"/>.
         /// </exception>
+#if NETSTANDARD2_1_OR_GREATER || NET5_0_OR_GREATER
+        protected bool MoveItem(int oldIndex, int newIndex, [MaybeNullWhen(false)] out T movedItem)
+#else
         protected bool MoveItem(int oldIndex, int newIndex, out T? movedItem)
+#endif
         {
             if (MoveItemOperationInvoke(oldIndex, newIndex, out movedItem))
             {
@@ -589,7 +604,11 @@ namespace ObservableHelpers.Utilities
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="oldIndex"/> or <paramref name="newIndex"/> is less than zero. -or- is greater than or equal to <see cref="ObservableCollectionBase{T}.Count"/>.
         /// </exception>
+#if NETSTANDARD2_1_OR_GREATER || NET5_0_OR_GREATER
+        protected bool MoveItemOperationInvoke(int oldIndex, int newIndex, [MaybeNullWhen(false)] out T movedItem)
+#else
         protected bool MoveItemOperationInvoke(int oldIndex, int newIndex, out T? movedItem)
+#endif
         {
             T? proxy = default;
             bool ret = RWLock.LockUpgradeableRead(() =>
@@ -653,7 +672,11 @@ namespace ObservableHelpers.Utilities
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="index"/> is less than zero. -or- is greater than <see cref="ObservableCollectionBase{T}.Count"/>.
         /// </exception>
+#if NETSTANDARD2_1_OR_GREATER || NET5_0_OR_GREATER
+        protected bool RemoveItem(int index, [MaybeNullWhen(false)] out T removedItem)
+#else
         protected bool RemoveItem(int index, out T? removedItem)
+#endif
         {
             if (RemoveItemOperationInvoke(index, out removedItem))
             {
@@ -678,7 +701,11 @@ namespace ObservableHelpers.Utilities
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="index"/> is less than zero. -or- is greater than <see cref="ObservableCollectionBase{T}.Count"/>.
         /// </exception>
+#if NETSTANDARD2_1_OR_GREATER || NET5_0_OR_GREATER
+        protected bool RemoveItemOperationInvoke(int index, [MaybeNullWhen(false)] out T removedItem)
+#else
         protected bool RemoveItemOperationInvoke(int index, out T? removedItem)
+#endif
         {
             T? proxy = default;
             bool ret = RWLock.LockUpgradeableRead(() =>
@@ -742,7 +769,11 @@ namespace ObservableHelpers.Utilities
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="index"/> or <paramref name="count"/> is less than zero.
         /// </exception>
+#if NETSTANDARD2_1_OR_GREATER || NET5_0_OR_GREATER
+        protected bool RemoveItems(int index, int count, [MaybeNullWhen(false)] out IEnumerable<T> removedItems)
+#else
         protected bool RemoveItems(int index, int count, out IEnumerable<T>? removedItems)
+#endif
         {
             if (RemoveItemsOperationInvoke(index, count, out removedItems))
             {
@@ -773,7 +804,11 @@ namespace ObservableHelpers.Utilities
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="index"/> or <paramref name="count"/> is less than zero.
         /// </exception>
+#if NETSTANDARD2_1_OR_GREATER || NET5_0_OR_GREATER
+        protected bool RemoveItemsOperationInvoke(int index, int count, [MaybeNullWhen(false)] out IEnumerable<T> removedItems)
+#else
         protected bool RemoveItemsOperationInvoke(int index, int count, out IEnumerable<T>? removedItems)
+#endif
         {
             IEnumerable<T>? proxy = default;
             bool ret = RWLock.LockUpgradeableRead(() =>
@@ -800,7 +835,7 @@ namespace ObservableHelpers.Utilities
                     return false;
                 });
             });
-            removedItems = proxy ?? new T[0];
+            removedItems = proxy;
             return ret;
         }
 
@@ -825,7 +860,7 @@ namespace ObservableHelpers.Utilities
                 }
                 else
                 {
-                    OnCollectionRemove(removedItems.ToList(), index);
+                    OnCollectionRemove(removedItems?.ToList(), index);
                 }
             });
         }
@@ -933,13 +968,17 @@ namespace ObservableHelpers.Utilities
         /// <returns>
         /// <c>true</c> if operation was executed; otherwise <c>false</c>.
         /// </returns>
+#if NETSTANDARD2_1_OR_GREATER || NET5_0_OR_GREATER
+        protected virtual bool InternalClearItems([MaybeNullWhen(false)] out IEnumerable<T> oldItems)
+#else
         protected virtual bool InternalClearItems(out IEnumerable<T>? oldItems)
+#endif
         {
             oldItems = Items.ToList();
 
             Items.Clear();
 
-            return oldItems.Count() != 0;
+            return oldItems.Any();
         }
 
         /// <summary>
@@ -996,7 +1035,11 @@ namespace ObservableHelpers.Utilities
         /// <returns>
         /// <c>true</c> if operation was executed; otherwise <c>false</c>.
         /// </returns>
+#if NETSTANDARD2_1_OR_GREATER || NET5_0_OR_GREATER
+        protected virtual bool InternalMoveItem(int oldIndex, int newIndex, [MaybeNullWhen(false)] out T movedItem)
+#else
         protected virtual bool InternalMoveItem(int oldIndex, int newIndex, out T? movedItem)
+#endif
         {
             movedItem = Items[oldIndex];
 
@@ -1021,7 +1064,11 @@ namespace ObservableHelpers.Utilities
         /// <returns>
         /// <c>true</c> if operation was executed; otherwise <c>false</c>.
         /// </returns>
+#if NETSTANDARD2_1_OR_GREATER || NET5_0_OR_GREATER
+        protected virtual bool InternalRemoveItems(int index, int count, [MaybeNullWhen(false)] out IEnumerable<T> oldItems)
+#else
         protected virtual bool InternalRemoveItems(int index, int count, out IEnumerable<T>? oldItems)
+#endif
         {
             if (count == 1)
             {
@@ -1041,7 +1088,7 @@ namespace ObservableHelpers.Utilities
             }
             else
             {
-                oldItems = new T[0];
+                oldItems = null;
 
                 return false;
             }
@@ -1071,19 +1118,19 @@ namespace ObservableHelpers.Utilities
             return true;
         }
 
-        private protected ArgumentException WrongTypeException(string propertyName, Type? providedType)
+        private protected static ArgumentException WrongTypeException(string propertyName, Type? providedType)
         {
             return new ArgumentException("Expected value type is \"" + typeof(T).FullName + "\" but collection was provided with \"" + (providedType?.FullName ?? "unknown") + "\" value type.", propertyName);
         }
 
-        private protected NotSupportedException ReadOnlyException(string operationName)
+        private protected static NotSupportedException ReadOnlyException(string operationName)
         {
             return new NotSupportedException("Operation \"" + operationName + "\" is not supported. Collection is read-only.");
         }
 
-        #endregion
+#endregion
 
-        #region ObservableSyncContext Members
+#region ObservableSyncContext Members
 
         /// <inheritdoc/>
         public override bool IsNull()
@@ -1097,21 +1144,21 @@ namespace ObservableHelpers.Utilities
             throw ReadOnlyException(nameof(SetNull));
         }
 
-        #endregion
+#endregion
 
-        #region IReadOnlyList<T> Members
+#region IReadOnlyList<T> Members
 
         T IReadOnlyList<T>.this[int index] => this[index];
 
-        #endregion
+#endregion
 
-        #region IReadOnlyCollection<T> Members
+#region IReadOnlyCollection<T> Members
 
         int IReadOnlyCollection<T>.Count => Count;
 
-        #endregion
+#endregion
 
-        #region ICollection Members
+#region ICollection Members
 
         int ICollection.Count => Count;
 
@@ -1133,21 +1180,21 @@ namespace ObservableHelpers.Utilities
 
         private object? syncRoot;
 
-        #endregion
+#endregion
 
-        #region IEnumerable<T> Members
+#region IEnumerable<T> Members
 
         IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
 
-        #endregion
+#endregion
 
-        #region IEnumerable Members
+#region IEnumerable Members
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-        #endregion
+#endregion
 
-        #region Helper Classes
+#region Helper Classes
 
         /// <summary>
         /// Provides a filter observable collection from <see cref="ObservableCollectionBase{T}"/> used for data binding.
@@ -1161,6 +1208,6 @@ namespace ObservableHelpers.Utilities
             }
         }
 
-        #endregion
+#endregion
     }
 }

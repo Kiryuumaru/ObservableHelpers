@@ -419,7 +419,7 @@ namespace ObservableHelpers
 
         bool IList.IsFixedSize => false;
 
-        int IList.Add(object value)
+        int IList.Add(object? value)
         {
             return RWLock.LockUpgradeableRead(() =>
             {

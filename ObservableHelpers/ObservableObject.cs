@@ -4,6 +4,7 @@ using ObservableHelpers.Utilities;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -399,7 +400,11 @@ namespace ObservableHelpers
         /// <exception cref="PropertyKeyAndNameNullException">
         /// Throws when both <paramref name="key"/> and <paramref name="propertyName"/> are not provided.
         /// </exception>
+#if NETSTANDARD2_1_OR_GREATER || NET5_0_OR_GREATER
+        protected bool TryGetNamedProperty(string? key, string? propertyName, [MaybeNullWhen(false)] out NamedProperty namedProperty)
+#else
         protected bool TryGetNamedProperty(string? key, string? propertyName, out NamedProperty? namedProperty)
+#endif
         {
             if (key == null && propertyName == null)
             {
@@ -783,7 +788,7 @@ namespace ObservableHelpers
                 });
             }
 
-            void handler(object s, PropertyChangedEventArgs e)
+            void handler(object? s, PropertyChangedEventArgs e)
             {
                 if (key != null)
                 {
@@ -858,7 +863,7 @@ namespace ObservableHelpers
                 });
             }
 
-            void handler(object s, PropertyChangedEventArgs e)
+            void handler(object? s, PropertyChangedEventArgs e)
             {
                 if (key != null)
                 {

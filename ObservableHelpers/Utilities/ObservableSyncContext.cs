@@ -27,10 +27,10 @@ public abstract class ObservableSyncContext :
     /// <summary>
     /// Event raised on the current synchronizatiob context when a property is changed.
     /// </summary>
-    public virtual event PropertyChangedEventHandler? PropertyChanged;
+    public event PropertyChangedEventHandler? PropertyChanged;
 
     /// <inheritdoc/>
-    public virtual event PropertyChangedEventHandler? ImmediatePropertyChanged;
+    public event PropertyChangedEventHandler? ImmediatePropertyChanged;
 
     #endregion
 

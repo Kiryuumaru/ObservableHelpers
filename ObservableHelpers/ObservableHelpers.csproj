@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;netstandard2.1;</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;netstandard2.1;net5.0;net6.0;</TargetFrameworks>
     <LangVersion>10.0</LangVersion>
     <Nullable>enable</Nullable>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
@@ -17,8 +17,8 @@
     <RepositoryUrl>https://github.com/Kiryuumaru/ObservableHelpers</RepositoryUrl>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageReleaseNotes>* Fixed ObservableObject property group logic.</PackageReleaseNotes>
-    <Version>1.5.4</Version>
+    <PackageReleaseNotes>* Added upper frameworks to simplify dependencies.</PackageReleaseNotes>
+    <Version>1.5.5</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,8 +27,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="LockerHelpers" Version="1.0.1" />
-    <PackageReference Include="SynchronizationContextHelpers" Version="1.0.1" />
+    <PackageReference Include="LockerHelpers" Version="1.0.2" />
+    <PackageReference Include="SynchronizationContextHelpers" Version="1.0.2" />
   </ItemGroup>
 
 </Project>
