@@ -74,6 +74,10 @@ namespace YourNamespace
         {
             dinosaur.PropertyChanged += (s, e) =>
             {
+                // Executed on current thread
+            }
+            dinosaur.SynchronizedPropertyChanged += (s, e) =>
+            {
                 // Executed on UI thread
             }
             dinosaur.Name = "Megalosaurus";

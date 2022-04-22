@@ -17,8 +17,8 @@
     <RepositoryUrl>https://github.com/Kiryuumaru/ObservableHelpers</RepositoryUrl>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageReleaseNotes>* Swapped logic of the synchronized and non-synchronized observable event for all observable models.</PackageReleaseNotes>
-    <Version>1.6.0</Version>
+    <PackageReleaseNotes>* Updated readme.</PackageReleaseNotes>
+    <Version>1.6.1</Version>
   </PropertyGroup>
 
   <ItemGroup>
