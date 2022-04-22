@@ -17,8 +17,8 @@
     <RepositoryUrl>https://github.com/Kiryuumaru/ObservableHelpers</RepositoryUrl>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageReleaseNotes>* Added upper frameworks to simplify dependencies.</PackageReleaseNotes>
-    <Version>1.5.5</Version>
+    <PackageReleaseNotes>* Swapped logic of the synchronized and non-synchronized observable event for all observable models.</PackageReleaseNotes>
+    <Version>1.6.0</Version>
   </PropertyGroup>
 
   <ItemGroup>

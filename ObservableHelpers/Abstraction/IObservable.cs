@@ -10,7 +10,7 @@ public interface IObservable :
     INotifyPropertyChanged
 {
     /// <summary>
-    /// Occurs right after the property value changes and will invoke on the caller thread instead of the current synchronization context thread. Advisable for non-UI related events.
+    /// Event raised on the current synchronization context when a property is changed.
     /// </summary>
-    event PropertyChangedEventHandler ImmediatePropertyChanged;
+    event PropertyChangedEventHandler SynchronizedPropertyChanged;
 }

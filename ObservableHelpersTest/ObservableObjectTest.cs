@@ -75,7 +75,7 @@ public class GetPropertyTest : SampleObject
 
         obj.InitializeProperties();
 
-        obj.ImmediatePropertyChanged += (s, e) =>
+        obj.PropertyChanged += (s, e) =>
         {
             raiseCol.Add((ObjectPropertyChangesEventArgs)e);
         };
@@ -249,7 +249,7 @@ public class GetPropertyTest : SampleObject
 
         obj.InitializeProperties();
 
-        obj.ImmediatePropertyChanged += (s, e) =>
+        obj.PropertyChanged += (s, e) =>
         {
             raiseCol.Add((ObjectPropertyChangesEventArgs)e);
         };
@@ -423,7 +423,7 @@ public class GetPropertyTest : SampleObject
 
         obj.InitializeProperties();
 
-        obj.ImmediatePropertyChanged += (s, e) =>
+        obj.PropertyChanged += (s, e) =>
         {
             raiseCol.Add((ObjectPropertyChangesEventArgs)e);
         };
@@ -600,7 +600,7 @@ public class SetPropertyTest : SampleObject
 
         obj.InitializeProperties();
 
-        obj.ImmediatePropertyChanged += (s, e) =>
+        obj.PropertyChanged += (s, e) =>
         {
             raiseCol.Add((ObjectPropertyChangesEventArgs)e);
         };
@@ -801,7 +801,7 @@ public class SetPropertyTest : SampleObject
 
         obj.InitializeProperties();
 
-        obj.ImmediatePropertyChanged += (s, e) =>
+        obj.PropertyChanged += (s, e) =>
         {
             raiseCol.Add((ObjectPropertyChangesEventArgs)e);
         };
@@ -1002,7 +1002,7 @@ public class SetPropertyTest : SampleObject
 
         obj.InitializeProperties();
 
-        obj.ImmediatePropertyChanged += (s, e) =>
+        obj.PropertyChanged += (s, e) =>
         {
             raiseCol.Add((ObjectPropertyChangesEventArgs)e);
         };
@@ -1206,7 +1206,7 @@ public class RemoveTest : SampleObject
 
         obj.InitializeProperties();
 
-        obj.ImmediatePropertyChanged += (s, e) =>
+        obj.PropertyChanged += (s, e) =>
         {
             raiseCol.Add((ObjectPropertyChangesEventArgs)e);
         };
@@ -1268,7 +1268,7 @@ public class RemoveTest : SampleObject
 
         obj.InitializeProperties();
 
-        obj.ImmediatePropertyChanged += (s, e) =>
+        obj.PropertyChanged += (s, e) =>
         {
             raiseCol.Add((ObjectPropertyChangesEventArgs)e);
         };
@@ -1330,7 +1330,7 @@ public class RemoveTest : SampleObject
 
         obj.InitializeProperties();
 
-        obj.ImmediatePropertyChanged += (s, e) =>
+        obj.PropertyChanged += (s, e) =>
         {
             raiseCol.Add((ObjectPropertyChangesEventArgs)e);
         };
@@ -1534,20 +1534,20 @@ public class AttachOnPropertyChangedTest : SampleObject
     }
 }
 
-public class AttachImmediateOnPropertyChangedTest : SampleObject
+public class AttachSynchronizedOnPropertyChangedTest : SampleObject
 {
     [Fact]
     public void Normal()
     {
-        var obj = new AttachImmediateOnPropertyChangedTest();
+        var obj = new AttachSynchronizedOnPropertyChangedTest();
 
         string? SampleProp1 = null;
         DateTime SampleProp2 = default;
         string? SampleProp3 = null;
 
-        obj.AttachOnImmediatePropertyChanged<string?>(v => SampleProp1 = v, nameof(obj.SampleProp1));
-        obj.AttachOnImmediatePropertyChanged<DateTime>(v => SampleProp2 = v, nameof(obj.SampleProp2));
-        obj.AttachOnImmediatePropertyChanged<string?>(v => SampleProp3 = v, nameof(obj.SampleProp3));
+        obj.AttachOnSynchronizedPropertyChanged<string?>(v => SampleProp1 = v, nameof(obj.SampleProp1));
+        obj.AttachOnSynchronizedPropertyChanged<DateTime>(v => SampleProp2 = v, nameof(obj.SampleProp2));
+        obj.AttachOnSynchronizedPropertyChanged<string?>(v => SampleProp3 = v, nameof(obj.SampleProp3));
 
         obj.InitializeProperties();
 

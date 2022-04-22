@@ -13,14 +13,14 @@ public abstract class ObservableCollectionSyncContext :
     #region Events
 
     /// <summary>
-    /// Event raised on the current syncronization context when the collection changes.
+    /// Event raised on the callers thread instead of the current syncronization context thread when the collection changes.
     /// </summary>
     public event NotifyCollectionChangedEventHandler? CollectionChanged;
 
     /// <summary>
-    /// Event raised on the callers thread instead of the current syncronization context thread when the collection changes.
+    /// Event raised on the current syncronization context when the collection changes.
     /// </summary>
-    public event NotifyCollectionChangedEventHandler? ImmediateCollectionChanged;
+    public event NotifyCollectionChangedEventHandler? SynchronizedCollectionChanged;
 
     #endregion
 
@@ -193,7 +193,7 @@ public abstract class ObservableCollectionSyncContext :
     }
 
     /// <summary>
-    /// Invokes <see cref="CollectionChanged"/> into current synchronization context.
+    /// Invokes <see cref="CollectionChanged"/> and  <see cref="SynchronizedCollectionChanged"/>.
     /// </summary>
     /// <param name="e">
     /// The <see cref="NotifyCollectionChangedEventArgs"/> event argument.
@@ -204,10 +204,10 @@ public abstract class ObservableCollectionSyncContext :
         {
             return;
         }
-        ImmediateCollectionChanged?.Invoke(this, e);
+        CollectionChanged?.Invoke(this, e);
         ContextPost(delegate
         {
-            CollectionChanged?.Invoke(this, e);
+            SynchronizedCollectionChanged?.Invoke(this, e);
         });
     }
 
@@ -217,7 +217,7 @@ public abstract class ObservableCollectionSyncContext :
         if (disposing)
         {
             CollectionChanged = null;
-            ImmediateCollectionChanged = null;
+            SynchronizedCollectionChanged = null;
         }
         base.Dispose(disposing);
     }

@@ -371,13 +371,13 @@ namespace ObservableHelpers
 
             if (namedProperty.Property != null)
             {
-                namedProperty.Property.ImmediatePropertyChanged += eventProxy;
+                namedProperty.Property.PropertyChanged += eventProxy;
             }
             Disposing += (s, e) =>
             {
                 if (namedProperty.Property != null)
                 {
-                    namedProperty.Property.ImmediatePropertyChanged -= eventProxy;
+                    namedProperty.Property.PropertyChanged -= eventProxy;
                 }
             };
         }
@@ -818,7 +818,7 @@ namespace ObservableHelpers
         }
 
         /// <summary>
-        /// Specifically attach <see cref="ObservableSyncContext.ImmediatePropertyChanged"/> event on single property.
+        /// Specifically attach <see cref="ObservableSyncContext.SynchronizedPropertyChanged"/> event on single property.
         /// </summary>
         /// <typeparam name="T">
         /// The type of the value of the property.
@@ -838,7 +838,7 @@ namespace ObservableHelpers
         /// <exception cref="PropertyKeyAndNameNullException">
         /// Throws when both <paramref name="key"/> and <paramref name="propertyName"/> are not provided.
         /// </exception>
-        protected IDisposable AttachOnImmediatePropertyChanged<T>(
+        protected IDisposable AttachOnSynchronizedPropertyChanged<T>(
             Action<T?> onPropertyChanged,
             string? propertyName = null,
             string? key = null)
@@ -882,13 +882,13 @@ namespace ObservableHelpers
                     invoke();
                 }
             }
-            ImmediatePropertyChanged += handler;
+            PropertyChanged += handler;
 
             invoke();
 
             return new Disposable(delegate
             {
-                ImmediatePropertyChanged -= handler;
+                PropertyChanged -= handler;
             });
         }
 

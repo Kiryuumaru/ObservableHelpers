@@ -33,7 +33,7 @@ public class ConcurrencyTest
 
         Assert.Empty(col);
 
-        col.ImmediateCollectionChanged += (s, e) =>
+        col.CollectionChanged += (s, e) =>
         {
             Interlocked.Increment(ref raiseCount1);
         };
@@ -69,7 +69,7 @@ public class ConcurrencyTest
         var raiseCount1 = 0;
         var col = new ObservableCollection<int>();
 
-        col.ImmediateCollectionChanged += (s, e) =>
+        col.CollectionChanged += (s, e) =>
         {
             Interlocked.Increment(ref raiseCount1);
         };
@@ -106,7 +106,7 @@ public class ConcurrencyTest
         var raiseCount1 = 0;
         var col = new ObservableCollection<int>();
 
-        col.ImmediateCollectionChanged += (s, e) =>
+        col.CollectionChanged += (s, e) =>
         {
             Interlocked.Increment(ref raiseCount1);
         };
@@ -144,7 +144,7 @@ public class ConcurrencyTest
         var raiseCount1 = 0;
         var col = new ObservableCollection<int>();
 
-        col.ImmediateCollectionChanged += (s, e) =>
+        col.CollectionChanged += (s, e) =>
         {
             Interlocked.Increment(ref raiseCount1);
         };
@@ -190,7 +190,7 @@ public class IndexerTest
         var raiseCol = new List<NotifyCollectionChangedEventArgs>();
         var col = new ObservableCollection<int>(new int[] { 1, 2, 3 });
 
-        col.ImmediateCollectionChanged += (s, e) =>
+        col.CollectionChanged += (s, e) =>
         {
             raiseCol.Add(e);
         };
@@ -313,7 +313,7 @@ public class AddTest
         var raiseCol = new List<NotifyCollectionChangedEventArgs>();
         var col = new ObservableCollection<int>();
 
-        col.ImmediateCollectionChanged += (s, e) =>
+        col.CollectionChanged += (s, e) =>
         {
             raiseCol.Add(e);
         };
@@ -360,7 +360,7 @@ public class AddRangeTest
         var raiseCol = new List<NotifyCollectionChangedEventArgs>();
         var col = new ObservableCollection<int>();
 
-        col.ImmediateCollectionChanged += (s, e) =>
+        col.CollectionChanged += (s, e) =>
         {
             raiseCol.Add(e);
         };
@@ -412,7 +412,7 @@ public class ClearTest
         var raiseCol = new List<NotifyCollectionChangedEventArgs>();
         var col = new ObservableCollection<int>(new int[] { 1, 2, 3, 4, 5, 6 });
 
-        col.ImmediateCollectionChanged += (s, e) =>
+        col.CollectionChanged += (s, e) =>
         {
             raiseCol.Add(e);
         };
@@ -553,7 +553,7 @@ public class InsertTest
         var raiseCol = new List<NotifyCollectionChangedEventArgs>();
         var col = new ObservableCollection<int>();
 
-        col.ImmediateCollectionChanged += (s, e) =>
+        col.CollectionChanged += (s, e) =>
         {
             raiseCol.Add(e);
         };
@@ -594,7 +594,7 @@ public class InsertTest
         var raiseCol = new List<NotifyCollectionChangedEventArgs>();
         var col = new ObservableCollection<int>();
 
-        col.ImmediateCollectionChanged += (s, e) =>
+        col.CollectionChanged += (s, e) =>
         {
             raiseCol.Add(e);
         };
@@ -636,7 +636,7 @@ public class InsertTest
         var raiseCol = new List<NotifyCollectionChangedEventArgs>();
         var col = new ObservableCollection<int>(new int[] { 2, 4 });
 
-        col.ImmediateCollectionChanged += (s, e) =>
+        col.CollectionChanged += (s, e) =>
         {
             raiseCol.Add(e);
         };
@@ -684,7 +684,7 @@ public class InsertRange
         var raiseCol = new List<NotifyCollectionChangedEventArgs>();
         var col = new ObservableCollection<int>();
 
-        col.ImmediateCollectionChanged += (s, e) =>
+        col.CollectionChanged += (s, e) =>
         {
             raiseCol.Add(e);
         };
@@ -717,7 +717,7 @@ public class InsertRange
         var raiseCol = new List<NotifyCollectionChangedEventArgs>();
         var col = new ObservableCollection<int>();
 
-        col.ImmediateCollectionChanged += (s, e) =>
+        col.CollectionChanged += (s, e) =>
         {
             raiseCol.Add(e);
         };
@@ -771,7 +771,7 @@ public class MoveTest
         var raiseCol = new List<NotifyCollectionChangedEventArgs>();
         var col = new ObservableCollection<int>(new int[] { 1, 2, 3, 4 });
 
-        col.ImmediateCollectionChanged += (s, e) =>
+        col.CollectionChanged += (s, e) =>
         {
             raiseCol.Add(e);
         };
@@ -859,7 +859,7 @@ public class RemoveTest
         var raiseCol = new List<NotifyCollectionChangedEventArgs>();
         var col = new ObservableCollection<int>(new int[] { 1, 2, 3, 4 });
 
-        col.ImmediateCollectionChanged += (s, e) =>
+        col.CollectionChanged += (s, e) =>
         {
             raiseCol.Add(e);
         };
@@ -889,7 +889,7 @@ public class RemoveTest
         var raiseCol = new List<NotifyCollectionChangedEventArgs>();
         var col = new ObservableCollection<int>(new int[] { 1, 2, 3, 4 });
 
-        col.ImmediateCollectionChanged += (s, e) =>
+        col.CollectionChanged += (s, e) =>
         {
             raiseCol.Add(e);
         };
@@ -936,7 +936,7 @@ public class RemoveAtTest
         var raiseCol = new List<NotifyCollectionChangedEventArgs>();
         var col = new ObservableCollection<int>(new int[] { 1, 2, 3, 4 });
 
-        col.ImmediateCollectionChanged += (s, e) =>
+        col.CollectionChanged += (s, e) =>
         {
             raiseCol.Add(e);
         };
@@ -966,7 +966,7 @@ public class RemoveAtTest
         var raiseCol = new List<NotifyCollectionChangedEventArgs>();
         var col = new ObservableCollection<int>(new int[] { 1, 2, 3, 4 });
 
-        col.ImmediateCollectionChanged += (s, e) =>
+        col.CollectionChanged += (s, e) =>
         {
             raiseCol.Add(e);
         };
@@ -1022,7 +1022,7 @@ public class RemoveRangeTest
         var raiseCol = new List<NotifyCollectionChangedEventArgs>();
         var col = new ObservableCollection<int>(new int[] { 1, 2, 3, 4 });
 
-        col.ImmediateCollectionChanged += (s, e) =>
+        col.CollectionChanged += (s, e) =>
         {
             raiseCol.Add(e);
         };
@@ -1048,7 +1048,7 @@ public class RemoveRangeTest
         var raiseCol = new List<NotifyCollectionChangedEventArgs>();
         var col = new ObservableCollection<int>(new int[] { 1, 2, 3, 4 });
 
-        col.ImmediateCollectionChanged += (s, e) =>
+        col.CollectionChanged += (s, e) =>
         {
             raiseCol.Add(e);
         };

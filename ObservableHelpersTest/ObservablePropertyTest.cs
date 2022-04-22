@@ -29,11 +29,11 @@ public class PropertyTest
         var prop1 = new ObservableProperty();
         var prop2 = new ObservableProperty<string>();
 
-        prop1.ImmediatePropertyChanged += (s, e) =>
+        prop1.PropertyChanged += (s, e) =>
         {
             raiseCol1.Add(e);
         };
-        prop2.ImmediatePropertyChanged += (s, e) =>
+        prop2.PropertyChanged += (s, e) =>
         {
             raiseCol2.Add(e);
         };
@@ -73,7 +73,7 @@ public class TypeTest
         var raiseCol1 = new List<PropertyChangedEventArgs>();
         var prop1 = new ObservableProperty();
 
-        prop1.ImmediatePropertyChanged += (s, e) =>
+        prop1.PropertyChanged += (s, e) =>
         {
             raiseCol1.Add(e);
         };
@@ -105,11 +105,11 @@ public class ValueTest
         var prop1 = new ObservableProperty();
         var prop2 = new ObservableProperty<string>();
 
-        prop1.ImmediatePropertyChanged += (s, e) =>
+        prop1.PropertyChanged += (s, e) =>
         {
             raiseCol1.Add(e);
         };
-        prop2.ImmediatePropertyChanged += (s, e) =>
+        prop2.PropertyChanged += (s, e) =>
         {
             raiseCol2.Add(e);
         };
@@ -146,11 +146,11 @@ public class GetValueAndSetValueTest
         var prop1 = new ObservableProperty();
         var prop2 = new ObservableProperty<string>();
 
-        prop1.ImmediatePropertyChanged += (s, e) =>
+        prop1.PropertyChanged += (s, e) =>
         {
             raiseCol1.Add(e);
         };
-        prop2.ImmediatePropertyChanged += (s, e) =>
+        prop2.PropertyChanged += (s, e) =>
         {
             raiseCol2.Add(e);
         };
@@ -196,11 +196,11 @@ public class GetObjectAndSetObjectTest
         var prop1 = new ObservableProperty();
         var prop2 = new ObservableProperty<string>();
 
-        prop1.ImmediatePropertyChanged += (s, e) =>
+        prop1.PropertyChanged += (s, e) =>
         {
             raiseCol1.Add(e);
         };
-        prop2.ImmediatePropertyChanged += (s, e) =>
+        prop2.PropertyChanged += (s, e) =>
         {
             raiseCol2.Add(e);
         };
@@ -240,11 +240,11 @@ public class SetNullAndIsNullTest
         var prop1 = new ObservableProperty();
         var prop2 = new ObservableProperty<string>();
 
-        prop1.ImmediatePropertyChanged += (s, e) =>
+        prop1.PropertyChanged += (s, e) =>
         {
             raiseCol1.Add(e);
         };
-        prop2.ImmediatePropertyChanged += (s, e) =>
+        prop2.PropertyChanged += (s, e) =>
         {
             raiseCol2.Add(e);
         };

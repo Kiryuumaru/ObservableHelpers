@@ -28,7 +28,7 @@ public class IndexerTest
         var raiseCol = new List<NotifyCollectionChangedEventArgs>();
         var col = new ObservableStack<int>(new int[] { 1, 2, 3 });
 
-        col.ImmediateCollectionChanged += (s, e) =>
+        col.CollectionChanged += (s, e) =>
         {
             raiseCol.Add(e);
         };
@@ -102,7 +102,7 @@ public class ClearTest
         var raiseCol = new List<NotifyCollectionChangedEventArgs>();
         var col = new ObservableStack<int>(new int[] { 1, 2, 3, 4, 5, 6 });
 
-        col.ImmediateCollectionChanged += (s, e) =>
+        col.CollectionChanged += (s, e) =>
         {
             raiseCol.Add(e);
         };
@@ -171,7 +171,7 @@ public class PopTest
         var raiseCol = new List<NotifyCollectionChangedEventArgs>();
         var col = new ObservableStack<int>(new int[] { 1, 2, 3 });
 
-        col.ImmediateCollectionChanged += (s, e) =>
+        col.CollectionChanged += (s, e) =>
         {
             raiseCol.Add(e);
         };
@@ -220,7 +220,7 @@ public class PushTest
         var raiseCol = new List<NotifyCollectionChangedEventArgs>();
         var col = new ObservableStack<int>();
 
-        col.ImmediateCollectionChanged += (s, e) =>
+        col.CollectionChanged += (s, e) =>
         {
             raiseCol.Add(e);
         };
@@ -277,12 +277,12 @@ public class PushRangeTest
         var col5 = new ObservableStack<int>(new int[] { 1, 2, 3 });
         var col6 = new ObservableStack<int>();
 
-        col1.ImmediateCollectionChanged += (s, e) => raiseCol1.Add(e);
-        col2.ImmediateCollectionChanged += (s, e) => raiseCol2.Add(e);
-        col3.ImmediateCollectionChanged += (s, e) => raiseCol3.Add(e);
-        col4.ImmediateCollectionChanged += (s, e) => raiseCol4.Add(e);
-        col5.ImmediateCollectionChanged += (s, e) => raiseCol5.Add(e);
-        col6.ImmediateCollectionChanged += (s, e) => raiseCol6.Add(e);
+        col1.CollectionChanged += (s, e) => raiseCol1.Add(e);
+        col2.CollectionChanged += (s, e) => raiseCol2.Add(e);
+        col3.CollectionChanged += (s, e) => raiseCol3.Add(e);
+        col4.CollectionChanged += (s, e) => raiseCol4.Add(e);
+        col5.CollectionChanged += (s, e) => raiseCol5.Add(e);
+        col6.CollectionChanged += (s, e) => raiseCol6.Add(e);
 
         col1.PushRange(new int[] { 1, 2 });
         col2.PushRange(new int[] { 1, 2, 3 });
@@ -379,7 +379,7 @@ public class PopAndPushTest
         var raiseCol = new List<NotifyCollectionChangedEventArgs>();
         var col = new ObservableStack<int>();
 
-        col.ImmediateCollectionChanged += (s, e) =>
+        col.CollectionChanged += (s, e) =>
         {
             raiseCol.Add(e);
         };
@@ -482,7 +482,7 @@ public class TryPopTest
         var raiseCol = new List<NotifyCollectionChangedEventArgs>();
         var col = new ObservableStack<int>(new int[] { 1, 2, 3 });
 
-        col.ImmediateCollectionChanged += (s, e) =>
+        col.CollectionChanged += (s, e) =>
         {
             raiseCol.Add(e);
         };
@@ -539,12 +539,12 @@ public class TryPopRangeTest
         var col5 = new ObservableStack<int>(new int[] { 1, 2, 3 });
         var col6 = new ObservableStack<int>(new int[] { 1, 2, 3 });
 
-        col1.ImmediateCollectionChanged += (s, e) => raiseCol1.Add(e);
-        col2.ImmediateCollectionChanged += (s, e) => raiseCol2.Add(e);
-        col3.ImmediateCollectionChanged += (s, e) => raiseCol3.Add(e);
-        col4.ImmediateCollectionChanged += (s, e) => raiseCol4.Add(e);
-        col5.ImmediateCollectionChanged += (s, e) => raiseCol5.Add(e);
-        col6.ImmediateCollectionChanged += (s, e) => raiseCol6.Add(e);
+        col1.CollectionChanged += (s, e) => raiseCol1.Add(e);
+        col2.CollectionChanged += (s, e) => raiseCol2.Add(e);
+        col3.CollectionChanged += (s, e) => raiseCol3.Add(e);
+        col4.CollectionChanged += (s, e) => raiseCol4.Add(e);
+        col5.CollectionChanged += (s, e) => raiseCol5.Add(e);
+        col6.CollectionChanged += (s, e) => raiseCol6.Add(e);
 
         int[] vals1 = new int[2];
         int[] vals2 = new int[3];

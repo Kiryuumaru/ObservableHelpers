@@ -24,13 +24,11 @@ public abstract class ObservableSyncContext :
 
     #region Events
 
-    /// <summary>
-    /// Event raised on the current synchronizatiob context when a property is changed.
-    /// </summary>
+    /// <inheritdoc/>
     public event PropertyChangedEventHandler? PropertyChanged;
 
     /// <inheritdoc/>
-    public event PropertyChangedEventHandler? ImmediatePropertyChanged;
+    public event PropertyChangedEventHandler? SynchronizedPropertyChanged;
 
     #endregion
 
@@ -58,7 +56,7 @@ public abstract class ObservableSyncContext :
     }
 
     /// <summary>
-    /// Invokes <see cref="PropertyChanged"/> into current synchronization context.
+    /// Invokes <see cref="PropertyChanged"/> and <see cref="SynchronizedPropertyChanged"/>.
     /// </summary>
     /// <param name="args">
     /// The <see cref="PropertyChangedEventArgs"/> event argument.
@@ -69,10 +67,10 @@ public abstract class ObservableSyncContext :
         {
             return;
         }
-        ImmediatePropertyChanged?.Invoke(this, args);
+        PropertyChanged?.Invoke(this, args);
         ContextPost(delegate
         {
-            PropertyChanged?.Invoke(this, args);
+            SynchronizedPropertyChanged?.Invoke(this, args);
         });
     }
 
@@ -82,7 +80,7 @@ public abstract class ObservableSyncContext :
         if (disposing)
         {
             PropertyChanged = null;
-            ImmediatePropertyChanged = null;
+            SynchronizedPropertyChanged = null;
         }
         base.Dispose(disposing);
     }
