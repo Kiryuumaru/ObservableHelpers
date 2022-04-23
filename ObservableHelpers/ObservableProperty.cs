@@ -55,7 +55,7 @@ namespace ObservableHelpers
         /// <returns>
         /// <c>true</c> whether the property has changed; otherwise <c>false</c>.
         /// </returns>
-        public bool SetValue<T>(T value) => SetObject(typeof(T), value);
+        public bool SetValue<T>(T? value) => SetObject(typeof(T), value);
 
         /// <summary>
         /// Gets the value of the property.
@@ -298,7 +298,7 @@ namespace ObservableHelpers
         /// <returns>
         /// <c>true</c> whether the property has changed; otherwise <c>false</c>.
         /// </returns>
-        public bool SetValue(T value) => SetValue<T>(value);
+        public bool SetValue(T? value) => SetValue<T>(value);
 
         /// <summary>
         /// Gets the value of the property.

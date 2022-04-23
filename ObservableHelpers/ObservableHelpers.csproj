@@ -17,8 +17,8 @@
     <RepositoryUrl>https://github.com/Kiryuumaru/ObservableHelpers</RepositoryUrl>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageReleaseNotes>* Updated readme.</PackageReleaseNotes>
-    <Version>1.6.1</Version>
+    <PackageReleaseNotes>* Proper nullable ObservableProperty</PackageReleaseNotes>
+    <Version>1.6.2</Version>
   </PropertyGroup>
 
   <ItemGroup>
