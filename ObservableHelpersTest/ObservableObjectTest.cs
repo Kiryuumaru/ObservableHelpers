@@ -12,7 +12,7 @@ namespace ObservableObjectTest;
 [ObservableObject]
 public partial class ModelWithObservableObjectAttribute
 {
-    [ObservableProperty(Access = AccessModifier.InternalWithPrivateSetter)]
+    [ObservableProperty(Access = AccessModifier.ProtectedInternalWithPrivateSetter)]
     private string? _myProperty;
 }
 
