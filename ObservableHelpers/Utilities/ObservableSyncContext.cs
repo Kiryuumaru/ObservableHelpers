@@ -1,8 +1,8 @@
-﻿using ObservableHelpers.Abstraction;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Threading;
-using SynchronizationContextHelpers;
 using LockerHelpers;
+using ObservableHelpers.Abstraction;
+using SynchronizationContextHelpers;
 
 namespace ObservableHelpers.Utilities;
 
@@ -10,15 +10,15 @@ namespace ObservableHelpers.Utilities;
 /// Contains all implementations for performing observable operations.
 /// </summary>
 public abstract class ObservableSyncContext :
-    SyncContext,
-    IObservable
+    ISynchronizedObject
 {
     #region Properties
 
-    /// <summary>
-    /// Gets the read-write lock for concurrency.
-    /// </summary>
+    /// <inheritdoc/>
     public RWLock RWLock { get; } = new RWLock(LockRecursionPolicy.SupportsRecursion);
+
+    /// <inheritdoc/>
+    public SyncOperation SyncOperation { get; } = new SyncOperation();
 
     #endregion
 
@@ -30,15 +30,13 @@ public abstract class ObservableSyncContext :
     /// <inheritdoc/>
     public event PropertyChangedEventHandler? SynchronizedPropertyChanged;
 
-    #endregion
-
-    #region Abstract Methods
-
     /// <inheritdoc/>
-    public abstract bool SetNull();
+    public event PropertyChangedEventHandler? UnsynchronizedPropertyChanged;
 
-    /// <inheritdoc/>
-    public abstract bool IsNull();
+    /// <summary>
+    /// Gets or sets <c>true</c> if the <see cref="PropertyChanged"/> event will invoke on the synchronized context.
+    /// </summary>
+    public bool SynchronizePropertyChangedEvent { get; set; }
 
     #endregion
 
@@ -63,26 +61,23 @@ public abstract class ObservableSyncContext :
     /// </param>
     protected virtual void OnPropertyChanged(PropertyChangedEventArgs args)
     {
-        if (IsDisposed)
-        {
-            return;
-        }
-        PropertyChanged?.Invoke(this, args);
-        ContextPost(delegate
+        UnsynchronizedPropertyChanged?.Invoke(this, args);
+        SyncOperation.ContextPost(delegate
         {
             SynchronizedPropertyChanged?.Invoke(this, args);
         });
-    }
 
-    /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
-    {
-        if (disposing)
+        if (SynchronizePropertyChangedEvent)
         {
-            PropertyChanged = null;
-            SynchronizedPropertyChanged = null;
+            SyncOperation.ContextPost(delegate
+            {
+                PropertyChanged?.Invoke(this, args);
+            });
         }
-        base.Dispose(disposing);
+        else
+        {
+            PropertyChanged?.Invoke(this, args);
+        }
     }
 
     #endregion

@@ -33,25 +33,17 @@ using ObservableHelpers;
 
 namespace YourNamespace
 {
+    [ObservableObject]
     public class Dinosaur : ObservableObject
     {
-        public string Name
-        {
-            get => GetProperty(() => "Default Dinosaur");
-            set => SetProperty(value);
-        }
-
-        public string? Family
-        {
-            get => GetProperty<string>();
-            set => SetProperty(value);
-        }
+        [ObservableProperty]
+        string? name;
         
-        public int Height
-        {
-            get => GetProperty<int>();
-            set => SetProperty(value);
-        }
+        [ObservableProperty]
+        string? family;
+        
+        [ObservableProperty]
+        int Height;
     }
 }
 ```
@@ -67,18 +59,24 @@ namespace YourNamespace
 
         public void UIThread()
         {
-            dinosaur = new Dinosaur();
+            dinosaur = new Dinosaur(); // Must be created on UI thread to synchronize events
+
+            dinosaur.SynchronizeChangedEvent = true;
         }
 
         public void BackgroundThread()
         {
             dinosaur.PropertyChanged += (s, e) =>
             {
-                // Executed on current thread
+                // Executes on UI thread if dinosaur.SynchronizeChangedEvent is true (default false)
             }
             dinosaur.SynchronizedPropertyChanged += (s, e) =>
             {
                 // Executed on UI thread
+            }
+            dinosaur.UnsynchronizedPropertyChanged += (s, e) =>
+            {
+                // Executed on current thread
             }
             dinosaur.Name = "Megalosaurus";
         }
@@ -88,6 +86,7 @@ namespace YourNamespace
 
 Code & Inspiration from the following:
 * [MVVM helpers](https://github.com/jamesmontemagno/mvvm-helpers) by [@jamesmontemagno](https://github.com/jamesmontemagno)
+* [.NET Community Toolkit](https://github.com/CommunityToolkit/dotnet) by [@CommunityToolkit](https://github.com/CommunityToolkit)
 
 
 ### Want To Support This Project?

@@ -1,4 +1,4 @@
-﻿namespace ObservableHelpersTest;
+﻿namespace ObservableHelpers.UnitTest;
 
 using System;
 using System.Collections.Generic;

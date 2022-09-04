@@ -8,9 +8,12 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{BFD77350-C00B-45D4-AB7D-E3B247415701}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
+		.github\workflows\nuget.yml = .github\workflows\nuget.yml
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ObservableHelpersTest", "ObservableHelpersTest\ObservableHelpersTest.csproj", "{9EA4AED5-593E-421F-B3B7-07D718FF7920}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ObservableHelpers.UnitTest", "ObservableHelpersTest\ObservableHelpers.UnitTest.csproj", "{9EA4AED5-593E-421F-B3B7-07D718FF7920}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ObservableHelpers.SourceGenerators", "ObservableHelpers.SourceGenerators\ObservableHelpers.SourceGenerators.csproj", "{C63CFE04-F24D-41DA-B1D6-17AA9EE2A9A5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -26,6 +29,10 @@ Global
 		{9EA4AED5-593E-421F-B3B7-07D718FF7920}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9EA4AED5-593E-421F-B3B7-07D718FF7920}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9EA4AED5-593E-421F-B3B7-07D718FF7920}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C63CFE04-F24D-41DA-B1D6-17AA9EE2A9A5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C63CFE04-F24D-41DA-B1D6-17AA9EE2A9A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C63CFE04-F24D-41DA-B1D6-17AA9EE2A9A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C63CFE04-F24D-41DA-B1D6-17AA9EE2A9A5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

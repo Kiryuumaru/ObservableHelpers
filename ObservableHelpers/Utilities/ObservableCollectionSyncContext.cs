@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using ObservableHelpers.Abstraction;
+using System.Collections;
 using System.Collections.Specialized;
 
 namespace ObservableHelpers.Utilities;
@@ -8,19 +9,23 @@ namespace ObservableHelpers.Utilities;
 /// </summary>
 public abstract class ObservableCollectionSyncContext :
     ObservableSyncContext,
-    INotifyCollectionChanged
+    ISynchronizedCollection
 {
     #region Events
 
-    /// <summary>
-    /// Event raised on the callers thread instead of the current syncronization context thread when the collection changes.
-    /// </summary>
+    /// <inheritdoc/>
     public event NotifyCollectionChangedEventHandler? CollectionChanged;
 
-    /// <summary>
-    /// Event raised on the current syncronization context when the collection changes.
-    /// </summary>
+    /// <inheritdoc/>
     public event NotifyCollectionChangedEventHandler? SynchronizedCollectionChanged;
+
+    /// <inheritdoc/>
+    public event NotifyCollectionChangedEventHandler? UnsynchronizedCollectionChanged;
+
+    /// <summary>
+    /// Gets or sets <c>true</c> if the <see cref="CollectionChanged"/> event will invoke on the synchronized context.
+    /// </summary>
+    public bool SynchronizeCollectionChangedEvent { get; set; }
 
     #endregion
 
@@ -200,26 +205,23 @@ public abstract class ObservableCollectionSyncContext :
     /// </param>
     protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
     {
-        if (IsDisposed)
-        {
-            return;
-        }
-        CollectionChanged?.Invoke(this, e);
-        ContextPost(delegate
+        UnsynchronizedCollectionChanged?.Invoke(this, e);
+        SyncOperation.ContextPost(delegate
         {
             SynchronizedCollectionChanged?.Invoke(this, e);
         });
-    }
 
-    /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
-    {
-        if (disposing)
+        if (SynchronizeCollectionChangedEvent)
         {
-            CollectionChanged = null;
-            SynchronizedCollectionChanged = null;
+            SyncOperation.ContextPost(delegate
+            {
+                CollectionChanged?.Invoke(this, e);
+            });
         }
-        base.Dispose(disposing);
+        else
+        {
+            CollectionChanged?.Invoke(this, e);
+        }
     }
 
     #endregion

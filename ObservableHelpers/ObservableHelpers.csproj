@@ -1,24 +1,31 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
+  
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;netstandard2.1;net5.0;net6.0;</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;netstandard2.1;net6.0;</TargetFrameworks>
     <LangVersion>10.0</LangVersion>
     <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <Authors>Kiryuumaru</Authors>
     <Company>Kiryuumaru</Company>
     <Copyright>Kiryuumaru</Copyright>
     <Description>Observable helpers with short-and-easy and UI-safe property implementations. Can be used for any MVVM software architectural applications.</Description>
-    <PackageTags>MVVM, Observable, Model, Helper</PackageTags>
+    <PackageTags>MVVM, Observable, Model, Helper, Source, Generator, INotifyPropertyChanged, INotifyCollectionChanged</PackageTags>
     <PackageProjectUrl>https://github.com/Kiryuumaru/ObservableHelpers</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Kiryuumaru/ObservableHelpers</RepositoryUrl>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageReleaseNotes>* Proper nullable ObservableProperty</PackageReleaseNotes>
-    <Version>1.6.2</Version>
+  </PropertyGroup>
+  
+  <PropertyGroup>
+    <PackageReleaseNotes>* Introduced source generators</PackageReleaseNotes>
+    <Version>2.0.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,8 +34,54 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="LockerHelpers" Version="1.0.2" />
-    <PackageReference Include="SynchronizationContextHelpers" Version="1.0.2" />
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>ObservableHelpers.UnitTest</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <!-- Enable trimming support on .NET 6 -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net6.0'">
+    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+    <IsTrimmable>true</IsTrimmable>
+  </PropertyGroup>
+
+  <!-- Source generator project reference for packing -->
+  <ItemGroup>
+    <ProjectReference Include="..\ObservableHelpers.SourceGenerators\ObservableHelpers.SourceGenerators.csproj"
+                      ReferenceOutputAssembly="false"
+                      OutputItemType="Analyzer"
+                      PrivateAssets="contentfiles;build" />
+  </ItemGroup>
+
+  <ItemGroup Label="Package">
+
+    <!-- Include the custom .targets file to check the source generator (.NET 6 is not needed as it guarantees Roslyn 4.x) -->
+    <None Include="ObservableHelpers.targets" PackagePath="buildTransitive\netstandard2.0" Pack="true" />
+    <None Include="ObservableHelpers.targets" PackagePath="buildTransitive\netstandard2.1" Pack="true" />
+    <None Include="ObservableHelpers.targets" PackagePath="build\netstandard2.0" Pack="true" />
+    <None Include="ObservableHelpers.targets" PackagePath="build\netstandard2.1" Pack="true" />
+
+    <!-- Pack the source generator to the right package folder -->
+    <None Include="..\ObservableHelpers.SourceGenerators\bin\$(Configuration)\netstandard2.0\ObservableHelpers.SourceGenerators.dll" PackagePath="analyzers\dotnet\roslyn4.0\cs" Pack="true" Visible="false" />
+  </ItemGroup>
+
+  <!-- .NET Standard 2.0 doesn't have the Span<T> and IAsyncEnumerable<T> types -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="6.0.0" />
+    <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
+    <PackageReference Include="System.Memory" Version="4.5.5" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
+  </ItemGroup>
+
+  <!-- .NET Standard 2.1 doesn't have the Unsafe type -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+    <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="LockerHelpers" Version="1.0.3" />
+    <PackageReference Include="SynchronizationContextHelpers" Version="1.0.5" />
   </ItemGroup>
 
 </Project>
