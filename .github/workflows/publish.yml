@@ -1,4 +1,4 @@
-name: "Deploy to NuGet"
+name: "Publish NuGet Package"
 
 on:
   push:
@@ -35,27 +35,24 @@ jobs:
     - name: 'Get Version'
       id: version
       uses: battila7/get-version-action@v2
+      
+    - name: Build Changelog
+      id: changelog
+      uses: mikepenz/release-changelog-builder-action@{latest-release}
 
     - name: 'Pack project'
       run: dotnet pack ${{ env.PROJECT_PATH }} --no-restore --no-build --configuration Release --include-symbols -p:SymbolPackageFormat=snupkg -p:PackageVersion=${{ steps.version.outputs.version-without-v }} --output ${{ env.PACKAGE_OUTPUT_DIRECTORY }}
       
     - name: Create Release
       id: create_release
-      uses: actions/create-release@v1
+      uses: softprops/action-gh-release@v1
       with:
         tag_name: ${{ github.ref }}
         release_name: Release ${{ github.ref }}
+        body: ${{steps.github_release.outputs.changelog}}
         draft: false
         prerelease: ${{ steps.version.outputs.is-prerelease }}
-
-    - name: Upload Release Assets
-      id: upload-release-assets
-      uses: dwenegar/upload-release-assets@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        release_id: ${{ steps.create_release.outputs.id }}
-        assets_path: ${{ env.PACKAGE_OUTPUT_DIRECTORY }}
+        files: ${{ env.PACKAGE_OUTPUT_DIRECTORY }}\*
 
     - name: 'Push package to Github'
       run: dotnet nuget push ${{ env.PACKAGE_OUTPUT_DIRECTORY }}\*.nupkg -k ${{ secrets.GITHUB_TOKEN }} -s ${{ env.GITHUB_SOURCE_URL }}
