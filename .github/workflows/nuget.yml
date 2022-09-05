@@ -48,21 +48,14 @@ jobs:
         draft: false
         prerelease: ${{ steps.version.outputs.is-prerelease }}
 
-    - name: Upload NuGet Release Asset
-      uses: actions/upload-release-asset@v1.0.1
+    - name: Upload Release Assets
+      id: upload-release-assets
+      uses: dwenegar/upload-release-assets@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ${{ env.PACKAGE_OUTPUT_DIRECTORY }}\${{ env.PROJECT_NAME }}.${{ steps.version.outputs.version-without-v }}.nupkg
-        asset_name: ${{ env.PROJECT_NAME }}.${{ steps.version.outputs.version-without-v }}.snupkg
-        asset_content_type: application/octet-stream
-
-    - name: Upload NuGet Symbol Release Asset
-      uses: actions/upload-release-asset@v1.0.1
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ${{ env.PACKAGE_OUTPUT_DIRECTORY }}\${{ env.PROJECT_NAME }}.${{ steps.version.outputs.version-without-v }}.snupkg
-        asset_name: ${{ env.PROJECT_NAME }}.${{ steps.version.outputs.version-without-v }}.snupkg
-        asset_content_type: application/octet-stream
+        release_id: ${{ steps.create_release.outputs.id }}
+        assets_path: ${{ env.PACKAGE_OUTPUT_DIRECTORY }}
 
     - name: 'Push package to Github'
       run: dotnet nuget push ${{ env.PACKAGE_OUTPUT_DIRECTORY }}\*.nupkg -k ${{ secrets.GITHUB_TOKEN }} -s ${{ env.GITHUB_SOURCE_URL }}
