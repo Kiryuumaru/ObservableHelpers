@@ -9,7 +9,6 @@ env:
   PROJECT_NAME: 'ObservableHelpers'
   PROJECT_PATH: 'ObservableHelpers/ObservableHelpers.csproj'
   PACKAGE_OUTPUT_DIRECTORY: ${{ github.workspace }}\output
-  GITHUB_REPO_URL: 'https://github.com/Kiryuumaru/ObservableHelpers'
   NUGET_SOURCE_URL: 'https://api.nuget.org/v3/index.json'
   GITHUB_SOURCE_URL: 'https://nuget.pkg.github.com/kiryuumaru/index.json'
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -48,7 +47,7 @@ jobs:
       id: create_release
       uses: softprops/action-gh-release@v1
       with:
-        body: **Full Changelog**: ${{ env.GITHUB_REPO_URL }}/compare/${{ steps.github_release.outputs.fromTag }}...${{ steps.version.toTag }}
+        body: ${{ steps.github_release.outputs.changelog }}
         draft: false
         prerelease: ${{ steps.version.outputs.is-prerelease == true }}
         files: ${{ env.PACKAGE_OUTPUT_DIRECTORY }}\*
