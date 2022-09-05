@@ -49,7 +49,7 @@ jobs:
         prerelease: ${{ steps.version.outputs.is-prerelease }}
 
     - name: Upload NuGet Release Asset
-    - uses: actions/upload-release-asset@v1.0.1
+      uses: actions/upload-release-asset@v1.0.1
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ${{ env.PACKAGE_OUTPUT_DIRECTORY }}\${{ env.PROJECT_NAME }}.${{ steps.version.outputs.version-without-v }}.nupkg
@@ -57,7 +57,7 @@ jobs:
         asset_content_type: application/octet-stream
 
     - name: Upload NuGet Symbol Release Asset
-    - uses: actions/upload-release-asset@v1.0.1
+      uses: actions/upload-release-asset@v1.0.1
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ${{ env.PACKAGE_OUTPUT_DIRECTORY }}\${{ env.PROJECT_NAME }}.${{ steps.version.outputs.version-without-v }}.snupkg
