@@ -1,6 +1,6 @@
 # Observable Helpers
 
-Observable helpers with source generator and UI-safe property implementations. Can be used for any MVVM software architectural applications.
+Observable helpers with source generators and UI-safe property implementations. Can be used for any MVVM software architectural applications.
 
 **NuGets**
 
