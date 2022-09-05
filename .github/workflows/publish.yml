@@ -35,10 +35,6 @@ jobs:
     - name: 'Get Version'
       id: version
       uses: battila7/get-version-action@v2
-      
-    - name: Build Changelog
-      id: changelog
-      uses: mikepenz/release-changelog-builder-action@{latest-release}
 
     - name: 'Pack project'
       run: dotnet pack ${{ env.PROJECT_PATH }} --no-restore --no-build --configuration Release --include-symbols -p:SymbolPackageFormat=snupkg -p:PackageVersion=${{ steps.version.outputs.version-without-v }} --output ${{ env.PACKAGE_OUTPUT_DIRECTORY }}
@@ -49,7 +45,6 @@ jobs:
       with:
         tag_name: ${{ github.ref }}
         release_name: Release ${{ github.ref }}
-        body: ${{steps.github_release.outputs.changelog}}
         draft: false
         prerelease: ${{ steps.version.outputs.is-prerelease }}
         files: ${{ env.PACKAGE_OUTPUT_DIRECTORY }}\*
