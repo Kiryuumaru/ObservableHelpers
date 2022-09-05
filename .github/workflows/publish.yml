@@ -47,9 +47,9 @@ jobs:
       id: create_release
       uses: softprops/action-gh-release@v1
       with:
-        body: ${{steps.github_release.outputs.changelog}}
+        body: ${{ steps.github_release.outputs.changelog }}
         draft: false
-        prerelease: steps.version.outputs.is-prerelease
+        prerelease: ${{ steps.version.outputs.is-prerelease == 'true' }}
         files: ${{ env.PACKAGE_OUTPUT_DIRECTORY }}\*
 
     - name: 'Push package to Github'
