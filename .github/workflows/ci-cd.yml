@@ -1,0 +1,75 @@
+name: CI CD Pipeline
+
+on:
+  push:
+    branches:
+      - master
+
+env:
+  PROJECT_NAME: ObservableHelpers
+  PROJECT_PATH: ObservableHelpers/ObservableHelpers.csproj
+  PACKAGE_OUTPUT_DIRECTORY: ${{ github.workspace }}/output
+  NUGET_SOURCE_URL: https://api.nuget.org/v3/index.json
+  GITHUB_SOURCE_URL: https://nuget.pkg.github.com/kiryuumaru/index.json
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+
+  version_bumper:
+    name: Version Bumper
+    runs-on: ubuntu-latest
+    outputs:
+      new_tag: ${{ steps.bump.outputs.new_tag }}
+      part: ${{ steps.bump.outputs.part }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Bump version and push tag
+        id: bump
+        uses: anothrNick/github-tag-action@1.36.0
+        env:
+          WITH_V: true
+          DEFAULT_BUMP: none
+          PRERELEASE_SUFFIX: prerelease
+
+  publish:
+    name: Publish
+    needs: version_bumper
+    if: needs.version_bumper.outputs.part != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Get Version
+        id: version
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const ver = '${{ needs.version_bumper.outputs.new_tag }}'
+            const ver_no_v = ver.replace('v', '')
+            const is_prerelease = ver_no_v.lastIndexOf('-') > -1
+            core.setOutput('ver', ver)
+            core.setOutput('ver-no-v', ver_no_v)
+            core.setOutput('is-prerelease', is_prerelease)
+      - name: Install dotnet
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 6.0.x
+      - name: Restore packages
+        run: dotnet restore ${{ env.PROJECT_PATH }}
+      - name: Build project
+        run: dotnet build ${{ env.PROJECT_PATH }} --no-restore --configuration Release
+      - name: Pack project
+        run: dotnet pack ${{ env.PROJECT_PATH }} --no-restore --no-build --configuration Release --include-symbols -p:SymbolPackageFormat=snupkg -p:PackageVersion=${{ steps.version.outputs.ver-no-v }} --output ${{ env.PACKAGE_OUTPUT_DIRECTORY }}
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.ver }}
+          files: ${{ env.PACKAGE_OUTPUT_DIRECTORY }}/*
+          prerelease: ${{ steps.version.outputs.is-prerelease == true }}
+          generate_release_notes: true
+          draft: false
+      - name: Push package to Github
+        run: dotnet nuget push ${{ env.PACKAGE_OUTPUT_DIRECTORY }}/*.nupkg -k ${{ secrets.GITHUB_TOKEN }} -s ${{ env.GITHUB_SOURCE_URL }}
+      - name: Push package to NuGet
+        run: dotnet nuget push ${{ env.PACKAGE_OUTPUT_DIRECTORY }}/*.nupkg -k ${{ secrets.NUGET_AUTH_TOKEN }} -s ${{ env.NUGET_SOURCE_URL }}
