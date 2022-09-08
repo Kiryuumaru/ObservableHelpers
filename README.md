@@ -34,16 +34,74 @@ using ObservableHelpers;
 namespace YourNamespace
 {
     [ObservableObject]
-    public class Dinosaur : ObservableObject
+    public partial class Dinosaur : ObservableObject
     {
         [ObservableProperty]
         string? name;
         
-        [ObservableProperty]
+        [ObservableProperty(Access = Access.PublicWithPrivateSetter)]
         string? family;
         
         [ObservableProperty]
-        int Height;
+        int height;
+    }
+}
+```
+### Will Generate
+```csharp
+using ObservableHelpers;
+
+namespace YourNamespace
+{
+    public partial class Dinosaur : ObservableObject
+    {
+        public string? Name
+        {
+            get => name;
+            set
+            {
+                if (!EqualityComparer<string?>.Default.Equals(name, value))
+                {
+                    OnNameChanging(value);
+                    OnPropertyChanging(nameof(Name));
+                    name = value;
+                    OnNameChanged(value);
+                    OnPropertyChanged(nameof(Name));
+                }
+            }
+        }
+        
+        public string? Family
+        {
+            get => family;
+            private set
+            {
+                if (!EqualityComparer<string?>.Default.Equals(family, value))
+                {
+                    OnFamilyChanging(value);
+                    OnPropertyChanging(nameof(Family));
+                    family = value;
+                    OnFamilyChanged(value);
+                    OnPropertyChanged(nameof(Family));
+                }
+            }
+        }
+        
+        public int Height
+        {
+            get => height;
+            set
+            {
+                if (!EqualityComparer<int>.Default.Equals(height, value))
+                {
+                    OnHeightChanging(value);
+                    OnPropertyChanging(nameof(Height));
+                    height = value;
+                    OnHeightChanged(value);
+                    OnPropertyChanged(nameof(Height));
+                }
+            }
+        }
     }
 }
 ```

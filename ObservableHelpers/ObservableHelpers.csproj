@@ -24,7 +24,7 @@
   </PropertyGroup>
   
   <PropertyGroup>
-    <PackageReleaseNotes>* Introduced source generators</PackageReleaseNotes>
+    <PackageReleaseNotes>* Updated readme</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

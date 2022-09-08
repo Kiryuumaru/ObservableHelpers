@@ -23,7 +23,7 @@ namespace ObservableHelpers.ComponentModel;
 ///     [ObservableProperty]
 ///     private string name;
 ///
-///     [ObservableProperty(Access = AccessModifier.Private)]
+///     [ObservableProperty(Access = AccessModifier.PublicWithPrivateSetter)]
 ///     private bool isEnabled;
 /// }
 /// </code>
