@@ -34,7 +34,7 @@ using ObservableHelpers;
 namespace YourNamespace
 {
     [ObservableObject]
-    public partial class Dinosaur : ObservableObject
+    public partial class Dinosaur
     {
         [ObservableProperty]
         string? name;
@@ -53,7 +53,7 @@ using ObservableHelpers;
 
 namespace YourNamespace
 {
-    public partial class Dinosaur : ObservableObject
+    public partial class Dinosaur
     {
         public string? Name
         {
