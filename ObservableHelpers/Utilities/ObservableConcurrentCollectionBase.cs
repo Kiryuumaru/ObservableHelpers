@@ -96,7 +96,7 @@ public abstract class ObservableConcurrentCollectionBase<T> :
     /// </exception>
     public ObservableConcurrentCollectionBase(Func<ObservableConcurrentCollectionBase<T>, List<T>> collectionWrapperFactory)
     {
-        ArgumentNullException.ThrowIfNull(nameof(collectionWrapperFactory));
+        ArgumentNullException.ThrowIfNull(collectionWrapperFactory);
 
         Items = collectionWrapperFactory.Invoke(this);
     }
@@ -437,7 +437,7 @@ public abstract class ObservableConcurrentCollectionBase<T> :
         int proxy = default;
         bool ret = RWLock.LockUpgradeableRead(() =>
         {
-            ArgumentNullException.ThrowIfNull(nameof(items));
+            ArgumentNullException.ThrowIfNull(items);
 
             if (index < 0 || index > Items.Count)
             {

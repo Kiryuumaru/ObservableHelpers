@@ -46,13 +46,13 @@ public class ObservableConcurrentDictionary<TKey, TValue> :
     {
         get
         {
-            ArgumentNullException.ThrowIfNull(nameof(key));
+            ArgumentNullException.ThrowIfNull(key);
 
             return RWLock.LockRead(() => dictionary[key]);
         }
         set
         {
-            ArgumentNullException.ThrowIfNull(nameof(key));
+            ArgumentNullException.ThrowIfNull(key);
             ThrowIfReadOnly(nameof(IndexerName));
 
             AddOrUpdate(key, value);
@@ -98,7 +98,7 @@ public class ObservableConcurrentDictionary<TKey, TValue> :
     public ObservableConcurrentDictionary(IEnumerable<KeyValuePair<TKey, TValue>> items)
         : base(_ => new List<KeyValuePair<TKey, TValue>>())
     {
-        ArgumentNullException.ThrowIfNull(nameof(items));
+        ArgumentNullException.ThrowIfNull(items);
 
         dictionary = new Dictionary<TKey, TValue>();
         Keys = new DictionaryKeys();
@@ -118,7 +118,7 @@ public class ObservableConcurrentDictionary<TKey, TValue> :
     public ObservableConcurrentDictionary(IEqualityComparer<TKey> comparer)
         : base(_ => new List<KeyValuePair<TKey, TValue>>())
     {
-        ArgumentNullException.ThrowIfNull(nameof(comparer));
+        ArgumentNullException.ThrowIfNull(comparer);
 
         dictionary = new Dictionary<TKey, TValue>(comparer);
         Keys = new DictionaryKeys();
@@ -140,8 +140,8 @@ public class ObservableConcurrentDictionary<TKey, TValue> :
     public ObservableConcurrentDictionary(IEnumerable<KeyValuePair<TKey, TValue>> items, IEqualityComparer<TKey> comparer)
         : base(_ => new List<KeyValuePair<TKey, TValue>>())
     {
-        ArgumentNullException.ThrowIfNull(nameof(items));
-        ArgumentNullException.ThrowIfNull(nameof(comparer));
+        ArgumentNullException.ThrowIfNull(items);
+        ArgumentNullException.ThrowIfNull(comparer);
 
         dictionary = new Dictionary<TKey, TValue>(comparer);
         Keys = new DictionaryKeys();
@@ -199,7 +199,7 @@ public class ObservableConcurrentDictionary<TKey, TValue> :
     /// </exception>
     public void Add(KeyValuePair<TKey, TValue> item)
     {
-        ArgumentNullException.ThrowIfNull(nameof(item));
+        ArgumentNullException.ThrowIfNull(item);
         ThrowIfReadOnly(nameof(Add));
 
         RWLock.LockUpgradeableRead(() =>
@@ -356,9 +356,9 @@ public class ObservableConcurrentDictionary<TKey, TValue> :
     /// </exception>
     public TValue AddOrUpdate(TKey key, Func<TKey, TValue> addValueFactory, Func<(TKey key, TValue oldValue), TValue> updateValueFactory)
     {
-        ArgumentNullException.ThrowIfNull(nameof(key));
-        ArgumentNullException.ThrowIfNull(nameof(addValueFactory));
-        ArgumentNullException.ThrowIfNull(nameof(updateValueFactory));
+        ArgumentNullException.ThrowIfNull(key);
+        ArgumentNullException.ThrowIfNull(addValueFactory);
+        ArgumentNullException.ThrowIfNull(updateValueFactory);
         ThrowIfReadOnly(nameof(AddOrUpdate));
 
         return RWLock.LockUpgradeableRead(() =>
@@ -420,7 +420,7 @@ public class ObservableConcurrentDictionary<TKey, TValue> :
     /// </exception>
     public void AddRange(IEnumerable<KeyValuePair<TKey, TValue>> items)
     {
-        ArgumentNullException.ThrowIfNull(nameof(items));
+        ArgumentNullException.ThrowIfNull(items);
         ThrowIfReadOnly(nameof(AddRange));
 
         RWLock.LockUpgradeableRead(() =>
@@ -457,7 +457,7 @@ public class ObservableConcurrentDictionary<TKey, TValue> :
     /// </exception>
     public bool ContainsKey(TKey key)
     {
-        ArgumentNullException.ThrowIfNull(nameof(key));
+        ArgumentNullException.ThrowIfNull(key);
 
         return RWLock.LockRead(() => dictionary.ContainsKey(key));
     }
@@ -505,8 +505,8 @@ public class ObservableConcurrentDictionary<TKey, TValue> :
     /// </exception>
     public TValue GetOrAdd(TKey key, Func<TKey, TValue> valueFactory)
     {
-        ArgumentNullException.ThrowIfNull(nameof(key));
-        ArgumentNullException.ThrowIfNull(nameof(valueFactory));
+        ArgumentNullException.ThrowIfNull(key);
+        ArgumentNullException.ThrowIfNull(valueFactory);
         ThrowIfReadOnly(nameof(GetOrAdd));
 
         return RWLock.LockUpgradeableRead(() =>
@@ -595,7 +595,7 @@ public class ObservableConcurrentDictionary<TKey, TValue> :
     /// </exception>
     public void InsertRange(int index, IEnumerable<KeyValuePair<TKey, TValue>> items)
     {
-        ArgumentNullException.ThrowIfNull(nameof(items));
+        ArgumentNullException.ThrowIfNull(items);
         ThrowIfReadOnly(nameof(InsertRange));
 
         InsertItems(index, items, out _);
@@ -758,8 +758,8 @@ public class ObservableConcurrentDictionary<TKey, TValue> :
     /// </exception>
     public bool TryAdd(TKey key, Func<TKey, TValue> valueFactory)
     {
-        ArgumentNullException.ThrowIfNull(nameof(key));
-        ArgumentNullException.ThrowIfNull(nameof(valueFactory));
+        ArgumentNullException.ThrowIfNull(key);
+        ArgumentNullException.ThrowIfNull(valueFactory);
         ThrowIfReadOnly(nameof(TryAdd));
 
         return RWLock.LockUpgradeableRead(() =>
@@ -811,7 +811,7 @@ public class ObservableConcurrentDictionary<TKey, TValue> :
     {
         value = default;
 
-        ArgumentNullException.ThrowIfNull(nameof(key));
+        ArgumentNullException.ThrowIfNull(key);
 
         TValue? proxy = default;
         bool exists = RWLock.LockRead(() => dictionary.TryGetValue(key, out proxy));
@@ -906,7 +906,7 @@ public class ObservableConcurrentDictionary<TKey, TValue> :
     {
         value = default;
 
-        ArgumentNullException.ThrowIfNull(nameof(key));
+        ArgumentNullException.ThrowIfNull(key);
         ThrowIfReadOnly(nameof(TryRemove));
 
         TValue? proxy = default;
@@ -1070,9 +1070,9 @@ public class ObservableConcurrentDictionary<TKey, TValue> :
     /// </exception>
     public bool TryUpdate(TKey key, Func<TKey, TValue> newValueFactory, Func<(TKey key, TValue newValue, TValue oldValue), bool> validation)
     {
-        ArgumentNullException.ThrowIfNull(nameof(key));
-        ArgumentNullException.ThrowIfNull(nameof(newValueFactory));
-        ArgumentNullException.ThrowIfNull(nameof(validation));
+        ArgumentNullException.ThrowIfNull(key);
+        ArgumentNullException.ThrowIfNull(newValueFactory);
+        ArgumentNullException.ThrowIfNull(validation);
         ThrowIfReadOnly(nameof(TryUpdate));
 
         return RWLock.LockUpgradeableRead(() =>

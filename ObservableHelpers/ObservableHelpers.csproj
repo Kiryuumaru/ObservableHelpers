@@ -24,7 +24,7 @@
   </PropertyGroup>
   
   <PropertyGroup>
-    <PackageReleaseNotes>* Updated readme</PackageReleaseNotes>
+    <PackageReleaseNotes>* Fixed ArgumentNullException wrong parameter names</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
