@@ -141,6 +141,50 @@ namespace YourNamespace
     }
 }
 ```
+### ObservableHelpers.Collections Examples
+
+The `ObservableHelpers.Collections` namespace provides thread-safe, observable collections for MVVM and data-binding scenarios.
+
+## Supports
+```csharp
+ObservableConcurrentCollection<T>
+ObservableConcurrentDictionary<TKey, TValue>
+ObservableConcurrentQueue<T>
+ObservableConcurrentStack<T>
+```
+
+### Sample
+```csharp
+using ObservableHelpers.Collections;
+
+namespace YourNamespace
+{
+    public class Program
+    {
+        private ObservableConcurrentCollection<int> collection;
+
+        public void UIThread()
+        {
+            collection = new ObservableConcurrentCollection<int>(); // Must be created on UI thread to synchronize events
+
+            collection.SynchronizeCollectionChangedEvent = true;
+
+            collection.CollectionChanged += (s, e) =>
+            {
+                // Executes on UI thread if collection.SynchronizeCollectionChangedEvent is true (default false)
+            }
+            collection.SynchronizedCollectionChanged += (s, e) =>
+            {
+                // Executed on UI thread
+            }
+            collection.UnsynchronizedCollectionChanged += (s, e) =>
+            {
+                // Executed on current thread
+            }
+        }
+    }
+}
+```
 
 Code & Inspiration from the following:
 * [MVVM helpers](https://github.com/jamesmontemagno/mvvm-helpers) by [@jamesmontemagno](https://github.com/jamesmontemagno)
